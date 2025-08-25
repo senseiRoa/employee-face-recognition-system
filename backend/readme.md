@@ -69,14 +69,18 @@ Debido a que `dlib` no se instala fácilmente en Windows con `pip install dlib`,
 
 #### Descarga el archivo `.whl` compatible
 
-- Descarga: [`dlib-19.22.99-cp39-cp39-win_amd64.whl`](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/blob/main/dlib-19.22.99-cp39-cp39-win_amd64.whl)
+> 🔎 Asegúrate de que tu versión de Python sea la que tienes en tu equipo ejemplo **3.9** y sistema **64 bits**. Si usas otra versión, busca un `.whl` compatible.
+
+
+- Descarga: [`dlib-xxxxxxxxxxxxxxx.whl`](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/tree/main)
 - Guarda el archivo en la raíz del proyecto (junto a `venv/`).
 
-> 🔎 Asegúrate de que tu versión de Python sea **3.9** y sistema **64 bits**. Si usas otra versión, busca un `.whl` compatible.
 
 #### Instálalo manualmente
 
 ```bash
+pip install dlib-versiondescargada.whl 
+ejemplo
 pip install dlib-19.22.99-cp39-cp39-win_amd64.whl
 ```
 
@@ -110,7 +114,7 @@ Si tienes un archivo `main.py`, inícialo con:
 uvicorn main:app --reload
 ```
 
-> El servidor se ejecutará en `http://127.0.0.1:8000`
+> El servidor se ejecutará en `http://127.0.0.1:8081`
 
 ---
 

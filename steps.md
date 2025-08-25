@@ -259,8 +259,8 @@ pip install -r requirements.txt
 # (Windows atajo) si falla dlib:
 # pip install dlib-bin && pip install face_recognition
 
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-# http://localhost:8000/docs
+uvicorn main:app --reload --host 0.0.0.0 --port 8081
+# http://localhost:8081/docs
 ```
 
 ---
@@ -286,8 +286,8 @@ COPY . .
 # Crear carpeta de datos para SQLite
 RUN mkdir -p /app/data
 
-EXPOSE 8000
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+EXPOSE 8081
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8081"]
 ```
 
 ## docker-compose.yml
@@ -299,7 +299,7 @@ services:
     image: employee-backend:latest
     container_name: employee-backend
     ports:
-      - "8000:8000"
+      - "8081:8081"
     volumes:
       - ./data:/app/data   # Persistir SQLite
     restart: unless-stopped
@@ -310,7 +310,7 @@ services:
 ```bash
 cd backend
 docker compose up --build
-# http://localhost:8000/docs
+# http://localhost:8081/docs
 ```
 
 ---
@@ -360,7 +360,7 @@ android:networkSecurityConfig="@xml/network_security_config"
 </network-security-config>
 ```
 
-> Emulador Android accede al host como **`http://10.0.2.2:8000`**. En dispositivo físico, usa la IP LAN de tu PC (por ejemplo `http://192.168.1.50:8000`).
+> Emulador Android accede al host como **`http://10.0.2.2:8081`**. En dispositivo físico, usa la IP LAN de tu PC (por ejemplo `http://192.168.1.50:8081`).
 
 ## environments
 
@@ -369,7 +369,7 @@ android:networkSecurityConfig="@xml/network_security_config"
 ```ts
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8000'
+  apiBaseUrl: 'http://localhost:8081'
 };
 ```
 
@@ -379,7 +379,7 @@ Para emulador:
 // src/environments/environment.emu.ts
 export const environment = {
   production: false,
-  apiBaseUrl: 'http://10.0.2.2:8000'
+  apiBaseUrl: 'http://10.0.2.2:8081'
 };
 ```
 
@@ -535,7 +535,7 @@ export class HomePage {
   npx cap run android
   ```
 
-  > Si usas emulador, compila con el `environment.emu.ts` o ajusta `apiBaseUrl` a `http://10.0.2.2:8000`.
+  > Si usas emulador, compila con el `environment.emu.ts` o ajusta `apiBaseUrl` a `http://10.0.2.2:8081`.
 
 * Dispositivo físico:
 
@@ -551,7 +551,7 @@ export class HomePage {
 * Registro (reemplaza `<B64>` con base64 de una foto):
 
 ```bash
-curl -X POST http://localhost:8000/register_face \
+curl -X POST http://localhost:8081/register_face \
   -H "Content-Type: application/json" \
   -d '{"employee_id":"E001","name":"Alice","image_base64":"<B64>"}'
 ```
@@ -559,7 +559,7 @@ curl -X POST http://localhost:8000/register_face \
 * Check In/Out:
 
 ```bash
-curl -X POST http://localhost:8000/check_in_out \
+curl -X POST http://localhost:8081/check_in_out \
   -H "Content-Type: application/json" \
   -d '{"image_base64":"<B64>"}'
 ```
@@ -567,7 +567,7 @@ curl -X POST http://localhost:8000/check_in_out \
 * Ver logs:
 
 ```bash
-curl http://localhost:8000/logs
+curl http://localhost:8081/logs
 ```
 
 ## Validar en SQLite

@@ -64,7 +64,7 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-Acceso a la API: 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
+Acceso a la API: 👉 [http://localhost:8081/docs](http://localhost:8081/docs)
 
 ---
 
@@ -83,7 +83,7 @@ Acceso a la API: 👉 [http://localhost:8000/docs](http://localhost:8000/docs)
 ```bash
 cd backend
 docker build -t face-recognition-api .
-docker run -d -p 8000:8000 face-recognition-api
+docker run -d -p 8081:8081 face-recognition-api
 ```
 
 ---

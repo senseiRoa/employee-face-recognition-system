@@ -1,0 +1,36 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Registro de Ingreso (POC)</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Enroll (Registrar Rostro)</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-input label="Employee ID" [(ngModel)]="employee_id"></ion-input>
+      </ion-item>
+      <ion-item>
+        <ion-input label="Name" [(ngModel)]="name"></ion-input>
+      </ion-item>
+      <ion-button expand="block" (click)="enroll()" [disabled]="loading">Registrar</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Check In/Out</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-button expand="block" (click)="check()" [disabled]="loading">Tomar Foto y Verificar</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-text color="medium">
+    <p *ngIf="loading">Procesando...</p>
+    <p>{{ message }}</p>
+  </ion-text>
+</ion-content>

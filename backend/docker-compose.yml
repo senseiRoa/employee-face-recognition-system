@@ -1,0 +1,11 @@
+
+services:
+  api:
+    build: .
+    image: employee-backend:latest
+    container_name: employee-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data   # Persistir SQLite
+    restart: unless-stopped

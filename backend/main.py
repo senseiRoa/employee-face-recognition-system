@@ -1,52 +1,24 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, List, Literal
-import base64, io, os, datetime
-from PIL import Image
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from database import engine, Base
+from models import Employee, AccessLog
+from schemas import RegisterFaceReq, RegisterFaceRes, CheckReq, CheckRes
+from services import compute_encoding, serialize_encoding, deserialize_encoding, decide_event
 import numpy as np
-import face_recognition
-
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, ForeignKey, select, text
-from sqlalchemy.orm import declarative_base, Session, relationship
-
-# --- Config ---
-DB_DIR = os.path.join(os.path.dirname(__file__), "data")
-os.makedirs(DB_DIR, exist_ok=True)
-DB_PATH = os.path.join(DB_DIR, "db.sqlite3")
-engine = create_engine(f"sqlite:///{DB_PATH}", future=True)
-Base = declarative_base()
-
-# --- Modelos DB ---
-class Employee(Base):
-    __tablename__ = "employees"
-    id = Column(String, primary_key=True)  # employee_id definido por el cliente
-    name = Column(String, nullable=False)
-    # encoding almacenado como texto JSON de floats separados por coma (simple para POC)
-    encoding = Column(String, nullable=False)  # "0.12,0.34,..."
-
-    logs = relationship("AccessLog", back_populates="employee")
-
-class AccessLog(Base):
-    __tablename__ = "access_logs"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    employee_id = Column(String, ForeignKey("employees.id"), nullable=False)
-    event = Column(String, nullable=False)  # "in" | "out"
-    ts = Column(DateTime, default=datetime.datetime.utcnow)
-
-    employee = relationship("Employee", back_populates="logs")
 
 Base.metadata.create_all(engine)
 
-# --- FastAPI ---
 app = FastAPI(title="Employee Face POC")
 
 origins = [
     "http://localhost",
-    "http://localhost:8100",      # Ionic serve
+    "http://localhost:8100",
     "capacitor://localhost",
     "ionic://localhost",
-    "http://10.0.2.2:8100",       # Emulador Android (opcional)
+    "http://10.0.2.2:8100",
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -56,58 +28,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- Schemas ---
-class RegisterFaceReq(BaseModel):
-    employee_id: str
-    name: str
-    image_base64: str  # sin el prefijo data:image/...
-
-class RegisterFaceRes(BaseModel):
-    status: Literal["ok"]
-    employee_id: str
-
-class CheckReq(BaseModel):
-    image_base64: str
-
-class CheckRes(BaseModel):
-    recognized: bool
-    employee_id: Optional[str] = None
-    name: Optional[str] = None
-    distance: Optional[float] = None
-    event: Optional[Literal["in","out"]] = None
-    ts: Optional[str] = None
-
-# --- Utilidades ---
-def b64_to_rgb_np(b64: str) -> np.ndarray:
-    img_bytes = base64.b64decode(b64)
-    img = Image.open(io.BytesIO(img_bytes)).convert("RGB")
-    return np.array(img)
-
-def compute_encoding(b64: str) -> List[float]:
-    image_np = b64_to_rgb_np(b64)
-    boxes = face_recognition.face_locations(image_np, model="hog")  # HOG para POC (sin GPU)
-    if not boxes:
-        raise HTTPException(status_code=422, detail="No se detectó rostro en la imagen.")
-    encs = face_recognition.face_encodings(image_np, boxes)
-    if not encs:
-        raise HTTPException(status_code=422, detail="No se pudo extraer el encoding del rostro.")
-    return encs[0].tolist()
-
-def serialize_encoding(enc: List[float]) -> str:
-    return ",".join(f"{v:.8f}" for v in enc)
-
-def deserialize_encoding(s: str) -> np.ndarray:
-    return np.array([float(x) for x in s.split(",")], dtype=np.float32)
-
 TOLERANCE = 0.6
 
-def decide_event(session: Session, employee_id: str) -> str:
-    last = session.execute(
-        select(AccessLog).where(AccessLog.employee_id == employee_id).order_by(AccessLog.ts.desc()).limit(1)
-    ).scalar_one_or_none()
-    return "out" if (last and last.event == "in") else "in"
-
-# --- Endpoints ---
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -139,7 +61,6 @@ def check_in_out(req: CheckReq):
         best_id, best_name, best_dist = None, None, 1e9
         for e in employees:
             db_enc = deserialize_encoding(e.encoding)
-            # Distancia euclidiana (face_recognition usa distancia similar)
             dist = np.linalg.norm(db_enc - probe)
             if dist < best_dist:
                 best_id, best_name, best_dist = e.id, e.name, dist

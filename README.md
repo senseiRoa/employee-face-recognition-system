@@ -37,7 +37,7 @@ El backend está preparado para ejecutarse en **Docker**, facilitando su desplie
 
 ```bash
 # Clonar el proyecto
-git clone https://github.com/TU-USUARIO/TU-REPO.git
+git clone https://github.com/senseiRoa/face_recognition_test.git
 cd TU-REPO/frontend
 
 # Instalar dependencias

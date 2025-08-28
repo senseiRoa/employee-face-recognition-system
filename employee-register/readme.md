@@ -214,6 +214,13 @@ ionic capacitor add android
 ionic capacitor sync android
 ```
 
+#### live reload en el dispositivo
+
+```sh
+ionic capacitor run android -l --external
+
+```
+
 #### Ejecutar en emulador/dispositivo
 
 ```sh

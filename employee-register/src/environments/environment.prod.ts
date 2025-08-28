@@ -1,4 +1,5 @@
 export const environment = {
   production: true,
-  apiBaseUrl: 'http://localhost:8081'
+  apiBaseUrl:
+    "https://facerecognition.blueforest-bc5a0ae3.eastus2.azurecontainerapps.io"
 };

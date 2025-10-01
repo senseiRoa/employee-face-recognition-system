@@ -1,9 +1,12 @@
 fastapi
-dlib
 uvicorn[standard]
-face_recognition
 numpy
 SQLAlchemy>=2
 pillow
 python-multipart
 opencv-python
+deepface
+pymysql
+alembic
+python-jose[cryptography]
+passlib[bcrypt]

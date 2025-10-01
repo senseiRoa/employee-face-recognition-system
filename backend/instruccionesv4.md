@@ -31,11 +31,10 @@ Quiero que actúes como **desarrollador fullstack senior especializado en Python
 
 4. **Pruebas**
 
-   * Tests unitarios y de integración (pytest).
    * Scripts cURL de prueba para endpoints.
 
 ### 🛠️ Expectativa de entrega
-
+* continua con el  archivo todo.md donde generes el plan de accion y lleves el progreso de los avances 
 * Código refactorizado con estructura clara de **dominio, infraestructura y aplicación** (arquitectura hexagonal).
 * Configuración de MySQL en `docker-compose.yml`.
 * Implementación del flujo de introspección de JWT.

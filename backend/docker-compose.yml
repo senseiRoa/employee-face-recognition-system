@@ -1,11 +1,33 @@
+version: '3.8'
 
 services:
-  api:
-    build: .
-    image: employee-backend:latest
-    container_name: employee-backend
+  db:
+    image: mysql:8
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: face_recognition
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
     ports:
-      - "8081:8081"
+      - "3306:3306"
     volumes:
-      - ./data:/app/data   # Persistir SQLite
+      - mysql_data:/var/lib/mysql
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: employee-backend
+    depends_on:
+      - db
+    ports:
+      - "8001:8000"
+    environment:
+      DATABASE_URL: mysql+pymysql://user:password@db/face_recognition
+    volumes:
+      - .:/app
     restart: unless-stopped
+
+volumes:
+  mysql_data:

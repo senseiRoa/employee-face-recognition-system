@@ -1,0 +1,44 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run FastAPI",
+            "type": "shell",
+            "command": "uvicorn main:app --host 0.0.0.0 --port 8081 --reload",
+            "problemMatcher": [],
+            "detail": "Levanta el servidor FastAPI con recarga automática"
+        },
+        {
+            "label": "Run Tests (pytest)",
+            "type": "shell",
+            "command": "pytest -v",
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": [],
+            "detail": "Ejecuta todos los tests con pytest en modo verbose"
+        },
+        {
+            "label": "Lint (ruff)",
+            "type": "shell",
+            "command": "ruff check .",
+            "problemMatcher": [],
+            "detail": "Analiza el código con ruff para encontrar problemas de estilo"
+        },
+        {
+            "label": "Format (black)",
+            "type": "shell",
+            "command": "black .",
+            "problemMatcher": [],
+            "detail": "Formatea todo el código con black"
+        },
+        {
+            "label": "Alembic Upgrade Head",
+            "type": "shell",
+            "command": "alembic upgrade head",
+            "problemMatcher": [],
+            "detail": "Aplica todas las migraciones pendientes de Alembic hasta la última versión"
+        }
+    ]
+}

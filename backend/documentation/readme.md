@@ -111,7 +111,8 @@ python -c "import face_recognition, numpy, sqlalchemy, PIL, fastapi; print('✅ 
 Si tienes un archivo `main.py`, inícialo con:
 
 ```bash
-uvicorn main:app --reload
+uvicorn main:app --reload --port 8001
+
 ```
 
 > El servidor se ejecutará en `http://127.0.0.1:8081`

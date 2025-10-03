@@ -18,10 +18,10 @@ def compute_encoding(b64: str) -> List[float]:
     image_np = b64_to_rgb_np(b64)
     boxes = face_recognition.face_locations(image_np, model="hog")
     if not boxes:
-        raise HTTPException(status_code=422, detail="No se detectó rostro en la imagen.")
+        raise HTTPException(status_code=422, detail="No face detected in the image.")
     encs = face_recognition.face_encodings(image_np, boxes)
     if not encs:
-        raise HTTPException(status_code=422, detail="No se pudo extraer el encoding del rostro.")
+        raise HTTPException(status_code=422, detail="Could not extract face encoding.")
     return encs[0].tolist()
 
 def serialize_encoding(enc: List[float]) -> str:

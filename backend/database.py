@@ -17,3 +17,11 @@ print(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False)
 
 Base = declarative_base()
+
+# Dependency to get the database session
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

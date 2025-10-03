@@ -4,7 +4,12 @@ from typing import List
 
 from database import get_db
 from schemas import RegisterFaceReq, RegisterFaceRes, CheckReq, CheckRes
-from services.face_recognition_service import compute_encoding, serialize_encoding, deserialize_encoding, decide_event
+from services.face_recognition_service import (
+    compute_encoding,
+    serialize_encoding,
+    deserialize_encoding,
+    decide_event,
+)
 from models import Employee, FaceEncoding, AccessLog
 from dependencies import get_current_user
 from models import Company
@@ -16,14 +21,19 @@ router = APIRouter()
 
 TOLERANCE = 0.6
 
+
 @router.post("/register_face", response_model=RegisterFaceRes)
-def register_face(req: RegisterFaceReq, db: Session = Depends(get_db), current_user: Company = Depends(get_current_user)):
+def register_face(
+    req: RegisterFaceReq,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user),
+):
     enc = compute_encoding(req.image_base64)
     enc_s = serialize_encoding(enc)
 
-    emp = db.get(Employee, req.employee_id)
+    emp = db.get(Employee, 0)
     if not emp:
-        emp = Employee(id=req.employee_id, name=req.name)
+        emp = Employee(name=req.name)
         db.add(emp)
     else:
         emp.name = req.name
@@ -32,11 +42,15 @@ def register_face(req: RegisterFaceReq, db: Session = Depends(get_db), current_u
     emp.encodings.append(new_encoding)
 
     db.commit()
-    return {"status": "ok", "employee_id": req.employee_id}
+    return {"status": "ok", "employee": req.name}
 
 
 @router.post("/check_in_out", response_model=CheckRes)
-def check_in_out(req: CheckReq, db: Session = Depends(get_db), current_user: Company = Depends(get_current_user)):
+def check_in_out(
+    req: CheckReq,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user),
+):
     probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
 
     employees = (
@@ -86,6 +100,8 @@ def check_in_out(req: CheckReq, db: Session = Depends(get_db), current_user: Com
 
 
 @router.get("/employees")
-def list_employees(db: Session = Depends(get_db), current_user: Company = Depends(get_current_user)):
+def list_employees(
+    db: Session = Depends(get_db), current_user: Company = Depends(get_current_user)
+):
     rows = db.execute(select(Employee)).scalars().all()
     return [{"employee_id": r.id, "name": r.name} for r in rows]

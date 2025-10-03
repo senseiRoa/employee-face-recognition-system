@@ -11,7 +11,8 @@ load_dotenv()
 
 # Importar Base y modelos
 from database import Base
-from models import Employee, AccessLog, FaceEncoding
+import models
+
 
 # Config Alembic
 config = context.config

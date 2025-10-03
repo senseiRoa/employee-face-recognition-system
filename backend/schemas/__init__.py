@@ -4,17 +4,20 @@ import datetime
 
 # ========== Face Recognition Schemas ==========
 
+
 class RegisterFaceReq(BaseModel):
-    employee_id: int
     name: str
     image_base64: str
 
+
 class RegisterFaceRes(BaseModel):
     status: Literal["ok"]
-    employee_id: int
+    employee: str
+
 
 class CheckReq(BaseModel):
     image_base64: str
+
 
 class CheckRes(BaseModel):
     recognized: bool
@@ -24,12 +27,15 @@ class CheckRes(BaseModel):
     event: Optional[Literal["in", "out"]] = None
     ts: Optional[str] = None
 
+
 # ========== Company Schemas ==========
+
 
 class CompanyCreate(BaseModel):
     name: str
     username: str
     password: str
+
 
 class Company(BaseModel):
     id: int
@@ -39,20 +45,26 @@ class Company(BaseModel):
     class Config:
         orm_mode = True
 
+
 # ========== Authentication Schemas ==========
+
 
 class Token(BaseModel):
     access_token: str
     token_type: str
 
+
 class TokenData(BaseModel):
     username: Optional[str] = None
+
 
 class LoginReq(BaseModel):
     username: str
     password: str
 
+
 # ========== Log Schemas ==========
+
 
 class LoginLog(BaseModel):
     id: int
@@ -63,6 +75,7 @@ class LoginLog(BaseModel):
 
     class Config:
         orm_mode = True
+
 
 class AccessLog(BaseModel):
     id: int

@@ -1,5 +1,4 @@
 fastapi
-dlib
 uvicorn[standard]
 face_recognition
 numpy
@@ -7,3 +6,7 @@ SQLAlchemy>=2
 pillow
 python-multipart
 opencv-python
+alembic
+python-dotenv
+httpx
+mysqlclient

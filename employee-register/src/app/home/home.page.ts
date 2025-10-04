@@ -17,7 +17,6 @@ import { IonicModule, ToastController } from '@ionic/angular';
 export class HomePage {
   loading = false;
 
-  employee_id = '';
   name = '';
   message = '';
 
@@ -46,8 +45,8 @@ export class HomePage {
   }
 
   async enroll() {
-    if (!this.employee_id || !this.name) {
-      this.showToast('Employee ID y Name son requeridos', 'warning');
+    if ( !this.name) {
+      this.showToast('Name es requerido', 'warning');
       return;
     }
     this.loading = true;
@@ -57,8 +56,8 @@ export class HomePage {
         this.showToast('No se pudo capturar la imagen', 'danger');
         return;
       }
-      await this.api.registerFace(this.employee_id, this.name, b64).toPromise();
-      this.showToast(`Registrado: ${this.employee_id}`, 'success');
+      await this.api.registerFace( this.name, b64).toPromise();
+      this.showToast(`Registrado: ${this.name}`, 'success');
     } catch (e: any) {
       this.showToast(e?.error?.detail || 'Error registrando rostro', 'danger');
     } finally {

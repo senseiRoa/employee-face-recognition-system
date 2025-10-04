@@ -1,171 +1,108 @@
+# Employee Time Tracker API
 
+This is the backend API for the Employee Time Tracker application. It provides functionalities for face recognition-based employee check-in/out, user management, and logging.
 
-### 📄 `README.md`
+## Project Structure
 
-```markdown
-# Backend de Reconocimiento Facial con FastAPI
-
-Este proyecto utiliza **FastAPI** y **face_recognition** para construir una API de reconocimiento facial. Debido a que `dlib` (una dependencia clave) no se instala fácilmente en Windows mediante `pip`, este README incluye instrucciones detalladas para la instalación correcta en entornos Windows.
-
----
-
-## 🛠 Requisitos Previos
-
-- [Python 3.9](https://www.python.org/downloads/) (recomendado, pero versiones 3.7–3.11 también pueden funcionar)
-- `pip` actualizado
-- Git (opcional, para clonar el repositorio)
-- Terminal (Git Bash, CMD o PowerShell)
-
-> ⚠️ **Nota**: Este proyecto está probado en **Windows 10/11 (64 bits)**.
-
----
-
-## 📦 Dependencias Principales
-
-- `fastapi`: Framework web moderno para APIs.
-- `uvicorn[standard]`: Servidor ASGI para ejecutar FastAPI.
-- `dlib`: Biblioteca de aprendizaje automático (requiere instalación especial en Windows).
-- `face_recognition`: API simple para reconocimiento facial.
-- `numpy`: Cálculos numéricos.
-- `SQLAlchemy>=2`: ORM para bases de datos.
-- `pillow`: Manejo de imágenes.
-- `python-multipart`: Para subir archivos (como imágenes) en FastAPI.
-
----
-
-## 🧰 Instalación Paso a Paso
-
-
-
-### 2. Crear un entorno virtual
-
-```bash
-python -m venv venv
-```
-
-### 3. Activar el entorno virtual
-
-En **Git Bash**:
-```bash
-source venv/Scripts/activate
-```
-
-En **CMD o PowerShell**:
-```cmd
-venv\Scripts\activate
-```
-
-> ✅ Verifica que el entorno está activado (verás `(venv)` al inicio del prompt).
-
-### 4. Actualizar pip
-
-```bash
-pip install --upgrade pip
-```
-
-### 5. Instalar `dlib` desde archivo `.whl` (paso crítico en Windows)
-
-Debido a que `dlib` no se instala fácilmente en Windows con `pip install dlib`, usamos una versión precompilada.
-
-#### Descarga el archivo `.whl` compatible
-
-> 🔎 Asegúrate de que tu versión de Python sea la que tienes en tu equipo ejemplo **3.9** y sistema **64 bits**. Si usas otra versión, busca un `.whl` compatible.
-
-
-- Descarga: [`dlib-xxxxxxxxxxxxxxx.whl`](https://github.com/z-mahmud22/Dlib_Windows_Python3.x/tree/main)
-- Guarda el archivo en la raíz del proyecto (junto a `venv/`).
-
-
-#### Instálalo manualmente
-
-```bash
-pip install dlib-versiondescargada.whl 
-ejemplo
-pip install dlib-19.22.99-cp39-cp39-win_amd64.whl
-```
-
-> ✅ Si ves "Successfully installed dlib", ¡todo va bien!
-
-### 6. Instalar el resto de dependencias
-
-```bash
-pip install fastapi uvicorn[standard] face_recognition numpy SQLAlchemy>=2 pillow python-multipart
-```
-
-> ✅ `face_recognition` ya no intentará reinstalar `dlib`.
-
----
-
-## ✅ Verificar la instalación
-
-Ejecuta este comando para probar que todo funciona:
-
-```bash
-python -c "import face_recognition, numpy, sqlalchemy, PIL, fastapi; print('✅ Todas las dependencias se instalaron correctamente')"
-```
-
----
-
-## ▶️ Ejecutar el servidor FastAPI
-
-Si tienes un archivo `main.py`, inícialo con:
-
-```bash
-uvicorn main:app --reload
-```
-
-> El servidor se ejecutará en `http://127.0.0.1:8081`
-
----
-
-## 📁 Estructura del Proyecto (ejemplo)
+The project is organized into the following structure:
 
 ```
 backend/
-│
-├── venv/                  # Entorno virtual
-├── dlib-19.22.99-cp39-cp39-win_amd64.whl  # Archivo dlib (opcional mantener)
-├── main.py                # Archivo principal de FastAPI
-├── requirements.txt       # (Opcional) lista de dependencias
-└── README.md
+├── alembic/           # Alembic migrations
+├── controllers/       # API endpoints (routers)
+├── models/            # SQLAlchemy database models (entities)
+├── schemas/           # Pydantic data validation schemas
+├── services/          # Business logic
+├── utils/             # Utility functions (security, JWT)
+├── database.py        # Database connection and session management
+├── dependencies.py    # FastAPI dependencies (e.g., get_current_user)
+├── main.py            # Main FastAPI application
+├── requirements.txt   # Project dependencies
+└── ...
 ```
 
----
+### Modules
 
-## 📝 Notas Importantes
+*   **`main.py`**: The main entry point of the application. It initializes the FastAPI app, includes the routers, and configures middleware.
 
-- ⚠️ **No uses `dlib-bin`**: no es un paquete válido.
-- 💡 Si cambias de versión de Python, necesitarás un `.whl` diferente.
-- 🔗 Más `.whl` para otras versiones: [https://www.lfd.uci.edu/~gohlke/pythonlibs/#dlib](https://www.lfd.uci.edu/~gohlke/pythonlibs/#dlib)
-- 🐍 Recomendamos usar Python 3.9 en Windows para compatibilidad con `dlib`.
+*   **`database.py`**: Contains the SQLAlchemy engine, session factory, and a dependency to get a database session.
 
----
+*   **`dependencies.py`**: Implements dependencies used across the application, such as `get_current_user` which validates the JWT token and retrieves the current user.
 
-## 🧹 Limpiar (opcional)
+*   **`models/`**: Defines the SQLAlchemy models (database entities) that map to the database tables:
+    *   `Employee`: Stores employee information.
+    *   `FaceEncoding`: Stores face encodings for each employee.
+    *   `AccessLog`: Logs employee check-in/out events.
+    *   `Company`: Stores company information for authentication.
+    *   `LoginLog`: Logs company login events.
 
-Una vez instalado, puedes eliminar el archivo `.whl` si no lo necesitas conservar:
+*   **`schemas/`**: Contains the Pydantic models used for data validation and serialization in the API endpoints.
 
-```bash
-rm dlib-19.22.99-cp39-cp39-win_amd64.whl
-```
+*   **`controllers/`**: Each file in this directory corresponds to a specific domain and defines the API endpoints using FastAPI's `APIRouter`.
+    *   `auth.py`: Handles company registration and login.
+    *   `employees.py`: Manages employee and face recognition endpoints.
+    *   `logs.py`: Provides access to access and login logs.
 
----
+*   **`services/`**: This directory contains the core business logic of the application.
+    *   `auth_service.py`: Implements the logic for user authentication.
+    *   `company_service.py`: Manages the creation and retrieval of company data.
+    *   `face_recognition_service.py`: Contains the logic for face encoding computation and comparison.
+    *   `log_service.py`: Handles the retrieval of logs.
 
-## 🤝 Soporte
+*   **`utils/`**: This directory holds utility functions.
+    *   `jwt_handler.py`: **(Placeholder)** This module is responsible for JWT creation and validation. **WARNING**: The current implementation is a placeholder and not secure. It should be replaced with a proper JWT library like `python-jose` or `PyJWT` for production use.
+    *   `security.py`: Provides password hashing and verification functions.
 
-Si tienes problemas, abre un issue o contacta al equipo de desarrollo.
+## API Endpoints
 
-> ✨ ¡Listo! Tu backend de reconocimiento facial está listo para funcionar.
-```
+All endpoints (except for `/health`, `/auth/login`, and `/auth/register`) require a valid JWT token for authentication.
 
----
+*   **Auth (`/auth`)**
+    *   `POST /register`: Register a new company.
+    *   `POST /login`: Authenticate and receive a JWT token.
 
-### ✅ ¿Qué incluye este `README.md`?
+*   **Employees (`/employees`)**
+    *   `POST /register_face`: Register a new face for an employee.
+    *   `POST /check_in_out`: Perform a check-in or check-out for an employee using face recognition.
+    *   `GET /employees`: List all employees.
 
-- Instrucciones claras para Windows.
-- Enlace directo al `.whl` que ya probaste.
-- Comandos para Git Bash.
-- Verificación de instalación.
-- Estructura limpia y profesional.
+*   **Logs (`/logs`)**
+    *   `GET /access`: Get access logs.
+    *   `GET /login`: Get login logs.
+
+*   **Health (`/health`)**
+    *   `GET /`: Health check endpoint.
+
+
+
+## Getting Started
+1. **Review project documentation:**
+
+    * Read the files inside the `documentation/` folder to understand the architecture, dependencies, and usage guidelines before getting started.
+
+2. **Run the project inside a DevContainer:**
+
+    * Open the project in **VS Code**.
+    * Make sure you have the **Dev Containers** extension installed.
+    * Select **“Reopen in Container”** to launch the isolated environment (this helps avoid compatibility issues, especially with dependencies like `dlib`).
+
+3. **Set up the database:**
+
+    * Ensure the `.env` file contains the correct connection variables (`DATABASE_URL`).
+    * Run Alembic migrations:
+
+      ```bash
+      alembic upgrade head
+      ```
+
+4. **Start the application:**
+    Inside the container, run:
+
+    ```bash
+    uvicorn main:app --reload --host 0.0.0.0 --port 8081
+    ```
+
+    Once the environment is up, the application will be accessible at:
+    [http://localhost:8081/health](http://localhost:8081/health)
 
 ---

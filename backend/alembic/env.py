@@ -6,8 +6,9 @@ from sqlalchemy import engine_from_config, pool
 from sqlalchemy import create_engine
 from alembic import context
 
-# Cargar variables .env
-load_dotenv()
+# 👇 Forzar a leer el .env de la raíz del proyecto
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+load_dotenv(dotenv_path, override=True)
 
 # Importar Base y modelos
 from database import Base

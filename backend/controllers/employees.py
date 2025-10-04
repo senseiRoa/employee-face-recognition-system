@@ -1,16 +1,17 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 from database import get_db
-from schemas import RegisterFaceReq, RegisterFaceRes, CheckReq, CheckRes
+from schemas import RegisterFaceReq, RegisterFaceRes, CheckReq, CheckRes, Employee, EmployeeCreate, EmployeeUpdate
 from services.face_recognition_service import (
     compute_encoding,
     serialize_encoding,
     deserialize_encoding,
     decide_event,
 )
-from models import Employee, FaceEncoding, AccessLog
+from services import employee_service
+from models import Employee as EmployeeModel, FaceEncoding, AccessLog
 from dependencies import get_current_user
 from models import Company
 import numpy as np
@@ -31,18 +32,26 @@ def register_face(
     enc = compute_encoding(req.image_base64)
     enc_s = serialize_encoding(enc)
 
-    emp = db.get(Employee, 0)
-    if not emp:
-        emp = Employee(name=req.name)
-        db.add(emp)
-    else:
-        emp.name = req.name
+    emp = EmployeeModel(
+        warehouse_id=req.warehouse_id,
+        first_name=req.first_name,
+        last_name=req.last_name,
+        email=req.email
+    )
+    db.add(emp)
+    db.flush()
 
-    new_encoding = FaceEncoding(encoding=enc_s)
-    emp.encodings.append(new_encoding)
-
+    new_encoding = FaceEncoding(employee_id=emp.id, encoding=enc_s)
+    db.add(new_encoding)
+    
     db.commit()
-    return {"status": "ok", "employee": req.name}
+    db.refresh(emp)
+    
+    return {
+        "status": "ok",
+        "employee_id": emp.id,
+        "employee_name": f"{emp.first_name} {emp.last_name}"
+    }
 
 
 @router.post("/check_in_out", response_model=CheckRes)
@@ -53,11 +62,12 @@ def check_in_out(
 ):
     probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
 
-    employees = (
-        db.execute(select(Employee).options(selectinload(Employee.encodings)))
-        .scalars()
-        .all()
-    )
+    query = select(EmployeeModel).options(selectinload(EmployeeModel.encodings))
+    if req.warehouse_id:
+        query = query.filter(EmployeeModel.warehouse_id == req.warehouse_id)
+    
+    employees = db.execute(query).scalars().all()
+    
     if not employees:
         raise HTTPException(status_code=400, detail="No hay empleados registrados.")
 
@@ -73,7 +83,7 @@ def check_in_out(
         min_dist = min(distances) if distances else 1e9
 
         if min_dist < best_dist:
-            best_id, best_name, best_dist = e.id, e.name, min_dist
+            best_id, best_name, best_dist = e.id, f"{e.first_name} {e.last_name}", min_dist
 
     if best_dist > TOLERANCE:
         return {"recognized": False}
@@ -81,11 +91,15 @@ def check_in_out(
     recognized_employee = next((e for e in employees if e.id == best_id), None)
     if recognized_employee:
         enc_s = serialize_encoding(probe.tolist())
-        new_encoding = FaceEncoding(encoding=enc_s)
-        recognized_employee.encodings.append(new_encoding)
+        new_encoding = FaceEncoding(employee_id=best_id, encoding=enc_s)
+        db.add(new_encoding)
 
     event = decide_event(db, best_id)
-    log = AccessLog(employee_id=best_id, event=event)
+    log = AccessLog(
+        employee_id=best_id,
+        warehouse_id=req.warehouse_id,
+        event=event
+    )
     db.add(log)
     db.commit()
 
@@ -99,9 +113,58 @@ def check_in_out(
     }
 
 
-@router.get("/employees")
+@router.get("/", response_model=List[Employee])
 def list_employees(
-    db: Session = Depends(get_db), current_user: Company = Depends(get_current_user)
+    warehouse_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user)
 ):
-    rows = db.execute(select(Employee)).scalars().all()
-    return [{"employee_id": r.id, "name": r.name} for r in rows]
+    return employee_service.get_employees(db, warehouse_id=warehouse_id, skip=skip, limit=limit)
+
+
+@router.get("/{employee_id}", response_model=Employee)
+def get_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user)
+):
+    employee = employee_service.get_employee(db, employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return employee
+
+
+@router.post("/", response_model=Employee)
+def create_employee(
+    employee: EmployeeCreate,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user)
+):
+    return employee_service.create_employee(db, employee)
+
+
+@router.put("/{employee_id}", response_model=Employee)
+def update_employee(
+    employee_id: int,
+    employee_update: EmployeeUpdate,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user)
+):
+    employee = employee_service.update_employee(db, employee_id, employee_update)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    return employee
+
+
+@router.delete("/{employee_id}", status_code=204)
+def delete_employee(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    current_user: Company = Depends(get_current_user)
+):
+    success = employee_service.delete_employee(db, employee_id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Employee not found")
+

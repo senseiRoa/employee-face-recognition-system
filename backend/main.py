@@ -2,15 +2,37 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import create_engine
 
-from database import Base, SessionLocal, DATABASE_URL
-from controllers import employees, logs, auth
+from database import SessionLocal, DATABASE_URL
+from controllers import (
+    employees,
+    logs,
+    auth,
+    roles,
+    users,
+    warehouses,
+    tablets,
+    companies,
+    reports,
+)
+from config.openapi_config import configure_openapi_schema, get_openapi_tags
 
 engine = create_engine(DATABASE_URL, future=True)
 print("🚀🚀🚀Engine created")
 print(DATABASE_URL)
 SessionLocal.configure(bind=engine)
 
-app = FastAPI(title="Employee-TIME-TRACKER")
+app = FastAPI(
+    title="Employee TIME TRACKER",
+    version="1.0.0",
+    description="API for the facial recognition and employee management system",
+    swagger_ui_parameters={
+        "persistAuthorization": True,
+    },
+    openapi_tags=get_openapi_tags(),
+)
+
+# Configurar OpenAPI con JWT automáticamente
+configure_openapi_schema(app)
 
 origins = [
     "http://localhost",
@@ -30,8 +52,15 @@ app.add_middleware(
 )
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(companies.router, prefix="/companies", tags=["companies"])
+app.include_router(roles.router, prefix="/roles", tags=["roles"])
+app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(warehouses.router, prefix="/warehouses", tags=["warehouses"])
+app.include_router(tablets.router, prefix="/tablets", tags=["tablets"])
 app.include_router(employees.router, prefix="/employees", tags=["employees"])
 app.include_router(logs.router, prefix="/logs", tags=["logs"])
+app.include_router(reports.router, prefix="/reports", tags=["reports"])
+
 
 @app.get("/health")
 def health():

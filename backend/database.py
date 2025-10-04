@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
 
@@ -16,7 +17,12 @@ DATABASE_URL = (
     f"mysql+mysqldb://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}"
 )
 print(DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False)
+
+# Crear el engine
+engine = create_engine(DATABASE_URL)
+
+# Configurar la sesión
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 

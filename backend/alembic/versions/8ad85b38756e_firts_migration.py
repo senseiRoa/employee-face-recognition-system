@@ -1,8 +1,8 @@
 """firts migration
 
-Revision ID: db36ddc99e47
+Revision ID: 8ad85b38756e
 Revises:
-Create Date: 2025-10-04 22:04:06.922981
+Create Date: 2025-10-04 23:52:31.453085
 
 """
 
@@ -11,12 +11,10 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy import table, column, String, DateTime
-
-from models import Role
 from datetime import datetime
 
 # revision identifiers, used by Alembic.
-revision: str = "db36ddc99e47"
+revision: str = "8ad85b38756e"
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

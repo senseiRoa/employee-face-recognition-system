@@ -9,10 +9,11 @@ class Company(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
     username = Column(String(100), nullable=False, unique=True)
-    password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
-    warehouses = relationship("Warehouse", back_populates="company", cascade="all, delete-orphan")
+    warehouses = relationship(
+        "Warehouse", back_populates="company", cascade="all, delete-orphan"
+    )
     users = relationship("User", back_populates="company", cascade="all, delete-orphan")
     login_logs = relationship("LoginLog", back_populates="company")
 
@@ -52,7 +53,9 @@ class Warehouse(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     company = relationship("Company", back_populates="warehouses")
-    tablets = relationship("Tablet", back_populates="warehouse", cascade="all, delete-orphan")
+    tablets = relationship(
+        "Tablet", back_populates="warehouse", cascade="all, delete-orphan"
+    )
     employees = relationship("Employee", back_populates="warehouse")
 
 

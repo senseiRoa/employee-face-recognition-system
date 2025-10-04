@@ -48,7 +48,7 @@ alembic.ini
 Ejecutar:
 
 ```bash
-alembic revision -m "descripcion de la migracion"
+alembic revision -m --autogenerate "descripcion de la migracion"
 ```
 
 Esto creará un archivo dentro de `alembic/versions/` con un ID único.

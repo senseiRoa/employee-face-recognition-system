@@ -1,36 +1,69 @@
-# WARNING: This is a placeholder implementation and is NOT a secure JWT implementation.
-# It is used to fulfill the project structure requirements without adding new dependencies.
-# For a production environment, a proper JWT library (like python-jose or PyJWT) should be used.
+from datetime import datetime, timedelta
+from typing import Optional, Dict
+from jose import JWTError, jwt
+import os
+from dotenv import load_dotenv
 
-import time
-from typing import Dict
+load_dotenv()
 
-# This would normally be a securely stored secret key
-SECRET_KEY = "a_very_insecure_secret_key"
+# Secret key for JWT encoding/decoding - should be set in .env file
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this-in-production")
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))  # 24 hours default
 
-def create_access_token(data: dict, expires_delta: int = 3600) -> str:
-    """Creates a simple, insecure token."""
-    payload = data.copy()
-    expiration = int(time.time()) + expires_delta
-    payload["exp"] = expiration
-    # In a real JWT, this would be a signed, base64-encoded string.
-    # Here, we are just joining the dictionary items.
-    token_str = ",".join([f"{k}={v}" for k, v in payload.items()])
-    return f"{token_str}.{SECRET_KEY}" # Unsigned, just appended secret
 
-def decode_token(token: str) -> Dict[str, any]:
-    """Decodes a simple, insecure token."""
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
+    """
+    Create a JWT access token with the given data and expiration time.
+    
+    Args:
+        data: Dictionary containing the claims to encode in the token
+        expires_delta: Optional timedelta for token expiration (default: 24 hours)
+    
+    Returns:
+        Encoded JWT token string
+    """
+    to_encode = data.copy()
+    
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+
+def decode_token(token: str) -> Optional[Dict]:
+    """
+    Decode and verify a JWT token.
+    
+    Args:
+        token: JWT token string to decode
+    
+    Returns:
+        Dictionary with the decoded payload, or None if invalid/expired
+    """
     try:
-        token_parts = token.split('.')
-        if len(token_parts) != 2 or token_parts[1] != SECRET_KEY:
-            return None # Invalid token format or secret
-
-        payload_str = token_parts[0]
-        payload = dict(item.split('=') for item in payload_str.split(','))
-
-        if int(payload.get("exp", 0)) < int(time.time()):
-            return None # Token has expired
-
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
-    except Exception:
+    except JWTError:
         return None
+
+
+def create_refresh_token(data: dict) -> str:
+    """
+    Create a JWT refresh token with longer expiration time.
+    
+    Args:
+        data: Dictionary containing the claims to encode in the token
+    
+    Returns:
+        Encoded JWT refresh token string
+    """
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=30)  # Refresh tokens last 30 days
+    to_encode.update({"exp": expire, "type": "refresh"})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt

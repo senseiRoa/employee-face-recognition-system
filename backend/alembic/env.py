@@ -1,28 +1,40 @@
 from logging.config import fileConfig
 import os
 from dotenv import load_dotenv
-
-from sqlalchemy import engine_from_config, pool
 from sqlalchemy import create_engine
 from alembic import context
 
-# Cargar variables .env
-load_dotenv()
+# 👇 Force reading the .env file from the project root
+dotenv_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env")
+load_dotenv(dotenv_path, override=True)
 
-# Importar Base y modelos
-from database import Base
-import models
+# Import Base and models after loading environment variables
+from database import Base  # noqa: E402
 
+# Import all models explicitly so Alembic can detect them
+# These imports are necessary even if they appear as "unused" in the linter
+from models import (  # noqa: F401, E402
+    Company,
+    Role,
+    User,
+    Warehouse,
+    Employee,
+    FaceEncoding,
+    AccessLog,
+    UserLoginLog,
+    PasswordHistory,
+    RefreshToken,
+)
 
-# Config Alembic
+# Alembic configuration
 config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Metadata que Alembic usará
+# Metadata that Alembic will use
 target_metadata = Base.metadata
 
-# Sobrescribir URL con la de .env
+# Override URL with the one from .env
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_HOST = os.getenv("DB_HOST")
@@ -33,8 +45,7 @@ DATABASE_URL = (
     f"mysql+mysqldb://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_DATABASE}"
 )
 
-
-# 👇 Forzar que Alembic use la URL del .env y no la del alembic.ini
+# Force Alembic to use the URL from .env instead of alembic.ini
 config.set_main_option("sqlalchemy.url", DATABASE_URL)
 print("🚀🚀 " + DATABASE_URL)
 

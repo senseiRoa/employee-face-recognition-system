@@ -1,0 +1,35 @@
+{
+  "name": "admin-panel",
+  "version": "1.0.0",
+  "type": "module",
+  "author": {
+    "name": "Fabio Andres Roa Garcia",
+    "email": "andres308g@gmail.com"
+  },
+  "scripts": {
+    "dev": "vite",
+    "dev:open": "vite --open",
+    "build": "vite build",
+    "preview": "vite preview",
+    "build:prod:linux": "vite build && sh scripts/copy-www.sh",
+    "build:prod:win": "vite build && scripts\\copy-www.bat",
+    "dev:help": "echo 'Linux: npm run build:prod:linux | Windows: npm run build:prod:win'"
+  },
+  "dependencies": {
+    "vue": "^3.4.0",
+    "vue-router": "^4.2.5",
+    "pinia": "^2.1.7",
+    "axios": "^1.6.0",
+    "chart.js": "^4.4.0",
+    "vue-chartjs": "^5.3.0",
+    "vue-toastification": "^2.0.0-rc.5",
+    "@vueuse/core": "^10.7.0",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.5.2",
+    "vite": "^5.0.8",
+    "@types/node": "^20.10.0",
+    "sass": "^1.69.5"
+  }
+}

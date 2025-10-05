@@ -3,11 +3,12 @@ FROM python:3.11-bullseye
 # Dependencias de compilación para dlib/face_recognition
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential cmake libopenblas-dev liblapack-dev libjpeg-dev \
-    git curl vim \
+    git curl vim default-mysql-client\
     && rm -rf /var/lib/apt/lists/*
 
 # Crear carpeta de trabajo
 WORKDIR /app
+
 
 # Instalar dependencias de Python
 COPY requirements.txt .

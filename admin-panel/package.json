@@ -2,15 +2,18 @@
   "name": "admin-panel",
   "version": "1.0.0",
   "type": "module",
+  "author": {
+    "name": "Fabio Andres Roa Garcia",
+    "email": "andres308g@gmail.com"
+  },
   "scripts": {
     "dev": "vite",
     "dev:open": "vite --open",
     "build": "vite build",
     "preview": "vite preview",
-    "build:prod": "vite build && npm run copy-to-www",
-    "copy-to-www": "npm run clean-www && cp -r dist/* ../www/admin/",
-    "clean-www": "rm -rf ../www/admin && mkdir -p ../www/admin",
-    "dev:help": "echo 'Desarrollo: npm run dev (puerto automático) | Integrado: npm run build:prod'"
+    "build:prod:linux": "vite build && sh scripts/copy-www.sh",
+    "build:prod:win": "vite build && scripts\\copy-www.bat",
+    "dev:help": "echo 'Linux: npm run build:prod:linux | Windows: npm run build:prod:win'"
   },
   "dependencies": {
     "vue": "^3.4.0",

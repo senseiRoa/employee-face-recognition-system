@@ -21,7 +21,7 @@ Panel de administración web desarrollado con Vue.js 3 para el sistema de recono
 
 ### 1. Instalar dependencias
 ```bash
-cd frontend
+cd admin-panel
 npm install
 ```
 
@@ -31,11 +31,11 @@ npm install
 cd backend
 python -m uvicorn main:app --host 0.0.0.0 --port 8081 --reload
 
-# Terminal 2: Levantar el frontend en modo desarrollo
-cd frontend
+# Terminal 2: Levantar el admin-panel en modo desarrollo
+cd admin-panel
 npm run dev
 ```
-- **Frontend:** `http://localhost:3000` (con proxy automático al backend)
+- **admin-panel:** `http://localhost:3000` (con proxy automático al backend)
 - **Backend API:** `http://localhost:8081`
 - **Ventajas:** Hot reload, debugging, development tools
 
@@ -55,7 +55,7 @@ npm run build
 ## 📁 Estructura del Proyecto
 
 ```
-frontend/
+admin-panel/
 ├── src/
 │   ├── assets/           # CSS y recursos estáticos
 │   ├── components/       # Componentes reutilizables
@@ -101,7 +101,7 @@ El archivo `vite.config.js` está configurado para detectar automáticamente el 
   - Assets optimizados para servir desde FastAPI
 
 ### Variables de Entorno (opcional)
-Crear `.env.local` en el directorio `frontend/`:
+Crear `.env.local` en el directorio `admin-panel/`:
 ```
 VITE_API_URL=http://localhost:8081
 ```
@@ -191,7 +191,7 @@ Soporte básico para modo claro/oscuro mediante CSS variables.
 ## 🚀 Despliegue
 
 ### Integración con FastAPI
-1. Construir el frontend: `npm run build`
+1. Construir el admin-panel: `npm run build`
 2. Copiar archivos a `../www/admin/`
 3. FastAPI servirá automáticamente desde `/admin`
 

@@ -1,8 +1,8 @@
-# 🚀 Guía de Desarrollo - Frontend Vue.js
+# 🚀 Guía de Desarrollo - admin-panel Vue.js
 
 ## 📋 Resumen
 
-Este frontend se puede ejecutar de **2 maneras diferentes** según el flujo de trabajo que prefieras:
+Este admin-panel se puede ejecutar de **2 maneras diferentes** según el flujo de trabajo que prefieras:
 
 ## 🔥 Opción 1: Desarrollo Completo (RECOMENDADO)
 
@@ -20,13 +20,13 @@ Este frontend se puede ejecutar de **2 maneras diferentes** según el flujo de t
 cd backend
 python -m uvicorn main:app --host 0.0.0.0 --port 8081 --reload
 
-# Terminal 2: Frontend 
-cd frontend
+# Terminal 2: admin-panel 
+cd admin-panel
 npm run dev
 ```
 
 ### 📍 URLs
-- **Frontend (desarrollo)**: http://localhost:3000 (o el puerto que muestre Vite)
+- **admin-panel (desarrollo)**: http://localhost:3000 (o el puerto que muestre Vite)
 - **Backend API**: http://localhost:8081
 - **Proxy automático**: Todas las llamadas API se redirigen automáticamente
 
@@ -42,7 +42,7 @@ npm run dev
 ### 🚀 Cómo usar
 
 ```bash
-# Desde el directorio frontend
+# Desde el directorio admin-panel
 npm run build:prod
 
 # El panel estará disponible en:
@@ -86,7 +86,7 @@ npm run copy-to-www
 ## 🛠️ Estructura del Proyecto
 
 ```
-frontend/
+admin-panel/
 ├── src/
 │   ├── components/       # Componentes reutilizables
 │   ├── composables/      # Lógica de API y hooks
@@ -185,7 +185,7 @@ npm run build:prod
    cd backend && python -m uvicorn main:app --reload
    
    # Terminal 2  
-   cd frontend && npm run dev
+   cd admin-panel && npm run dev
    ```
 
 2. **Desarrollo**: Trabaja en http://localhost:3002/ (o el puerto asignado)

@@ -22,18 +22,18 @@ goto invalid
 :dev_mode
 echo.
 echo 🔥 Iniciando modo desarrollo...
-echo 📍 Frontend: http://localhost:3000 (o puerto automatico)
+echo 📍 admin-panel: http://localhost:3000 (o puerto automatico)
 echo 📍 Asegurate de que el backend este corriendo en puerto 8081
 echo.
-cd frontend
+cd admin-panel
 npm run dev
 goto end
 
 :integrated_mode
 echo.
 echo 🏭 Construyendo e integrando con FastAPI...
-cd frontend
-npm run build:prod
+cd admin-panel
+npm run build:prod:win
 echo.
 echo ✅ Panel disponible en: http://localhost:8081/admin/
 echo 💡 Asegurate de que FastAPI este ejecutandose
@@ -42,8 +42,8 @@ goto end
 :build_mode
 echo.
 echo 📦 Construyendo para produccion...
-cd frontend
-npm run build
+cd admin-panel
+npm run build:prod:win
 echo.
 echo ✅ Build completado en /dist
 echo 💡 Para integrar ejecuta: npm run copy-to-www

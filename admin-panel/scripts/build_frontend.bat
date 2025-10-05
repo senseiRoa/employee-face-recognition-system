@@ -1,14 +1,14 @@
 @echo off
-REM Script para construir el frontend Vue.js y copiarlo al backend (Windows)
+REM Script para construir el admin-panel Vue.js y copiarlo al backend (Windows)
 
 echo 🚀 Construyendo panel de administración Vue.js...
 
-REM Navegar al directorio del frontend
-cd frontend
+REM Navegar al directorio del admin-panel
+cd admin-panel
 
 REM Verificar si existe package.json
 if not exist "package.json" (
-    echo ❌ Error: No se encontró package.json en el directorio frontend
+    echo ❌ Error: No se encontró package.json en el directorio admin-panel
     exit /b 1
 )
 

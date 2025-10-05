@@ -8,7 +8,9 @@ class Company(Base):
     __tablename__ = "companies"
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
-    username = Column(String(100), nullable=False, unique=True)
+    email = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
+    address = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     warehouses = relationship(
@@ -34,9 +36,12 @@ class User(Base):
     company_id = Column(Integer, ForeignKey("companies.id"), nullable=False)
     role_id = Column(Integer, ForeignKey("roles.id"), nullable=False)
     username = Column(String(100), nullable=False, unique=True)
+    email = Column(String(100), nullable=False, unique=True)
     password = Column(String(255), nullable=False)
-    email = Column(String(100))
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
     is_active = Column(Boolean, default=True)
+    last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
     company = relationship("Company", back_populates="users")

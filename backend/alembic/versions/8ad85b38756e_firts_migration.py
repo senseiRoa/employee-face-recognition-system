@@ -160,41 +160,6 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id"),
     )
 
-    # ### Insert default roles ###
-    roles_table = table(
-        "roles",
-        column("name", String),
-        column("description", String),
-        column("created_at", DateTime),
-    )
-
-    now = datetime.utcnow()
-
-    op.bulk_insert(
-        roles_table,
-        [
-            {
-                "name": "AdminTablet",
-                "description": "Administrator for tablet devices with access to employee management",
-                "created_at": now,
-            },
-            {
-                "name": "AdminWeb",
-                "description": "Administrator for web panel with full access to all features",
-                "created_at": now,
-            },
-            {
-                "name": "Supervisor",
-                "description": "Supervisor with read-only access to logs and reports",
-                "created_at": now,
-            },
-            {
-                "name": "Empleado",
-                "description": "Employee with access to check-in/out and view own status",
-                "created_at": now,
-            },
-        ],
-    )
 
     # ### end Alembic commands ###
 

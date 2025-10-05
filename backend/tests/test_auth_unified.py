@@ -1,52 +1,56 @@
 """
-Tests de autenticación y autorización por roles
-Utiliza configuración unificada de conftest.py
+Authentication and role-based authorization tests
+Uses unified configuration from conftest.py
 """
 
-from conftest import client
-from conftest import client, get_auth_token
 import pytest
-from .conftest import client, get_auth_token
+from conftest import client, get_auth_token
 
 
 class TestAuthentication:
-    """Tests básicos de autenticación"""
+    """Basic authentication tests"""
 
     def test_login_success_admin(self, setup_test_data):
-        """Test: Admin puede hacer login"""
+        """Test: Admin can login successfully"""
         response = client.post(
             "/auth/login",
-            json={"username_or_email": "admin_test", "password": "admin123"},
+            json={"username_or_email": "admin_test", "password": "SystemHead2024!"},
         )
         assert response.status_code == 200
         data = response.json()
         assert "access_token" in data
         assert data["token_type"] == "bearer"
+        assert data["user"]["role"] == "admin"
+        assert "warehouse_id" in data["user"]
 
     def test_login_success_manager(self, setup_test_data):
-        """Test: Manager puede hacer login"""
+        """Test: Manager can login successfully"""
         response = client.post(
             "/auth/login",
-            json={"username_or_email": "manager_test", "password": "manager123"},
+            json={"username_or_email": "manager_test", "password": "OfficeChief2024#"},
         )
         assert response.status_code == 200
-        assert "access_token" in response.json()
+        data = response.json()
+        assert "access_token" in data
+        assert data["user"]["role"] == "manager"
+        assert "warehouse_id" in data["user"]
 
     def test_login_success_employee(self, setup_test_data):
-        """Test: Employee puede hacer login"""
+        """Test: Employee can login successfully"""
         response = client.post(
             "/auth/login",
-            json={"username_or_email": "employee_test", "password": "employee123"},
+            json={"username_or_email": "employee_test", "password": "StaffMember2024$"},
         )
         assert response.status_code == 200
         data = response.json()
         assert data["user"]["role"] == "employee"
+        assert "warehouse_id" in data["user"]
 
     def test_login_with_email(self, setup_test_data):
-        """Test: Login con email funciona"""
+        """Test: Login with email works"""
         response = client.post(
             "/auth/login",
-            json={"username_or_email": "admin@test.com", "password": "admin123"},
+            json={"username_or_email": "admin@test.com", "password": "SystemHead2024!"},
         )
         assert response.status_code == 200
 

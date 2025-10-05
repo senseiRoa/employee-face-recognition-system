@@ -1,7 +1,7 @@
 """
-Tests de endpoints protegidos por rol
-Casos específicos de Warehouses, Employees, Tablets, etc.
-Utiliza configuración unificada de conftest.py
+Role-protected endpoint tests
+Specific cases for Warehouses, Employees, etc.
+Uses unified configuration from conftest.py
 """
 
 import sys
@@ -13,40 +13,40 @@ from conftest import client, get_auth_token
 
 
 class TestWarehouseAccess:
-    """Tests de acceso a warehouses por rol"""
+    """Warehouse access tests by role"""
 
     def test_admin_can_view_all_warehouses(self, admin_token):
-        """Test: Admin puede ver warehouses de todas las compañías"""
+        """Test: Admin can view warehouses from all companies"""
         response = client.get(
             "/warehouses/", headers={"Authorization": f"Bearer {admin_token}"}
         )
         assert response.status_code == 200
         warehouses = response.json()
-        assert len(warehouses) >= 3  # Debería ver todos los warehouses
+        assert len(warehouses) >= 3  # Should see all warehouses
 
     def test_manager_can_view_company_warehouses(self, manager_token):
-        """Test: Manager solo puede ver warehouses de su compañía"""
+        """Test: Manager can only view warehouses from their company"""
         response = client.get(
             "/warehouses/", headers={"Authorization": f"Bearer {manager_token}"}
         )
         assert response.status_code == 200
         warehouses = response.json()
-        # Todos los warehouses deben ser de company_id = 1
+        # All warehouses should be from company_id = 1
         for warehouse in warehouses:
             assert warehouse["company_id"] == 1
 
     def test_employee_warehouse_access_restricted(self, employee_token):
-        """Test: Employee tiene acceso limitado a warehouses"""
+        """Test: Employee has limited access to warehouses"""
         response = client.get(
             "/warehouses/", headers={"Authorization": f"Bearer {employee_token}"}
         )
-        # Dependiendo de la implementación, puede ser 200 con datos limitados o 403
+        # Depending on implementation, can be 200 with limited data or 403
         assert response.status_code in [200, 403]
 
     def test_cross_company_warehouse_access_denied(self, setup_test_data):
-        """Test: Manager no puede ver warehouses de otra compañía"""
-        token = get_auth_token("manager_test", "manager123")
-        # Intentar acceder a warehouse de company 2
+        """Test: Manager cannot view warehouses from another company"""
+        token = get_auth_token("manager_test", "OfficeChief2024#")
+        # Try to access warehouse from company 2
         response = client.get(
             "/warehouses/3", headers={"Authorization": f"Bearer {token}"}
         )

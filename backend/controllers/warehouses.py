@@ -17,14 +17,14 @@ def create_warehouse(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Solo admins y managers pueden crear warehouses
+    # Only admins and managers can create warehouses
     if current_user.role.name == "employee":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient permissions to create warehouses",
         )
 
-    # Si no es admin, solo puede crear warehouses en su propia compañía
+    # If not admin, can only create warehouses in their own company
     target_company_id = (
         warehouse.company_id
         if hasattr(warehouse, "company_id")
@@ -50,12 +50,12 @@ def list_warehouses(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Determinar qué warehouses puede ver el usuario
+    # Determine which warehouses the user can see
     if current_user.role.name == "admin":
         # Admin puede especificar company_id o ver todos
         filter_company_id = company_id
     else:
-        # Otros roles solo pueden ver warehouses de su compañía
+        # Other roles can only see warehouses from their company
         filter_company_id = current_user.company_id
 
     return warehouse_service.get_warehouses(
@@ -75,7 +75,7 @@ def get_warehouse(
             status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )
 
-    # Verificar permisos: solo admin o usuarios de la misma compañía
+    # Verify permissions: only admin or users from the same company
     if (
         current_user.role.name != "admin"
         and warehouse.company_id != current_user.company_id

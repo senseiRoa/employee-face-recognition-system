@@ -1,6 +1,6 @@
 """
-Configuración común para todos los tests
-Fixtures compartidas y configuración de base de datos unificada
+Common configuration for all tests
+Shared fixtures and unified database configuration
 """
 
 import pytest
@@ -14,7 +14,7 @@ from database import get_db, Base
 from models import User, Role, Company, Warehouse, Employee
 from utils.security import get_password_hash as hash_password
 
-# Contraseñas fuertes para tests
+# Strong passwords for tests
 TEST_PASSWORDS = {
     "admin": "SystemHead2024!",
     "manager": "OfficeChief2024#",
@@ -22,7 +22,7 @@ TEST_PASSWORDS = {
     "temp": "TempAccess123!",
 }
 
-# Configuración unificada de base de datos de prueba
+# Unified test database configuration
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_unified.db"
 test_engine = create_engine(
     SQLALCHEMY_TEST_DATABASE_URL,
@@ -33,7 +33,7 @@ TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_
 
 
 def override_get_db():
-    """Override de la función get_db para usar base de datos de prueba"""
+    """Override get_db function to use test database"""
     try:
         db = TestingSessionLocal()
         yield db
@@ -44,20 +44,19 @@ def override_get_db():
 app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
-
 @pytest.fixture(scope="session")
 def test_db():
-    """Fixture de base de datos para toda la sesión de tests"""
-    # Crear todas las tablas
+    """Database fixture for the entire test session"""
+    # Create all tables
     Base.metadata.create_all(bind=test_engine)
     yield test_engine
-    # Limpiar al final de la sesión
+    # Clean up at the end of the session
     Base.metadata.drop_all(bind=test_engine)
 
 
 @pytest.fixture(scope="function")
 def db_session(test_db):
-    """Fixture de sesión de base de datos para cada test"""
+    """Database session fixture for each test"""
     connection = test_db.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
@@ -71,17 +70,43 @@ def db_session(test_db):
 
 @pytest.fixture(scope="function")
 def setup_test_data(db_session):
-    """Fixture para datos de prueba estándar"""
-    # Crear roles
+    """Fixture for standard test data with warehouse-based architecture"""
+    # Create roles with warehouse-based permissions
     roles_data = [
-        Role(id=1, name="admin", description="Administrator"),
-        Role(id=2, name="manager", description="Manager"),
-        Role(id=3, name="employee", description="Employee"),
+        Role(
+            id=1,
+            name="admin",
+            description="Administrator",
+            permissions={
+                "can_manage_users": True,
+                "can_manage_employees": True,
+                "can_view_reports": True,
+            },
+            scope="warehouse",
+        ),
+        Role(
+            id=2,
+            name="manager",
+            description="Manager",
+            permissions={
+                "can_manage_employees": True,
+                "can_view_reports": True,
+                "can_manage_access": True,
+            },
+            scope="warehouse",
+        ),
+        Role(
+            id=3,
+            name="employee",
+            description="Employee",
+            permissions={"can_clock_in": True, "can_view_own_logs": True},
+            scope="warehouse",
+        ),
     ]
     for role in roles_data:
         db_session.add(role)
 
-    # Crear compañías
+    # Create companies
     companies = [
         Company(id=1, name="Test Company A", email="companya@test.com"),
         Company(id=2, name="Test Company B", email="companyb@test.com"),
@@ -89,14 +114,44 @@ def setup_test_data(db_session):
     for company in companies:
         db_session.add(company)
 
-    # Crear usuarios de prueba con diferentes roles
+    # Create warehouses
+    warehouses = [
+        Warehouse(
+            id=1,
+            company_id=1,
+            name="Main Warehouse A",
+            location="Location A",
+            timezone="America/New_York",
+            is_active=True,
+        ),
+        Warehouse(
+            id=2,
+            company_id=1,
+            name="Secondary Warehouse A",
+            location="Location A2",
+            timezone="America/New_York",
+            is_active=True,
+        ),
+        Warehouse(
+            id=3,
+            company_id=2,
+            name="Main Warehouse B",
+            location="Location B",
+            timezone="America/Chicago",
+            is_active=True,
+        ),
+    ]
+    for warehouse in warehouses:
+        db_session.add(warehouse)
+
+    # Create test users with different roles (now with warehouse_id instead of company_id)
     users = [
         User(
             id=1,
             username="admin_test",
             email="admin@test.com",
             password=hash_password(TEST_PASSWORDS["admin"]),
-            company_id=1,
+            warehouse_id=1,
             role_id=1,
             is_active=True,
             first_name="Admin",
@@ -107,7 +162,7 @@ def setup_test_data(db_session):
             username="manager_test",
             email="manager@test.com",
             password=hash_password(TEST_PASSWORDS["manager"]),
-            company_id=1,
+            warehouse_id=1,
             role_id=2,
             is_active=True,
             first_name="Manager",
@@ -118,7 +173,7 @@ def setup_test_data(db_session):
             username="employee_test",
             email="employee@test.com",
             password=hash_password(TEST_PASSWORDS["employee"]),
-            company_id=1,
+            warehouse_id=1,
             role_id=3,
             is_active=True,
             first_name="Employee",
@@ -129,26 +184,28 @@ def setup_test_data(db_session):
             username="manager2_test",
             email="manager2@test.com",
             password=hash_password(TEST_PASSWORDS["manager"]),
-            company_id=2,
+            warehouse_id=2,  # Different warehouse
             role_id=2,
             is_active=True,
             first_name="Manager2",
+            last_name="Test",
+        ),
+        User(
+            id=5,
+            username="manager3_test",
+            email="manager3@test.com",
+            password=hash_password(TEST_PASSWORDS["manager"]),
+            warehouse_id=3,  # Different company's warehouse
+            role_id=2,
+            is_active=True,
+            first_name="Manager3",
             last_name="Test",
         ),
     ]
     for user in users:
         db_session.add(user)
 
-    # Crear warehouses
-    warehouses = [
-        Warehouse(id=1, name="Warehouse A1", company_id=1, location="Location A1"),
-        Warehouse(id=2, name="Warehouse A2", company_id=1, location="Location A2"),
-        Warehouse(id=3, name="Warehouse B1", company_id=2, location="Location B1"),
-    ]
-    for warehouse in warehouses:
-        db_session.add(warehouse)
-
-    # Crear employees
+    # Create employees
     employees = [
         Employee(
             id=1,
@@ -156,6 +213,10 @@ def setup_test_data(db_session):
             first_name="John",
             last_name="Doe",
             email="john@test.com",
+            employee_code="EMP001",
+            department="Operations",
+            position="Operator",
+            is_active=True,
         ),
         Employee(
             id=2,
@@ -163,6 +224,10 @@ def setup_test_data(db_session):
             first_name="Jane",
             last_name="Smith",
             email="jane@test.com",
+            employee_code="EMP002",
+            department="Quality",
+            position="Inspector",
+            is_active=True,
         ),
         Employee(
             id=3,
@@ -170,6 +235,10 @@ def setup_test_data(db_session):
             first_name="Bob",
             last_name="Wilson",
             email="bob@test.com",
+            employee_code="EMP003",
+            department="Logistics",
+            position="Coordinator",
+            is_active=True,
         ),
     ]
     for employee in employees:

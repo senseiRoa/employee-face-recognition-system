@@ -35,7 +35,7 @@ def get_my_company(
     current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
-    Obtener información de la compañía del usuario actual
+    Get information of the current user's company
     """
     return current_user.company
 
@@ -48,7 +48,7 @@ def get_companies(
     db: Session = Depends(get_db),
 ):
     """
-    Obtener lista de compañías (solo admins)
+    Get list of companies (admins only)
     """
     companies = company_service.get_companies(db, skip=skip, limit=limit)
     return companies
@@ -61,9 +61,9 @@ def get_company(
     db: Session = Depends(get_db),
 ):
     """
-    Obtener información de una compañía específica
+    Get information of a specific company
     """
-    # Solo admin puede ver cualquier compañía, otros solo pueden ver la suya
+    # Only admin can view any company, others can only view their own
     if current_user.role.name != "admin" and current_user.company_id != company_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -87,9 +87,9 @@ def update_company(
     db: Session = Depends(get_db),
 ):
     """
-    Actualizar información de una compañía
+    Update company information
     """
-    # Solo admin puede actualizar cualquier compañía, managers solo pueden actualizar la suya
+    # Only admin can update any company, managers can only update their own
     if current_user.role.name not in ["admin", "manager"] or (
         current_user.role.name == "manager" and current_user.company_id != company_id
     ):
@@ -123,7 +123,7 @@ def delete_company(
     db: Session = Depends(get_db),
 ):
     """
-    Eliminar una compañía (solo admins)
+    Delete a company (admins only)
     """
     company = company_service.get_company(db, company_id)
     if not company:

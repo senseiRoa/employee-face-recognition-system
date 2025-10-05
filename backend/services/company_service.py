@@ -8,7 +8,7 @@ def create_company(
     db: Session, name: str, email: str = None, phone: str = None, address: str = None
 ) -> Company:
     """
-    Crear una nueva compañía
+    Create a new company
     """
     db_company = Company(
         name=name,
@@ -25,14 +25,14 @@ def create_company(
 
 def get_company(db: Session, company_id: int) -> Optional[Company]:
     """
-    Obtener compañía por ID
+    Get company by ID
     """
     return db.query(Company).filter(Company.id == company_id).first()
 
 
 def get_companies(db: Session, skip: int = 0, limit: int = 100) -> List[Company]:
     """
-    Obtener lista de compañías
+    Get list of companies
     """
     return db.query(Company).offset(skip).limit(limit).all()
 
@@ -46,7 +46,7 @@ def update_company(
     address: str = None,
 ) -> Optional[Company]:
     """
-    Actualizar una compañía existente
+    Update an existing company
     """
     db_company = get_company(db, company_id)
     if not db_company:
@@ -68,7 +68,7 @@ def update_company(
 
 def delete_company(db: Session, company_id: int) -> bool:
     """
-    Eliminar una compañía
+    Delete a company
     """
     db_company = get_company(db, company_id)
     if not db_company:
@@ -79,9 +79,4 @@ def delete_company(db: Session, company_id: int) -> bool:
     return True
 
 
-# Funciones legacy para compatibilidad (se pueden remover después)
-def get_company_by_username(db: Session, username: str) -> Optional[Company]:
-    """
-    Función legacy - ya no se usa username en companies
-    """
-    return None
+

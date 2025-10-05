@@ -48,7 +48,7 @@ class UserUpdateRequest(BaseModel):
 @router.get("/me", response_model=UserResponse)
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
-    Obtener información del usuario actual
+    Get current user information
     """
     return current_user
 
@@ -152,7 +152,7 @@ def get_user(
     db: Session = Depends(get_db),
 ):
     """
-    Obtener información de un usuario específico
+    Get information for a specific user
     """
     user = user_service.get_user(db, user_id)
     if not user:
@@ -160,7 +160,7 @@ def get_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Verificar permisos
+    # Verify permissions
     if current_user.role.name == "employee" and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -169,7 +169,7 @@ def get_user(
 
     if (
         current_user.role.name == "manager"
-        and current_user.company_id != user.company_id
+        and current_user.warehouse_id != user.warehouse_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -187,7 +187,7 @@ def update_user(
     db: Session = Depends(get_db),
 ):
     """
-    Actualizar información de un usuario
+    Update user information
     """
     target_user = user_service.get_user(db, user_id)
     if not target_user:
@@ -195,7 +195,7 @@ def update_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Verificar permisos
+    # Verify permissions
     if current_user.role.name == "employee" and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -204,14 +204,14 @@ def update_user(
 
     if (
         current_user.role.name == "manager"
-        and current_user.company_id != target_user.company_id
+        and current_user.warehouse_id != target_user.warehouse_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only update users from your company",
+            detail="Can only update users from your warehouse",
         )
 
-    # Verificar si el nuevo username ya existe
+    # Check if new username already exists
     if user_update.username and user_update.username != target_user.username:
         existing = user_service.get_user_by_username(db, user_update.username)
         if existing:
@@ -219,7 +219,7 @@ def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken"
             )
 
-    # Verificar si el nuevo email ya existe
+    # Check if new email already exists
     if user_update.email and user_update.email != target_user.email:
         existing = user_service.get_user_by_email(db, user_update.email)
         if existing:
@@ -248,8 +248,8 @@ def delete_user(
     db: Session = Depends(get_db),
 ):
     """
-    Eliminar un usuario
-    Solo admins y managers pueden eliminar usuarios
+    Delete a user
+    Only admins and managers can delete users
     """
     if current_user.role.name == "employee":
         raise HTTPException(
@@ -263,14 +263,14 @@ def delete_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Manager solo puede eliminar usuarios de su compañía
+    # Manager can only delete users from their warehouse
     if (
         current_user.role.name == "manager"
-        and current_user.company_id != target_user.company_id
+        and current_user.warehouse_id != target_user.warehouse_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only delete users from your company",
+            detail="Can only delete users from your warehouse",
         )
 
     success = user_service.delete_user(db, user_id)

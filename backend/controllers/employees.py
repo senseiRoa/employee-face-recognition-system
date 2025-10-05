@@ -129,15 +129,15 @@ def list_employees(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    # Solo admin y manager pueden listar employees, employee no puede
+    # Only admin and manager can list employees, employee cannot
     if current_user.role.name == "employee":
         raise HTTPException(
             status_code=403, detail="Insufficient permissions to list employees"
         )
 
-    # Admins pueden especificar warehouse_id, otros solo de su compañía
+    # Admins can specify warehouse_id, others only from their company
     if current_user.role.name != "admin" and warehouse_id:
-        # Verificar que el warehouse pertenece a su compañía
+        # Verify that the warehouse belongs to their company
         from services import warehouse_service
 
         warehouse = warehouse_service.get_warehouse(db, warehouse_id)

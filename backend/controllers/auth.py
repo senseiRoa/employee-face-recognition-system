@@ -19,7 +19,7 @@ class UserRegisterRequest(BaseModel):
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    warehouse_id: Optional[int] = 1
+    warehouse_id: Optional[int] = None
     role_id: Optional[int] = 3  # Default role 'employee'
 
     @validator("password")
@@ -52,9 +52,9 @@ def register_user(
     db: Session = Depends(get_db),
 ):
     """
-    Registrar un nuevo usuario (solo para admins y managers)
+    Register a new user (for admins and managers only)
     """
-    # Verificar permisos - solo admin y manager pueden crear usuarios
+    # Verify permissions - only admin and manager can create users
     if current_user.role.name not in ["admin", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -103,13 +103,13 @@ def register_user(
 @router.post("/setup-admin", status_code=status.HTTP_201_CREATED)
 def setup_first_admin(user_data: UserRegisterRequest, db: Session = Depends(get_db)):
     """
-    Endpoint especial para crear el primer administrador del sistema
-    Solo funciona si no existen usuarios admin en el sistema
+    Special endpoint to create the first system administrator
+    Only works if there are no admin users in the system
     """
     from services.user_service import get_users
     from services.role_service import get_role_by_name
 
-    # Verificar si ya existe al menos un admin
+    # Verify if at least one admin already exists
     admin_role = get_role_by_name(db, "admin")
     if admin_role:
         existing_admins = get_users(db, skip=0, limit=1)
@@ -151,7 +151,7 @@ def setup_first_admin(user_data: UserRegisterRequest, db: Session = Depends(get_
 @router.post("/login", response_model=LoginResponse)
 def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
-    Autenticar usuario y obtener token de acceso
+    Authenticate user and get access token
     """
     try:
         result = auth_service.login(
@@ -172,7 +172,7 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
 @router.get("/me")
 def get_current_user_info(current_user: User = Depends(get_current_user)):
     """
-    Obtener información del usuario actual
+    Get current user information
     """
     return {
         "id": current_user.id,

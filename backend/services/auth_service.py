@@ -7,7 +7,7 @@ from utils.jwt_handler import create_access_token
 
 def login(db: Session, username_or_email: str, password: str) -> dict:
     """
-    Autenticar usuario por username o email
+    Authenticate user by username or email
     """
     # Intentar por username primero
     user = get_user_by_username(db, username_or_email)
@@ -16,7 +16,7 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
     if not user:
         user = get_user_by_email(db, username_or_email)
 
-    # Verificar si el usuario existe y la contraseña es correcta
+    # Verify if user exists and password is correct
     if not user or not verify_password(password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -24,14 +24,14 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Verificar si el usuario está activo
+    # Verify if user is active
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is disabled",
         )
 
-    # Crear token con información del usuario
+    # Create token with user information
     access_token = create_access_token(
         data={
             "sub": user.username,
@@ -80,14 +80,14 @@ def register_user(
             detail="Username already registered",
         )
 
-    # Verificar si el email ya existe
+    # Verify if email already exists
     existing_email = get_user_by_email(db, email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
-    # Crear el usuario
+    # Create the user
     user = create_user(
         db=db,
         username=username,

@@ -1,200 +1,201 @@
-# 📖 Guía de Testing para Desarrolladores
+# 📖 Developer Testing Guide
 
-## 🎯 Introducción
+## 🎯 Introduction
 
-Esta guía proporciona instrucciones completas para ejecutar todas las pruebas del sistema de Face Recognition Backend. El sistema incluye pruebas unitarias, de integración y de endpoints protegidos con autenticación por roles.
+This guide provides complete instructions for running all tests in the Face Recognition Backend system. The system includes unit tests, integration tests, and role-protected endpoint tests with warehouse-based authentication.
 
-## 🏗️ Arquitectura de Testing
+## 🏗️ Testing Architecture
 
-### Estructura de Archivos de Testing
+### Testing File Structure
 
 ```
 tests/
-├── conftest.py                 # Configuración común y fixtures
-├── test_auth_unified.py       # Pruebas de autenticación unificadas
-├── test_endpoints_unified.py  # Pruebas de endpoints protegidos
-├── test_face_recognition.py   # Pruebas de reconocimiento facial
-└── test_services.py          # Pruebas de servicios de negocio
+├── conftest.py                 # Common configuration and fixtures
+├── test_auth_unified.py       # Unified authentication tests
+├── test_endpoints_unified.py  # Protected endpoint tests
+├── test_face_recognition.py   # Face recognition tests
+└── test_services.py          # Business service tests
 ```
 
-### Scripts de Ejecución
+### Execution Scripts
 
 ```
-run_tests.sh              # Script principal para todas las pruebas
-run_integration_tests.sh  # Script específico para pruebas de integración
+run_tests.sh              # Main script for all tests
+run_integration_tests.sh  # Specific script for integration tests
 ```
 
-## 🔧 Configuración Inicial
+## 🔧 Initial Setup
 
-### 1. Instalar Dependencias
+### 1. Install Dependencies
 
 ```bash
-# Instalar dependencias de testing
+# Install testing dependencies
 pip install pytest pytest-asyncio pytest-cov coverage httpx
 
-# O instalar desde requirements.txt
+# Or install from requirements.txt
 pip install -r requirements.txt
 ```
 
-### 2. Configurar Base de Datos de Prueba
+### 2. Configure Test Database
 
-El sistema utiliza una base de datos SQLite unificada para todas las pruebas:
+The system uses a unified SQLite database for all tests with warehouse-based architecture:
 
-- **Archivo**: `test_unified.db` (se crea/elimina automáticamente)
-- **Fixtures**: Configuradas en `conftest.py`
-- **Aislamiento**: Cada test ejecuta en una transacción separada
+- **File**: `test_unified.db` (created/deleted automatically)
+- **Fixtures**: Configured in `conftest.py`
+- **Isolation**: Each test runs in a separate transaction
+- **Architecture**: Company → Warehouse → Users (warehouse-based permissions)
 
-### 3. Verificar Configuración
+### 3. Verify Configuration
 
 ```bash
-# Verificar que pytest está disponible
+# Verify pytest is available
 pytest --version
 
-# Verificar estructura de tests
+# Verify test structure
 pytest --collect-only tests/
 ```
 
-## 🚀 Ejecutar Pruebas
+## 🚀 Running Tests
 
-### Opción 1: Script Automatizado (Recomendado)
+### Option 1: Automated Script (Recommended)
 
 ```bash
-# Ejecutar suite completa
+# Run complete suite
 ./run_tests.sh
 
-# Resultado esperado:
-# ✅ Pruebas de autenticación: PASSED
-# ✅ Pruebas de endpoints: PASSED
-# ✅ Suite de integración: PASSED
-# ✅ Reporte de cobertura generado
+# Expected result:
+# ✅ Authentication tests: PASSED
+# ✅ Endpoint tests: PASSED
+# ✅ Integration suite: PASSED
+# ✅ Coverage report generated
 ```
 
-### Opción 2: Comandos Manuales
+### Option 2: Manual Commands
 
-#### Pruebas de Autenticación
+#### Authentication Tests
 ```bash
-# Ejecutar solo pruebas de autenticación
+# Run only authentication tests
 pytest tests/test_auth_unified.py -v
 
-# Con detalles de fallos
+# With failure details
 pytest tests/test_auth_unified.py -v --tb=long
 
-# Solo tests específicos
+# Only specific tests
 pytest tests/test_auth_unified.py::TestAuthentication::test_login_success_admin -v
 ```
 
-#### Pruebas de Endpoints Protegidos
+#### Protected Endpoint Tests
 ```bash
-# Ejecutar solo pruebas de endpoints
+# Run only endpoint tests
 pytest tests/test_endpoints_unified.py -v
 
-# Por clase de test
+# By test class
 pytest tests/test_endpoints_unified.py::TestWarehouseAccess -v
 ```
 
-#### Suite Completa
+#### Complete Suite
 ```bash
-# Todas las pruebas unificadas
+# All unified tests
 pytest tests/test_auth_unified.py tests/test_endpoints_unified.py -v
 
-# Con reporte de cobertura
+# With coverage report
 pytest tests/test_auth_unified.py tests/test_endpoints_unified.py --cov=. --cov-report=html
 ```
 
-### Opción 3: Pruebas de Integración
+### Option 3: Integration Tests
 
 ```bash
-# Requiere servidor corriendo en puerto 8081
+# Requires server running on port 8081
 uvicorn main:app --host 0.0.0.0 --port 8081 --reload &
 
-# Ejecutar pruebas de integración
+# Run integration tests
 ./run_integration_tests.sh
 ```
 
-## 📊 Tipos de Pruebas
+## 📊 Types of Tests
 
-### 1. Pruebas de Autenticación (`test_auth_unified.py`)
+### 1. Authentication Tests (`test_auth_unified.py`)
 
-**Cobertura: 25 tests**
+**Coverage: 25 tests**
 
-| Categoría | Tests | Descripción |
-|-----------|-------|-------------|
-| Login básico | 6 tests | Username/email, credenciales inválidas |
-| Endpoints auth | 2 tests | `/auth/me`, validación de tokens |
-| Registro usuarios | 6 tests | Permisos por rol, validaciones |
-| Gestión usuarios | 4 tests | CRUD con control de acceso |
-| Gestión compañías | 3 tests | Operaciones por rol |
-| Edge cases | 4 tests | Tokens inválidos, duplicados |
+| Category         | Tests | Description                                 |
+|------------------|-------|---------------------------------------------|
+| Basic login      | 6     | Username/email, invalid credentials         |
+| Auth endpoints   | 2     | `/auth/me`, token validation                |
+| User registration| 6     | Role permissions, validations               |
+| User management  | 4     | CRUD with access control                    |
+| Company management| 3    | Role-based operations                       |
+| Edge cases       | 4     | Invalid/duplicate tokens                    |
 
-**Ejemplos de ejecución:**
+**Execution examples:**
 ```bash
-# Solo tests de login
+# Only login tests
 pytest tests/test_auth_unified.py::TestAuthentication -v
 
-# Solo tests de registro
+# Only registration tests
 pytest tests/test_auth_unified.py::TestUserRegistration -v
 
-# Test específico
+# Specific test
 pytest tests/test_auth_unified.py::TestAuthentication::test_login_success_admin -v
 ```
 
-### 2. Pruebas de Endpoints (`test_endpoints_unified.py`)
+### 2. Endpoint Tests (`test_endpoints_unified.py`)
 
-**Cobertura: 21 tests**
+**Coverage: 21 tests**
 
-| Categoría | Tests | Descripción |
-|-----------|-------|-------------|
-| Warehouse access | 4 tests | Control por compañía y rol |
-| Employee access | 3 tests | Restricciones de listado |
-| User CRUD | 5 tests | Operaciones con permisos |
-| User deletion | 3 tests | Eliminación controlada |
-| Company ops | 2 tests | Gestión de compañías |
-| Security | 3 tests | Validación JWT |
-| Permission matrix | 1 test | Matriz completa de permisos |
+| Category         | Tests | Description                                 |
+|------------------|-------|---------------------------------------------|
+| Warehouse access | 4     | Company and role-based control              |
+| Employee access  | 3     | Listing restrictions                        |
+| User CRUD        | 5     | Operations with permissions                 |
+| User deletion    | 3     | Controlled deletion                         |
+| Company ops      | 2     | Company management                          |
+| Security         | 3     | JWT validation                              |
+| Permission matrix| 1     | Complete permission matrix                  |
 
-**Ejemplos de ejecución:**
+**Execution examples:**
 ```bash
-# Solo tests de warehouses
+# Only warehouse tests
 pytest tests/test_endpoints_unified.py::TestWarehouseAccess -v
 
-# Solo tests de seguridad
+# Only security tests
 pytest tests/test_endpoints_unified.py::TestSecurityValidation -v
 ```
 
-### 3. Pruebas de Integración
+### 3. Integration Tests
 
-**Ejecutadas con `run_integration_tests.sh`:**
+**Executed with `run_integration_tests.sh`:**
 
-- Flujos completos de admin/manager/employee
-- Operaciones CRUD end-to-end
-- Validación de restricciones cross-company
-- Pruebas básicas de carga
+- Complete admin/manager/employee flows
+- End-to-end CRUD operations
+- Cross-company restriction validation
+- Basic load tests
 
-## 🎭 Fixtures y Datos de Prueba
+## 🎭 Fixtures and Test Data
 
-### Fixtures Disponibles (conftest.py)
+### Available Fixtures (conftest.py)
 
 ```python
-# Fixtures de base de datos
+# Database fixtures
 @pytest.fixture
-def test_db():          # Base de datos de sesión
-def db_session():       # Sesión por test
-def setup_test_data():  # Datos estándar
+def test_db():          # Session database
+def db_session():       # Session per test
+def setup_test_data():  # Standard data
 
-# Fixtures de autenticación
+# Authentication fixtures
 @pytest.fixture
-def admin_token():      # Token de admin
-def manager_token():    # Token de manager  
-def employee_token():   # Token de employee
+def admin_token():      # Admin token
+def manager_token():    # Manager token  
+def employee_token():   # Employee token
 
-# Fixture de cliente
+# Client fixture
 @pytest.fixture
-def test_client():      # Cliente FastAPI
+def test_client():      # FastAPI client
 ```
 
-### Datos de Prueba Estándar
+### Standard Test Data
 
-**Usuarios creados automáticamente:**
+**Users created automatically:**
 ```python
 - admin_test (admin@test.com) - Company 1, Role: admin
 - manager_test (manager@test.com) - Company 1, Role: manager
@@ -202,7 +203,7 @@ def test_client():      # Cliente FastAPI
 - manager2_test (manager2@test.com) - Company 2, Role: manager
 ```
 
-**Compañías:**
+**Companies:**
 ```python
 - Company 1: "Test Company A"
 - Company 2: "Test Company B"
@@ -214,106 +215,106 @@ def test_client():      # Cliente FastAPI
 - Warehouse 3: Company 2
 ```
 
-## 📈 Análisis de Cobertura
+## 📈 Coverage Analysis
 
-### Generar Reporte de Cobertura
+### Generate Coverage Report
 
 ```bash
-# Ejecutar con cobertura
+# Execute with coverage
 coverage run -m pytest tests/test_auth_unified.py tests/test_endpoints_unified.py
 
-# Reporte en terminal
+# Terminal report
 coverage report --show-missing
 
-# Reporte HTML
+# HTML report
 coverage html
-# Ver en: htmlcov/index.html
+# View at: htmlcov/index.html
 ```
 
-### Métricas Esperadas
+### Expected Metrics
 
-- **Cobertura objetivo**: >85%
-- **Archivos críticos**: 100% (auth, dependencies)
+- **Target coverage**: >85%
+- **Critical files**: 100% (auth, dependencies)
 - **Controllers**: >90%
 - **Services**: >80%
 
 ## 🐛 Troubleshooting
 
-### Problemas Comunes
+### Common Issues
 
-#### 1. Error de Base de Datos
+#### 1. Database Error
 ```bash
 # Error: sqlite3.OperationalError: database is locked
-# Solución: Limpiar archivos de prueba
+# Solution: Clean up test files
 rm -f tests/*.db
 ```
 
-#### 2. Imports Fallando
+#### 2. Import Failures
 ```bash
 # Error: ModuleNotFoundError
-# Solución: Ejecutar desde directorio backend
+# Solution: Run from backend directory
 cd /path/to/backend
 pytest tests/
 ```
 
-#### 3. Tests Colgando
+#### 3. Hanging Tests
 ```bash
-# Timeout en tests
-# Solución: Ejecutar con timeout
+# Test timeout
+# Solution: Run with timeout
 pytest tests/ --timeout=30
 ```
 
-#### 4. Conflictos de Fixtures
+#### 4. Fixture Conflicts
 ```bash
 # Error: fixture not found
-# Solución: Verificar conftest.py
+# Solution: Check conftest.py
 pytest --fixtures tests/
 ```
 
-### Logs de Debug
+### Debug Logs
 
 ```bash
-# Ejecutar con logs detallados
+# Run with detailed logs
 pytest tests/ -v -s --log-cli-level=DEBUG
 
-# Solo errores
+# Only errors
 pytest tests/ -q --tb=short
 
-# Parar en primer fallo
+# Stop on first failure
 pytest tests/ -x
 ```
 
-## 🔄 Flujo de Desarrollo
+## 🔄 Development Flow
 
-### Antes de Hacer Commit
+### Before Committing
 
 ```bash
-# 1. Ejecutar linting
+# 1. Run linting
 ruff check .
 
-# 2. Ejecutar tests completos
+# 2. Run full test suite
 ./run_tests.sh
 
-# 3. Verificar cobertura
+# 3. Check coverage
 coverage report --fail-under=80
 ```
 
-### Para Nuevas Features
+### For New Features
 
 ```bash
-# 1. Escribir test primero (TDD)
-# 2. Implementar feature
-# 3. Ejecutar tests específicos
+# 1. Write test first (TDD)
+# 2. Implement feature
+# 3. Run specific tests
 pytest tests/test_new_feature.py -v
 
-# 4. Ejecutar suite completa
+# 4. Run full suite
 ./run_tests.sh
 ```
 
 ### CI/CD Pipeline
 
 ```bash
-# Pipeline recomendado:
+# Recommended pipeline:
 # 1. Install dependencies
 pip install -r requirements.txt
 
@@ -330,16 +331,16 @@ coverage report --fail-under=80
 ./run_integration_tests.sh
 ```
 
-## 📚 Referencias Adicionales
+## 📚 Additional References
 
-### Documentación de Testing
+### Testing Documentation
 - [Pytest Documentation](https://docs.pytest.org/)
 - [FastAPI Testing](https://fastapi.tiangolo.com/tutorial/testing/)
 - [SQLAlchemy Testing](https://docs.sqlalchemy.org/en/20/orm/session_transaction.html#joining-a-session-into-an-external-transaction-such-as-for-test-suites)
 
-### Ejemplos de Tests Específicos
+### Specific Test Examples
 
-#### Test de Autenticación
+#### Authentication Test
 ```python
 def test_custom_auth(setup_test_data):
     response = client.post("/auth/login", json={
@@ -350,7 +351,7 @@ def test_custom_auth(setup_test_data):
     assert "access_token" in response.json()
 ```
 
-#### Test de Endpoint Protegido
+#### Protected Endpoint Test
 ```python
 def test_protected_endpoint(admin_token):
     response = client.get("/protected-endpoint", 
@@ -358,29 +359,29 @@ def test_protected_endpoint(admin_token):
     assert response.status_code == 200
 ```
 
-#### Test con Datos Personalizados
+#### Test with Custom Data
 ```python
 def test_with_custom_data(db_session):
-    # Crear datos específicos para este test
+    # Create specific data for this test
     user = User(username="test_user", ...)
     db_session.add(user)
     db_session.commit()
     
-    # Ejecutar test
+    # Run test
     # ...
 ```
 
-## 🎯 Conclusión
+## 🎯 Conclusion
 
-Este sistema de testing proporciona:
+This testing system provides:
 
-- ✅ **Cobertura completa** de funcionalidades críticas
-- ✅ **Aislamiento** entre tests para consistencia
-- ✅ **Scripts automatizados** para facilitar ejecución
-- ✅ **Fixtures reutilizables** para eficiencia
-- ✅ **Documentación clara** para nuevos desarrolladores
+- ✅ **Complete coverage** of critical features
+- ✅ **Isolation** between tests for consistency
+- ✅ **Automated scripts** for easy execution
+- ✅ **Reusable fixtures** for efficiency
+- ✅ **Clear documentation** for new developers
 
-**Comando rápido para ejecutar todo:**
+**Quick command to run everything:**
 ```bash
-./run_tests.sh && echo "🎉 Todos los tests exitosos!"
+./run_tests.sh && echo "🎉 All tests successful!"
 ```

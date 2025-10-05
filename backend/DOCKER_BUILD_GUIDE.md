@@ -29,12 +29,43 @@ The Docker build uses a **multi-stage approach** to create an optimized final im
 
 ### Option 1: Automated Build Script (Recommended)
 
+You can use the provided build script for a streamlined and configurable Docker build process.
+
 ```bash
 # From project root directory
 ./backend/scripts/build-docker.sh
 
 # Or on Windows
 backend\scripts\build-docker.bat
+```
+
+To see all available options, run:
+
+```bash
+./backend/scripts/build-docker.sh --help
+```
+
+```
+========================================================
+    Face Recognition System - Docker Build Script
+========================================================
+
+Usage: ./backend/scripts/build-docker.sh [OPTIONS]
+
+Options:
+  -t, --tag TAG           Tag for the Docker image (default: latest)
+  -r, --registry REGISTRY Registry name (default: steelerp.azurecr.io)
+  -p, --push              Push to registry after build
+  -l, --local-only        Build only for local use (no registry tags)
+  --no-cache              Build without cache
+  --platform PLATFORM     Target platform (e.g., linux/amd64,linux/arm64)
+  -h, --help              Show this help message
+
+Examples:
+  ./backend/scripts/build-docker.sh                                   # Build with default settings
+  ./backend/scripts/build-docker.sh -t v1.0.0 -p                      # Build and push version 1.0.0
+  ./backend/scripts/build-docker.sh -l                                # Build only for local development
+  ./backend/scripts/build-docker.sh --no-cache                        # Force rebuild without cache
 ```
 
 ### Option 2: Manual Build Commands

@@ -2,20 +2,20 @@
   <div class="login-container">
     <div class="login-card">
       <div class="login-header">
-        <h1>Panel de Administración</h1>
+        <h1>Admin Panel</h1>
         <p>Employee Tracker System</p>
       </div>
       
       <form @submit.prevent="handleLogin" class="login-form">
         <div class="form-group">
-          <label for="username" class="form-label">Usuario</label>
+          <label for="username" class="form-label">Username</label>
           <input
             id="username"
             v-model="form.username"
             type="text"
             class="form-control"
             :class="{ error: errors.username }"
-            placeholder="Ingresa tu usuario"
+            placeholder="Enter your username"
             required
           />
           <div v-if="errors.username" class="form-error">
@@ -24,14 +24,14 @@
         </div>
 
         <div class="form-group">
-          <label for="password" class="form-label">Contraseña</label>
+          <label for="password" class="form-label">Password</label>
           <input
             id="password"
             v-model="form.password"
             type="password"
             class="form-control"
             :class="{ error: errors.password }"
-            placeholder="Ingresa tu contraseña"
+            placeholder="Enter your password"
             required
           />
           <div v-if="errors.password" class="form-error">
@@ -48,8 +48,8 @@
           class="btn btn-primary login-btn"
           :disabled="loading"
         >
-          <span v-if="loading">Iniciando sesión...</span>
-          <span v-else>Iniciar Sesión</span>
+          <span v-if="loading">Signing in...</span>
+          <span v-else>Sign In</span>
         </button>
       </form>
     </div>

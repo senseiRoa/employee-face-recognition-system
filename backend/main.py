@@ -54,7 +54,7 @@ origins = [
     "https://localhost",
     "http://localhost:8100",  # Ionic local dev
     "http://localhost:8101",  # Ionic local dev
-    "http://localhost:3000",  # Vue.js development server
+    "http://localhost:3031",  # Vue.js development server
     "capacitor://localhost",  # App en Android/iOS
     "http://localhost:4200",  # Angular local
     "https://tudominio.com",  # Producción

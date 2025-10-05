@@ -26,7 +26,7 @@ npm run dev
 ```
 
 ### 📍 URLs
-- **admin-panel (desarrollo)**: http://localhost:3000 (o el puerto que muestre Vite)
+- **admin-panel (desarrollo)**: http://localhost:3031 (o el puerto que muestre Vite)
 - **Backend API**: http://localhost:8081
 - **Proxy automático**: Todas las llamadas API se redirigen automáticamente
 

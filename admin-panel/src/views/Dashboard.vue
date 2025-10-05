@@ -1,12 +1,12 @@
 <template>
   <div class="dashboard">
-    <!-- Métricas principales -->
+    <!-- Main Metrics -->
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-icon">🏢</div>
         <div class="metric-content">
           <h3>{{ metrics.companies }}</h3>
-          <p>Empresas</p>
+          <p>Companies</p>
         </div>
       </div>
       
@@ -22,7 +22,7 @@
         <div class="metric-icon">👥</div>
         <div class="metric-content">
           <h3>{{ metrics.employees }}</h3>
-          <p>Empleados</p>
+          <p>Employees</p>
         </div>
       </div>
       
@@ -30,27 +30,27 @@
         <div class="metric-icon">📊</div>
         <div class="metric-content">
           <h3>{{ metrics.todayCheckIns }}</h3>
-          <p>Check-ins Hoy</p>
+          <p>Check-ins Today</p>
         </div>
       </div>
     </div>
 
-    <!-- Gráficos y estadísticas -->
+    <!-- Charts and Statistics -->
     <div class="charts-grid">
       <div class="chart-card">
-        <h3>Actividad de la Semana</h3>
+        <h3>Weekly Activity</h3>
         <canvas ref="weeklyChart"></canvas>
       </div>
       
       <div class="chart-card">
-        <h3>Estado de Empleados</h3>
+        <h3>Employee Status</h3>
         <canvas ref="statusChart"></canvas>
       </div>
     </div>
 
-    <!-- Actividad reciente -->
+    <!-- Recent Activity -->
     <div class="recent-activity">
-      <h3>Actividad Reciente</h3>
+      <h3>Recent Activity</h3>
       <div class="activity-list">
         <div
           v-for="activity in recentActivities"
@@ -125,18 +125,18 @@ export default {
         console.error('Error loading recent activities:', error)
         // Datos de ejemplo si no hay logs
         recentActivities.value = [
-          {
+            {
             id: 1,
             type: 'check_in',
-            description: 'Juan Pérez realizó check-in',
+            description: 'Juan Perez checked in',
             timestamp: new Date().toISOString()
-          },
-          {
+            },
+            {
             id: 2,
             type: 'check_out',
-            description: 'María García realizó check-out',
+            description: 'Maria Garcia checked out',
             timestamp: new Date(Date.now() - 300000).toISOString()
-          }
+            }
         ]
       }
     }
@@ -148,7 +148,7 @@ export default {
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
           datasets: [{
             label: 'Check-ins',
             data: [12, 19, 8, 15, 22, 10, 5],
@@ -190,7 +190,7 @@ export default {
       new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Activos', 'Inactivos', 'En Descanso'],
+            labels: ['Active', 'Inactive', 'On Break'],
           datasets: [{
             data: [65, 25, 10],
             backgroundColor: [

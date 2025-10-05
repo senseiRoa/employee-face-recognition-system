@@ -17,7 +17,7 @@
         
         <router-link to="/admin/companies" class="nav-item">
           <span class="nav-icon">🏢</span>
-          <span class="nav-text">Empresas</span>
+          <span class="nav-text">Companies</span>
         </router-link>
         
         <router-link to="/admin/warehouses" class="nav-item">
@@ -27,12 +27,12 @@
         
         <router-link to="/admin/employees" class="nav-item">
           <span class="nav-icon">👥</span>
-          <span class="nav-text">Empleados</span>
+          <span class="nav-text">Employees</span>
         </router-link>
         
         <router-link to="/admin/users" class="nav-item">
           <span class="nav-icon">👤</span>
-          <span class="nav-text">Usuarios</span>
+          <span class="nav-text">Users</span>
         </router-link>
         
         <router-link to="/admin/roles" class="nav-item">
@@ -47,7 +47,7 @@
         
         <router-link to="/admin/reports" class="nav-item">
           <span class="nav-icon">📈</span>
-          <span class="nav-text">Reportes</span>
+          <span class="nav-text">Reports</span>
         </router-link>
       </nav>
     </aside>
@@ -65,9 +65,9 @@
         
         <div class="header-right">
           <div class="user-menu">
-            <span class="user-name">{{ user?.name || 'Usuario' }}</span>
+            <span class="user-name">{{ user?.name || 'User' }}</span>
             <button @click="logout" class="btn btn-outline">
-              Cerrar Sesión
+              Log Out
             </button>
           </div>
         </div>

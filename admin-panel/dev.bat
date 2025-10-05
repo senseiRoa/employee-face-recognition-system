@@ -22,7 +22,7 @@ goto invalid
 :dev_mode
 echo.
 echo 🔥 Iniciando modo desarrollo...
-echo 📍 admin-panel: http://localhost:3000 (o puerto automatico)
+echo 📍 admin-panel: http://localhost:3031 (o puerto automatico)
 echo 📍 Asegurate de que el backend este corriendo en puerto 8081
 echo.
 cd admin-panel

@@ -108,7 +108,7 @@ The application consists of three main components:
 
 | Component | Purpose | Technology | Access |
 |-----------|---------|------------|---------|
-| **Admin Panel** | Management dashboard | Vue.js 3 | http://localhost:3000 |
+| **Admin Panel** | Management dashboard | Vue.js 3 | http://localhost:3031 |
 | **Backend API** | Core services & Face Recognition | FastAPI + Python | http://localhost:8081/docs |
 | **Employee App** | Mobile check-in/out | Ionic + Angular | http://localhost:8100 |
 

@@ -1,45 +1,45 @@
 <template>
   <div class="companies">
     <div class="page-header">
-      <h2>Gestión de Empresas</h2>
+      <h2>Company Management</h2>
       <button @click="showCreateModal = true" class="btn btn-primary">
         <span>➕</span>
-        Nueva Empresa
+        New Company
       </button>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filters -->
     <div class="filters">
       <div class="search-box">
         <input
           v-model="searchTerm"
           type="text"
-          placeholder="Buscar empresas..."
+          placeholder="Search companies..."
           class="form-control"
         />
       </div>
     </div>
 
-    <!-- Tabla de empresas -->
+    <!-- Companies table -->
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nombre</th>
+            <th>Name</th>
             <th>Email</th>
-            <th>Teléfono</th>
-            <th>Estado</th>
-            <th>Fecha Creación</th>
-            <th>Acciones</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Created At</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Cargando...</td>
+            <td colspan="7" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredCompanies.length === 0">
-            <td colspan="7" class="text-center">No hay empresas registradas</td>
+            <td colspan="7" class="text-center">No companies registered</td>
           </tr>
           <tr v-else v-for="company in filteredCompanies" :key="company.id">
             <td>{{ company.id }}</td>
@@ -48,7 +48,7 @@
             <td>{{ company.phone || '-' }}</td>
             <td>
               <span class="status-badge" :class="company.is_active ? 'active' : 'inactive'">
-                {{ company.is_active ? 'Activa' : 'Inactiva' }}
+                {{ company.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>{{ formatDate(company.created_at) }}</td>
@@ -57,14 +57,14 @@
                 <button
                   @click="editCompany(company)"
                   class="btn btn-outline btn-sm"
-                  title="Editar"
+                  title="Edit"
                 >
                   ✏️
                 </button>
                 <button
                   @click="deleteCompanyConfirm(company)"
                   class="btn btn-danger btn-sm"
-                  title="Eliminar"
+                  title="Delete"
                 >
                   🗑️
                 </button>
@@ -75,17 +75,17 @@
       </table>
     </div>
 
-    <!-- Modal de crear/editar empresa -->
+    <!-- Create/Edit company modal -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal">
         <div class="modal-header">
-          <h3>{{ editingCompany ? 'Editar Empresa' : 'Nueva Empresa' }}</h3>
+          <h3>{{ editingCompany ? 'Edit Company' : 'New Company' }}</h3>
           <button @click="closeModals" class="btn btn-outline">✕</button>
         </div>
         
         <form @submit.prevent="saveCompany" class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nombre *</label>
+            <label class="form-label">Name *</label>
             <input
               v-model="companyForm.name"
               type="text"
@@ -108,7 +108,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Teléfono</label>
+            <label class="form-label">Phone</label>
             <input
               v-model="companyForm.phone"
               type="tel"
@@ -119,7 +119,7 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">Dirección</label>
+            <label class="form-label">Address</label>
             <textarea
               v-model="companyForm.address"
               class="form-control"
@@ -133,40 +133,40 @@
                 v-model="companyForm.is_active"
                 type="checkbox"
               />
-              <span>Empresa activa</span>
+              <span>Active company</span>
             </label>
           </div>
         </form>
         
         <div class="modal-footer">
           <button @click="closeModals" type="button" class="btn btn-outline">
-            Cancelar
+            Cancel
           </button>
           <button @click="saveCompany" type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Guardando...' : 'Guardar' }}
+            {{ loading ? 'Saving...' : 'Save' }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Modal de confirmación de eliminación -->
+    <!-- Delete confirmation modal -->
     <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
       <div class="modal modal-sm">
         <div class="modal-header">
-          <h3>Confirmar Eliminación</h3>
+          <h3>Confirm Deletion</h3>
         </div>
         
         <div class="modal-body">
-          <p>¿Estás seguro de que quieres eliminar la empresa <strong>{{ companyToDelete?.name }}</strong>?</p>
-          <p class="text-warning">Esta acción no se puede deshacer.</p>
+          <p>Are you sure you want to delete the company <strong>{{ companyToDelete?.name }}</strong>?</p>
+          <p class="text-warning">This action cannot be undone.</p>
         </div>
         
         <div class="modal-footer">
           <button @click="showDeleteModal = false" class="btn btn-outline">
-            Cancelar
+            Cancel
           </button>
           <button @click="confirmDelete" class="btn btn-danger" :disabled="loading">
-            {{ loading ? 'Eliminando...' : 'Eliminar' }}
+            {{ loading ? 'Deleting...' : 'Delete' }}
           </button>
         </div>
       </div>

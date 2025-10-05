@@ -1,15 +1,15 @@
 <template>
   <div class="employees">
     <div class="page-header">
-      <h2>Gestión de Empleados</h2>
+      <h2>Employee Management</h2>
       <button @click="showCreateModal = true" class="btn btn-primary">
         <span>➕</span>
-        Nuevo Empleado
+        New Employee
       </button>
     </div>
 
     <div class="filters">
-      <input v-model="searchTerm" type="text" placeholder="Buscar empleados..." class="form-control" />
+      <input v-model="searchTerm" type="text" placeholder="Search employees..." class="form-control" />
     </div>
 
     <div class="table-container">
@@ -17,17 +17,17 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nombre</th>
+            <th>Name</th>
             <th>Email</th>
             <th>Warehouse</th>
-            <th>Foto</th>
-            <th>Estado</th>
-            <th>Acciones</th>
+            <th>Photo</th>
+            <th>Status</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Cargando...</td>
+            <td colspan="7" class="text-center">Loading...</td>
           </tr>
           <tr v-else v-for="employee in filteredEmployees" :key="employee.id">
             <td>{{ employee.id }}</td>
@@ -36,13 +36,13 @@
             <td>{{ employee.warehouse?.name || '-' }}</td>
             <td>
               <div class="photo-preview">
-                <img v-if="employee.img_base64" :src="'data:image/jpeg;base64,' + employee.img_base64" alt="Foto" />
-                <span v-else>Sin foto</span>
+                <img v-if="employee.img_base64" :src="'data:image/jpeg;base64,' + employee.img_base64" alt="Photo" />
+                <span v-else>No photo</span>
               </div>
             </td>
             <td>
               <span class="status-badge" :class="employee.is_active ? 'active' : 'inactive'">
-                {{ employee.is_active ? 'Activo' : 'Inactivo' }}
+                {{ employee.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>
@@ -56,16 +56,16 @@
       </table>
     </div>
 
-    <!-- Modal simplificado -->
+    <!-- Simplified Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3>Nuevo Empleado</h3>
+          <h3>New Employee</h3>
           <button @click="showCreateModal = false" class="btn btn-outline">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nombre *</label>
+            <label class="form-label">Name *</label>
             <input v-model="employeeForm.name" type="text" class="form-control" required />
           </div>
           <div class="form-group">
@@ -73,13 +73,13 @@
             <input v-model="employeeForm.email" type="email" class="form-control" />
           </div>
           <div class="form-group">
-            <label class="form-label">Foto</label>
+            <label class="form-label">Photo</label>
             <input @change="handlePhotoUpload" type="file" accept="image/*" class="form-control" />
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="showCreateModal = false" class="btn btn-outline">Cancelar</button>
-          <button @click="saveEmployee" class="btn btn-primary">Guardar</button>
+          <button @click="showCreateModal = false" class="btn btn-outline">Cancel</button>
+          <button @click="saveEmployee" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>

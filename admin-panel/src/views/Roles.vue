@@ -1,10 +1,10 @@
 <template>
   <div class="roles">
     <div class="page-header">
-      <h2>Gestión de Roles</h2>
+      <h2>Role Management</h2>
       <button @click="showCreateModal = true" class="btn btn-primary">
         <span>➕</span>
-        Nuevo Rol
+        New Role
       </button>
     </div>
 
@@ -13,16 +13,16 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nombre</th>
-            <th>Descripción</th>
-            <th>Permisos</th>
-            <th>Usuarios</th>
-            <th>Acciones</th>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Permissions</th>
+            <th>Users</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="6" class="text-center">Cargando...</td>
+            <td colspan="6" class="text-center">Loading...</td>
           </tr>
           <tr v-else v-for="role in roles" :key="role.id">
             <td>{{ role.id }}</td>
@@ -51,20 +51,20 @@
     <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3>Nuevo Rol</h3>
+          <h3>New Role</h3>
           <button @click="showCreateModal = false" class="btn btn-outline">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nombre *</label>
+            <label class="form-label">Name *</label>
             <input v-model="roleForm.name" type="text" class="form-control" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Descripción</label>
+            <label class="form-label">Description</label>
             <textarea v-model="roleForm.description" class="form-control" rows="3"></textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">Permisos</label>
+            <label class="form-label">Permissions</label>
             <div class="permissions-grid">
               <label v-for="permission in availablePermissions" :key="permission" class="checkbox-label">
                 <input 
@@ -78,8 +78,8 @@
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="showCreateModal = false" class="btn btn-outline">Cancelar</button>
-          <button @click="saveRole" class="btn btn-primary">Guardar</button>
+          <button @click="showCreateModal = false" class="btn btn-outline">Cancel</button>
+          <button @click="saveRole" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>

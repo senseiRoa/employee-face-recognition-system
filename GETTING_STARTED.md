@@ -83,7 +83,7 @@ This is a complete **Employee Time Tracking System using Facial Recognition** bu
 
 ✅ **Access Points:**
 - **Backend API**: http://localhost:8081/docs
-- **Admin Panel**: http://localhost:3000
+- **Admin Panel**: http://localhost:3031
 
 ### Option 2: Manual Setup (All Components)
 
@@ -148,7 +148,7 @@ If you prefer manual setup or want to develop all components:
 3. **Development mode** (recommended)
    ```bash
    npm run dev
-   # Access at http://localhost:3000
+   # Access at http://localhost:3031
    ```
 
 4. **Production build** (optional)
@@ -272,7 +272,7 @@ Once everything is running:
 |---------|-------------|------------|
 | **Backend API** | http://localhost:8081 | Your server:8081 |
 | **API Documentation** | http://localhost:8081/docs | Your server:8081/docs |
-| **Admin Panel** | http://localhost:3000 | http://localhost:8081/admin/ |
+| **Admin Panel** | http://localhost:3031 | http://localhost:8081/admin/ |
 | **Mobile App** | http://localhost:8100 | Native app |
 
 ## 🔧 Development Workflows

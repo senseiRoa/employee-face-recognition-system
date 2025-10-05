@@ -1,35 +1,35 @@
 <template>
   <div class="reports">
     <div class="page-header">
-      <h2>Reportes y Estadísticas</h2>
+      <h2>Reports & Statistics</h2>
       <div class="header-actions">
         <button @click="generateReport" class="btn btn-primary" :disabled="loading">
-          📊 Generar Reporte
+          📊 Generate Report
         </button>
       </div>
     </div>
 
-    <!-- Filtros de reporte -->
+    <!-- Report Filters -->
     <div class="report-filters">
       <div class="filter-group">
-        <label class="form-label">Tipo de Reporte</label>
+        <label class="form-label">Report Type</label>
         <select v-model="reportConfig.type" class="form-control">
-          <option value="attendance">Asistencia</option>
-          <option value="employees">Empleados</option>
+          <option value="attendance">Attendance</option>
+          <option value="employees">Employees</option>
           <option value="warehouses">Warehouses</option>
-          <option value="activity">Actividad</option>
+          <option value="activity">Activity</option>
         </select>
       </div>
       <div class="filter-group">
-        <label class="form-label">Fecha Desde</label>
-        <input v-model="reportConfig.dateFrom" type="date" class="form-control" />
+        <label class="form-label">Start Date</label>
+        <input v-model="reportConfig.dateFrom" type="date" class="form-control" lang="en" />
       </div>
       <div class="filter-group">
-        <label class="form-label">Fecha Hasta</label>
-        <input v-model="reportConfig.dateTo" type="date" class="form-control" />
+        <label class="form-label">End Date</label>
+        <input v-model="reportConfig.dateTo" type="date" class="form-control" lang="en" />
       </div>
       <div class="filter-group">
-        <label class="form-label">Formato</label>
+        <label class="form-label">Format</label>
         <select v-model="reportConfig.format" class="form-control">
           <option value="pdf">PDF</option>
           <option value="csv">CSV</option>
@@ -38,13 +38,13 @@
       </div>
     </div>
 
-    <!-- Estadísticas rápidas -->
+    <!-- Quick Stats -->
     <div class="stats-grid">
       <div class="stat-card">
         <div class="stat-icon">👥</div>
         <div class="stat-content">
           <h3>{{ stats.totalEmployees }}</h3>
-          <p>Total Empleados</p>
+          <p>Total Employees</p>
         </div>
       </div>
       
@@ -52,7 +52,7 @@
         <div class="stat-icon">📍</div>
         <div class="stat-content">
           <h3>{{ stats.totalCheckIns }}</h3>
-          <p>Check-ins Hoy</p>
+          <p>Check-ins Today</p>
         </div>
       </div>
       
@@ -60,7 +60,7 @@
         <div class="stat-icon">🏭</div>
         <div class="stat-content">
           <h3>{{ stats.activeWarehouses }}</h3>
-          <p>Warehouses Activos</p>
+          <p>Active Warehouses</p>
         </div>
       </div>
       
@@ -68,27 +68,27 @@
         <div class="stat-icon">⏰</div>
         <div class="stat-content">
           <h3>{{ stats.avgWorkingHours }}</h3>
-          <p>Promedio Horas/Día</p>
+          <p>Average Hours/Day</p>
         </div>
       </div>
     </div>
 
-    <!-- Gráficos -->
+    <!-- Charts -->
     <div class="charts-section">
       <div class="chart-container">
-        <h3>Asistencia por Día</h3>
+        <h3>Attendance by Day</h3>
         <canvas ref="attendanceChart"></canvas>
       </div>
       
       <div class="chart-container">
-        <h3>Empleados por Warehouse</h3>
+        <h3>Employees per Warehouse</h3>
         <canvas ref="warehouseChart"></canvas>
       </div>
     </div>
 
-    <!-- Tabla de reportes recientes -->
+    <!-- Recent Reports Table -->
     <div class="recent-reports">
-      <h3>Reportes Recientes</h3>
+      <h3>Recent Reports</h3>
       <div class="reports-list">
         <div v-for="report in recentReports" :key="report.id" class="report-item">
           <div class="report-info">
@@ -98,21 +98,21 @@
           </div>
           <div class="report-actions">
             <button @click="downloadReport(report)" class="btn btn-outline btn-sm">
-              📥 Descargar
+              📥 Download
             </button>
             <button @click="viewReport(report)" class="btn btn-primary btn-sm">
-              👁️ Ver
+              👁️ View
             </button>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal de vista previa del reporte -->
+    <!-- Report Preview Modal -->
     <div v-if="previewReport" class="modal-overlay" @click.self="previewReport = null">
       <div class="modal modal-lg">
         <div class="modal-header">
-          <h3>Vista Previa: {{ previewReport.name }}</h3>
+          <h3>Preview: {{ previewReport.name }}</h3>
           <button @click="previewReport = null" class="btn btn-outline">✕</button>
         </div>
         <div class="modal-body">
@@ -124,19 +124,19 @@
               height="500"
             ></iframe>
             <div v-else class="no-preview">
-              <p>Vista previa no disponible para este tipo de archivo.</p>
+              <p>Preview not available for this file type.</p>
               <button @click="downloadReport(previewReport)" class="btn btn-primary">
-                Descargar Archivo
+                Download File
               </button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
           <button @click="downloadReport(previewReport)" class="btn btn-primary">
-            Descargar
+            Download
           </button>
           <button @click="previewReport = null" class="btn btn-outline">
-            Cerrar
+            Close
           </button>
         </div>
       </div>
@@ -149,7 +149,6 @@ import { ref, reactive, onMounted, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 import api from '@/composables/api'
 import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 Chart.register(...registerables)
 
@@ -206,16 +205,16 @@ export default {
       recentReports.value = [
         {
           id: 1,
-          name: 'Reporte de Asistencia Semanal',
-          description: 'Asistencia de empleados del 1-7 de Octubre',
+          name: 'Weekly Attendance Report',
+          description: 'Employee attendance from October 1-7',
           created_at: new Date().toISOString(),
           format: 'pdf',
           url: '/api/reports/1/download'
         },
         {
           id: 2,
-          name: 'Estadísticas de Warehouses',
-          description: 'Resumen de actividad por warehouse',
+          name: 'Warehouse Statistics',
+          description: 'Activity summary by warehouse',
           created_at: new Date(Date.now() - 86400000).toISOString(),
           format: 'excel',
           url: '/api/reports/2/download'
@@ -230,7 +229,7 @@ export default {
       new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
           datasets: [{
             label: 'Check-ins',
             data: [22, 25, 18, 28, 24, 12, 8],
@@ -346,7 +345,7 @@ export default {
     }
 
     const formatDate = (dateString) => {
-      return format(new Date(dateString), 'dd/MM/yyyy HH:mm', { locale: es })
+      return format(new Date(dateString), 'MM/dd/yyyy HH:mm')
     }
 
     onMounted(async () => {

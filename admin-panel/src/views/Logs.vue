@@ -1,62 +1,62 @@
 <template>
   <div class="logs">
     <div class="page-header">
-      <h2>Auditoría y Logs</h2>
+      <h2>Audit & Logs</h2>
       <div class="header-actions">
         <button @click="refreshLogs" class="btn btn-outline" :disabled="loading">
-          🔄 Actualizar
+          🔄 Refresh
         </button>
         <button @click="exportLogs" class="btn btn-primary">
-          📊 Exportar
+          📊 Export
         </button>
       </div>
     </div>
 
-    <!-- Filtros -->
+    <!-- Filters -->
     <div class="filters">
       <div class="filter-group">
-        <label class="form-label">Desde</label>
+        <label class="form-label">From</label>
         <input v-model="filters.dateFrom" type="date" class="form-control" />
       </div>
       <div class="filter-group">
-        <label class="form-label">Hasta</label>
+        <label class="form-label">To</label>
         <input v-model="filters.dateTo" type="date" class="form-control" />
       </div>
       <div class="filter-group">
-        <label class="form-label">Tipo</label>
+        <label class="form-label">Type</label>
         <select v-model="filters.actionType" class="form-control">
-          <option value="">Todos</option>
+          <option value="">All</option>
           <option value="check_in">Check-in</option>
           <option value="check_out">Check-out</option>
           <option value="login">Login</option>
         </select>
       </div>
       <div class="filter-group">
-        <label class="form-label">Empleado</label>
-        <input v-model="filters.employeeName" type="text" placeholder="Buscar empleado..." class="form-control" />
+        <label class="form-label">Employee</label>
+        <input v-model="filters.employeeName" type="text" placeholder="Search employee..." class="form-control" />
       </div>
     </div>
 
-    <!-- Tabla de logs -->
+    <!-- Logs table -->
     <div class="table-container">
       <table class="table">
         <thead>
           <tr>
-            <th>Fecha/Hora</th>
-            <th>Empleado</th>
-            <th>Acción</th>
+            <th>Date/Time</th>
+            <th>Employee</th>
+            <th>Action</th>
             <th>Warehouse</th>
             <th>IP</th>
-            <th>Estado</th>
-            <th>Detalles</th>
+            <th>Status</th>
+            <th>Details</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Cargando logs...</td>
+            <td colspan="7" class="text-center">Loading logs...</td>
           </tr>
           <tr v-else-if="filteredLogs.length === 0">
-            <td colspan="7" class="text-center">No hay logs para mostrar</td>
+            <td colspan="7" class="text-center">No logs to display</td>
           </tr>
           <tr v-else v-for="log in filteredLogs" :key="log.id">
             <td>{{ formatDateTime(log.timestamp) }}</td>
@@ -70,7 +70,7 @@
             <td>{{ log.ip_address || '-' }}</td>
             <td>
               <span class="status-badge" :class="log.success ? 'success' : 'error'">
-                {{ log.success ? 'Exitoso' : 'Error' }}
+                {{ log.success ? 'Success' : 'Error' }}
               </span>
             </td>
             <td>
@@ -79,7 +79,7 @@
                 @click="showLogDetails(log)" 
                 class="btn btn-outline btn-sm"
               >
-                Ver
+                View
               </button>
             </td>
           </tr>
@@ -87,51 +87,51 @@
       </table>
     </div>
 
-    <!-- Paginación simple -->
+    <!-- Simple pagination -->
     <div class="pagination">
       <button 
         @click="prevPage" 
         :disabled="currentPage === 1" 
         class="btn btn-outline"
       >
-        Anterior
+        Previous
       </button>
       <span class="page-info">
-        Página {{ currentPage }} de {{ totalPages }}
+        Page {{ currentPage }} of {{ totalPages }}
       </span>
       <button 
         @click="nextPage" 
         :disabled="currentPage === totalPages" 
         class="btn btn-outline"
       >
-        Siguiente
+        Next
       </button>
     </div>
 
-    <!-- Modal de detalles -->
+    <!-- Details modal -->
     <div v-if="selectedLog" class="modal-overlay" @click.self="selectedLog = null">
       <div class="modal">
         <div class="modal-header">
-          <h3>Detalles del Log</h3>
+          <h3>Log Details</h3>
           <button @click="selectedLog = null" class="btn btn-outline">✕</button>
         </div>
         <div class="modal-body">
           <div class="log-detail">
-            <strong>Fecha/Hora:</strong> {{ formatDateTime(selectedLog.timestamp) }}
+            <strong>Date/Time:</strong> {{ formatDateTime(selectedLog.timestamp) }}
           </div>
           <div class="log-detail">
-            <strong>Empleado:</strong> {{ selectedLog.employee_name || '-' }}
+            <strong>Employee:</strong> {{ selectedLog.employee_name || '-' }}
           </div>
           <div class="log-detail">
-            <strong>Acción:</strong> {{ getActionLabel(selectedLog.action_type) }}
+            <strong>Action:</strong> {{ getActionLabel(selectedLog.action_type) }}
           </div>
           <div class="log-detail">
-            <strong>Detalles:</strong>
-            <pre>{{ selectedLog.details || 'Sin detalles adicionales' }}</pre>
+            <strong>Details:</strong>
+            <pre>{{ selectedLog.details || 'No additional details' }}</pre>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="selectedLog = null" class="btn btn-primary">Cerrar</button>
+          <button @click="selectedLog = null" class="btn btn-primary">Close</button>
         </div>
       </div>
     </div>
@@ -201,26 +201,26 @@ export default {
         console.error('Error fetching logs:', error)
         // Datos de ejemplo para desarrollo
         logs.value = [
-          {
+            {
             id: 1,
             timestamp: new Date().toISOString(),
-            employee_name: 'Juan Pérez',
+            employee_name: 'Juan Perez',
             action_type: 'check_in',
-            warehouse_name: 'Warehouse Central',
+            warehouse_name: 'Central Warehouse',
             ip_address: '192.168.1.100',
             success: true,
-            details: 'Check-in exitoso mediante reconocimiento facial'
-          },
-          {
+            details: 'Successful check-in via facial recognition'
+            },
+            {
             id: 2,
             timestamp: new Date(Date.now() - 300000).toISOString(),
-            employee_name: 'María García',
+            employee_name: 'Maria Garcia',
             action_type: 'check_out',
-            warehouse_name: 'Warehouse Norte',
+            warehouse_name: 'North Warehouse',
             ip_address: '192.168.1.101',
             success: true,
-            details: 'Check-out exitoso'
-          }
+            details: 'Successful check-out'
+            }
         ]
       } finally {
         loading.value = false

@@ -1,10 +1,10 @@
 <template>
   <div class="warehouses">
     <div class="page-header">
-      <h2>Gestión de Warehouses</h2>
+      <h2>Warehouse Management</h2>
       <button @click="showCreateModal = true" class="btn btn-primary">
         <span>➕</span>
-        Nuevo Warehouse
+        New Warehouse
       </button>
     </div>
 
@@ -13,7 +13,7 @@
         <input
           v-model="searchTerm"
           type="text"
-          placeholder="Buscar warehouses..."
+          placeholder="Search warehouses..."
           class="form-control"
         />
       </div>
@@ -24,20 +24,20 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Nombre</th>
-            <th>Empresa</th>
-            <th>Ubicación</th>
-            <th>Estado</th>
-            <th>Empleados</th>
-            <th>Acciones</th>
+            <th>Name</th>
+            <th>Company</th>
+            <th>Location</th>
+            <th>Status</th>
+            <th>Employees</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Cargando...</td>
+            <td colspan="7" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredWarehouses.length === 0">
-            <td colspan="7" class="text-center">No hay warehouses registrados</td>
+            <td colspan="7" class="text-center">No warehouses registered</td>
           </tr>
           <tr v-else v-for="warehouse in filteredWarehouses" :key="warehouse.id">
             <td>{{ warehouse.id }}</td>
@@ -46,7 +46,7 @@
             <td>{{ warehouse.location || '-' }}</td>
             <td>
               <span class="status-badge" :class="warehouse.is_active ? 'active' : 'inactive'">
-                {{ warehouse.is_active ? 'Activo' : 'Inactivo' }}
+                {{ warehouse.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>{{ warehouse.employees_count || 0 }}</td>
@@ -61,34 +61,34 @@
       </table>
     </div>
 
-    <!-- Modal crear/editar (simplificado por brevedad) -->
+    <!-- Create/Edit Modal (simplified for brevity) -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal">
         <div class="modal-header">
-          <h3>{{ editingWarehouse ? 'Editar Warehouse' : 'Nuevo Warehouse' }}</h3>
+          <h3>{{ editingWarehouse ? 'Edit Warehouse' : 'New Warehouse' }}</h3>
           <button @click="closeModals" class="btn btn-outline">✕</button>
         </div>
         
         <form @submit.prevent="saveWarehouse" class="modal-body">
           <div class="form-group">
-            <label class="form-label">Nombre *</label>
+            <label class="form-label">Name *</label>
             <input v-model="warehouseForm.name" type="text" class="form-control" required />
           </div>
           <div class="form-group">
-            <label class="form-label">Ubicación</label>
+            <label class="form-label">Location</label>
             <input v-model="warehouseForm.location" type="text" class="form-control" />
           </div>
           <div class="form-group">
             <label class="checkbox-label">
               <input v-model="warehouseForm.is_active" type="checkbox" />
-              <span>Warehouse activo</span>
+              <span>Active warehouse</span>
             </label>
           </div>
         </form>
         
         <div class="modal-footer">
-          <button @click="closeModals" type="button" class="btn btn-outline">Cancelar</button>
-          <button @click="saveWarehouse" class="btn btn-primary">Guardar</button>
+          <button @click="closeModals" type="button" class="btn btn-outline">Cancel</button>
+          <button @click="saveWarehouse" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>

@@ -1,10 +1,10 @@
 <template>
   <div class="users">
     <div class="page-header">
-      <h2>Gestión de Usuarios</h2>
+      <h2>User Management</h2>
       <button @click="showCreateModal = true" class="btn btn-primary">
         <span>➕</span>
-        Nuevo Usuario
+        New User
       </button>
     </div>
 
@@ -13,17 +13,17 @@
         <thead>
           <tr>
             <th>ID</th>
-            <th>Usuario</th>
+            <th>Username</th>
             <th>Email</th>
-            <th>Rol</th>
-            <th>Estado</th>
-            <th>Último Login</th>
-            <th>Acciones</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Last Login</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Cargando...</td>
+            <td colspan="7" class="text-center">Loading...</td>
           </tr>
           <tr v-else v-for="user in users" :key="user.id">
             <td>{{ user.id }}</td>
@@ -32,7 +32,7 @@
             <td>{{ user.role?.name || '-' }}</td>
             <td>
               <span class="status-badge" :class="user.is_active ? 'active' : 'inactive'">
-                {{ user.is_active ? 'Activo' : 'Inactivo' }}
+                {{ user.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>{{ formatDate(user.last_login) }}</td>
@@ -47,16 +47,16 @@
       </table>
     </div>
 
-    <!-- Modal básico -->
+    <!-- Basic Modal -->
     <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
       <div class="modal">
         <div class="modal-header">
-          <h3>Nuevo Usuario</h3>
+          <h3>New User</h3>
           <button @click="showCreateModal = false" class="btn btn-outline">✕</button>
         </div>
         <div class="modal-body">
           <div class="form-group">
-            <label class="form-label">Usuario *</label>
+            <label class="form-label">Username *</label>
             <input v-model="userForm.username" type="text" class="form-control" required />
           </div>
           <div class="form-group">
@@ -64,13 +64,13 @@
             <input v-model="userForm.email" type="email" class="form-control" />
           </div>
           <div class="form-group">
-            <label class="form-label">Contraseña *</label>
+            <label class="form-label">Password *</label>
             <input v-model="userForm.password" type="password" class="form-control" required />
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="showCreateModal = false" class="btn btn-outline">Cancelar</button>
-          <button @click="saveUser" class="btn btn-primary">Guardar</button>
+          <button @click="showCreateModal = false" class="btn btn-outline">Cancel</button>
+          <button @click="saveUser" class="btn btn-primary">Save</button>
         </div>
       </div>
     </div>

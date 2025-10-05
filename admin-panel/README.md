@@ -35,7 +35,7 @@ python -m uvicorn main:app --host 0.0.0.0 --port 8081 --reload
 cd admin-panel
 npm run dev
 ```
-- **admin-panel:** `http://localhost:3000` (con proxy automático al backend)
+- **admin-panel:** `http://localhost:3031` (con proxy automático al backend)
 - **Backend API:** `http://localhost:8081`
 - **Ventajas:** Hot reload, debugging, development tools
 

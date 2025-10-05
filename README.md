@@ -1,9 +1,7 @@
 # 🚀 Employee Face Recognition System
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-green.svg)](https://fastapi.tiangolo.com/)
-[![Vue.js## 🎯 Key Features
-
-### 🖥️ Admin Panel (Vue.js 3)ttps://img.shields.io/badge/Vue.js-3.4+-brightgreen.svg)](https://vuejs.org/)
+[![Vue.js](https://img.shields.io/badge/Vue.js-3.4+-brightgreen.svg)](https://vuejs.org/)
 [![Ionic](https://img.shields.io/badge/Ionic-8.0-blue.svg)](https://ionicframework.com/)
 [![Angular](https://img.shields.io/badge/Angular-20.0-red.svg)](https://angular.io/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)

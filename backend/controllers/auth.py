@@ -83,4 +83,18 @@ def get_current_user_info(db: Session = Depends(get_db)):
     (requiere implementar dependencia de autenticación)
     """
     # TODO: Implementar cuando se tenga la dependencia de usuario actual
+    # try:
+    #     result = auth_service.login(
+    #         db=db,
+    #         username_or_email=login_data.username_or_email,
+    #         password=login_data.password,
+    #     )
+    #     return result
+    # except HTTPException as e:
+    #     raise e
+    # except Exception as e:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+    #         detail=f"Login error: {str(e)}",
+    #     )
     return {"message": "Endpoint para obtener información del usuario actual"}

@@ -1,7 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import create_engine
+import os
 
+# Panel de administración Vue.js integrado
 from database import SessionLocal, DATABASE_URL
 from controllers import (
     employees,
@@ -49,6 +52,7 @@ origins = [
     "https://localhost",
     "http://localhost:8100",  # Ionic local dev
     "http://localhost:8101",  # Ionic local dev
+    "http://localhost:3000",  # Vue.js development server
     "capacitor://localhost",  # App en Android/iOS
     "http://localhost:4200",  # Angular local
     "https://tudominio.com",  # Producción
@@ -77,6 +81,14 @@ if PASSWORD_CONTROLLER_AVAILABLE:
 else:
     print("⚠️ Password management endpoints disabled")
 
+# Configurar archivos estáticos para el panel de administración
+admin_static_path = os.path.join(os.path.dirname(__file__), "www", "admin")
+if os.path.exists(admin_static_path):
+    app.mount("/admin", StaticFiles(directory=admin_static_path, html=True), name="admin")
+    print(f"✅ Admin panel mounted at /admin from {admin_static_path}")
+else:
+    print(f"⚠️ Admin panel directory not found: {admin_static_path}")
+    print("💡 Build the frontend first: cd frontend && npm run build && npm run copy-to-www")
 
 @app.get("/health")
 def health():

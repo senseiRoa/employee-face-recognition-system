@@ -16,10 +16,13 @@ Before deploying, ensure you have built the Docker image using our build process
 docker run -d \
   --name face-recognition-app \
   -p 8081:8081 \
-  -e DB_HOST=your-db-host \
-  -e DB_USER=your-db-user \
-  -e DB_PASSWORD=your-db-password \
-  -e JWT_SECRET_KEY=your-secret-key \
+  -e DB_HOST=localhost \
+  -e DB_USER=root \
+  -e DB_PASSWORD=m634kkkd/* \
+  -e DB_DATABASE=timeTrackerDB \
+  -e DB_PORT=3307 \
+  -e JWT_SECRET_KEY=8f7b2c1e5d9a4e6f3b7c0d2a6e1f4b8c \
+  -e ACCESS_TOKEN_EXPIRE_MINUTES=1440 \
   steelerp.azurecr.io/face_recognition_backend:latest
 ```
 

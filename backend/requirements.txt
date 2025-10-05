@@ -14,3 +14,10 @@ python-jose[cryptography]
 bcrypt==4.0.1 
 passlib[bcrypt]
 pydantic[email]
+
+# Testing dependencies
+pytest
+pytest-asyncio
+pytest-cov
+coverage
+httpx

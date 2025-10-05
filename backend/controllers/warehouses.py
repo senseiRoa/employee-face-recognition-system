@@ -74,6 +74,14 @@ def get_warehouse(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )
+    
+    # Verificar permisos: solo admin o usuarios de la misma compañía
+    if current_user.role.name != "admin" and warehouse.company_id != current_user.company_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to access this warehouse"
+        )
+    
     return warehouse
 
 

@@ -90,6 +90,8 @@ class UserCreate(BaseModel):
     username: str
     password: str
     email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     is_active: bool = True
 
 
@@ -98,6 +100,8 @@ class UserUpdate(BaseModel):
     username: Optional[str] = None
     password: Optional[str] = None
     email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     is_active: Optional[bool] = None
 
 
@@ -107,6 +111,8 @@ class User(BaseModel):
     role_id: int
     username: str
     email: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
     is_active: bool
     created_at: datetime.datetime
 

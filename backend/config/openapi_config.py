@@ -34,13 +34,12 @@ def configure_openapi_schema(app: FastAPI) -> None:
                 "type": "http",
                 "scheme": "bearer",
                 "bearerFormat": "JWT",
-                "description": "Ingrese el token JWT (sin 'Bearer' al inicio)",
+                "description": "Ingrese el token JWT obtenido del endpoint /auth/login",
             }
         }
 
-        # Aplicar seguridad JWT por defecto a endpoints protegidos
-        # FastAPI automáticamente aplicará esto a endpoints que usen dependencias de seguridad
-        openapi_schema["security"] = [{"BearerAuth": []}]
+        # NO aplicar seguridad global - dejar que FastAPI maneje esto automáticamente
+        # basado en las dependencias de cada endpoint
 
         app.openapi_schema = openapi_schema
         return app.openapi_schema

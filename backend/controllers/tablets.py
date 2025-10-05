@@ -6,7 +6,7 @@ from database import get_db
 from schemas import Tablet, TabletCreate, TabletUpdate
 from services import tablet_service
 from dependencies import get_current_user
-from models import Company
+from models import User
 
 router = APIRouter()
 
@@ -15,7 +15,7 @@ router = APIRouter()
 def create_tablet(
     tablet: TabletCreate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return tablet_service.create_tablet(db, tablet)
 
@@ -26,7 +26,7 @@ def list_tablets(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return tablet_service.get_tablets(db, warehouse_id=warehouse_id, skip=skip, limit=limit)
 
@@ -35,7 +35,7 @@ def list_tablets(
 def get_tablet(
     tablet_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     tablet = tablet_service.get_tablet(db, tablet_id)
     if not tablet:
@@ -51,7 +51,7 @@ def update_tablet(
     tablet_id: int,
     tablet_update: TabletUpdate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     tablet = tablet_service.update_tablet(db, tablet_id, tablet_update)
     if not tablet:
@@ -66,7 +66,7 @@ def update_tablet(
 def sync_tablet(
     tablet_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     tablet = tablet_service.update_tablet_sync(db, tablet_id)
     if not tablet:
@@ -81,7 +81,7 @@ def sync_tablet(
 def delete_tablet(
     tablet_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     success = tablet_service.delete_tablet(db, tablet_id)
     if not success:

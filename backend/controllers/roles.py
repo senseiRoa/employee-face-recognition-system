@@ -6,7 +6,7 @@ from database import get_db
 from schemas import Role, RoleCreate, RoleUpdate
 from services import role_service
 from dependencies import get_current_user
-from models import Company
+from models import User
 
 router = APIRouter()
 
@@ -15,7 +15,7 @@ router = APIRouter()
 def create_role(
     role: RoleCreate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     existing_role = role_service.get_role_by_name(db, role.name)
     if existing_role:
@@ -31,7 +31,7 @@ def list_roles(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return role_service.get_roles(db, skip=skip, limit=limit)
 
@@ -40,7 +40,7 @@ def list_roles(
 def get_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     role = role_service.get_role(db, role_id)
     if not role:
@@ -56,7 +56,7 @@ def update_role(
     role_id: int,
     role_update: RoleUpdate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     role = role_service.update_role(db, role_id, role_update)
     if not role:
@@ -71,7 +71,7 @@ def update_role(
 def delete_role(
     role_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     success = role_service.delete_role(db, role_id)
     if not success:

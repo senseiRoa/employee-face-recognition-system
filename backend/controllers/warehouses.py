@@ -6,7 +6,7 @@ from database import get_db
 from schemas import Warehouse, WarehouseCreate, WarehouseUpdate
 from services import warehouse_service
 from dependencies import get_current_user
-from models import Company
+from models import User
 
 router = APIRouter()
 
@@ -15,8 +15,30 @@ router = APIRouter()
 def create_warehouse(
     warehouse: WarehouseCreate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
+    # Solo admins y managers pueden crear warehouses
+    if current_user.role.name == "employee":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to create warehouses",
+        )
+
+    # Si no es admin, solo puede crear warehouses en su propia compañía
+    target_company_id = (
+        warehouse.company_id
+        if hasattr(warehouse, "company_id")
+        else current_user.company_id
+    )
+    if (
+        current_user.role.name != "admin"
+        and target_company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Can only create warehouses in your own company",
+        )
+
     return warehouse_service.create_warehouse(db, warehouse)
 
 
@@ -26,22 +48,31 @@ def list_warehouses(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    return warehouse_service.get_warehouses(db, company_id=company_id, skip=skip, limit=limit)
+    # Determinar qué warehouses puede ver el usuario
+    if current_user.role.name == "admin":
+        # Admin puede especificar company_id o ver todos
+        filter_company_id = company_id
+    else:
+        # Otros roles solo pueden ver warehouses de su compañía
+        filter_company_id = current_user.company_id
+
+    return warehouse_service.get_warehouses(
+        db, company_id=filter_company_id, skip=skip, limit=limit
+    )
 
 
 @router.get("/{warehouse_id}", response_model=Warehouse)
 def get_warehouse(
     warehouse_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     warehouse = warehouse_service.get_warehouse(db, warehouse_id)
     if not warehouse:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Warehouse not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )
     return warehouse
 
@@ -51,13 +82,12 @@ def update_warehouse(
     warehouse_id: int,
     warehouse_update: WarehouseUpdate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     warehouse = warehouse_service.update_warehouse(db, warehouse_id, warehouse_update)
     if not warehouse:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Warehouse not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )
     return warehouse
 
@@ -66,11 +96,10 @@ def update_warehouse(
 def delete_warehouse(
     warehouse_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     success = warehouse_service.delete_warehouse(db, warehouse_id)
     if not success:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Warehouse not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )

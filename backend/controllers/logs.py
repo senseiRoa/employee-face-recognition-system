@@ -7,7 +7,7 @@ from database import get_db
 from services import log_service
 from schemas import AccessLog, LoginLog, UserLoginLog
 from dependencies import get_current_user
-from models import Company
+from models import User
 
 router = APIRouter()
 
@@ -21,7 +21,7 @@ def list_access_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return log_service.get_access_logs(
         db,
@@ -42,7 +42,7 @@ def list_login_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return log_service.get_login_logs(
         db,
@@ -62,7 +62,7 @@ def list_user_login_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return log_service.get_user_login_logs(
         db,

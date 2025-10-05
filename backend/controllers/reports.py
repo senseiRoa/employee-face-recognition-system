@@ -6,7 +6,7 @@ from datetime import datetime
 from database import get_db
 from services import report_service
 from dependencies import get_current_user
-from models import Company
+from models import User
 
 router = APIRouter()
 
@@ -18,7 +18,7 @@ def get_checkin_report(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     results = report_service.get_employee_checkin_report(
         db, 
@@ -47,7 +47,7 @@ def get_warehouse_activity(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     results = report_service.get_warehouse_activity_report(
         db,
@@ -73,7 +73,7 @@ def get_frequent_employees(
     days: int = Query(7, ge=1, le=365),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     results = report_service.get_frequent_employees(
         db,

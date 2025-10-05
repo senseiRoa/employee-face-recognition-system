@@ -13,7 +13,7 @@ from services.face_recognition_service import (
 from services import employee_service
 from models import Employee as EmployeeModel, FaceEncoding, AccessLog
 from dependencies import get_current_user
-from models import Company
+from models import User
 import numpy as np
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
@@ -27,7 +27,7 @@ TOLERANCE = 0.6
 def register_face(
     req: RegisterFaceReq,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     enc = compute_encoding(req.image_base64)
     enc_s = serialize_encoding(enc)
@@ -58,7 +58,7 @@ def register_face(
 def check_in_out(
     req: CheckReq,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user),
+    current_user: User = Depends(get_current_user),
 ):
     probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
 
@@ -119,7 +119,7 @@ def list_employees(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return employee_service.get_employees(db, warehouse_id=warehouse_id, skip=skip, limit=limit)
 
@@ -128,7 +128,7 @@ def list_employees(
 def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     employee = employee_service.get_employee(db, employee_id)
     if not employee:
@@ -140,7 +140,7 @@ def get_employee(
 def create_employee(
     employee: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     return employee_service.create_employee(db, employee)
 
@@ -150,7 +150,7 @@ def update_employee(
     employee_id: int,
     employee_update: EmployeeUpdate,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     employee = employee_service.update_employee(db, employee_id, employee_update)
     if not employee:
@@ -162,7 +162,7 @@ def update_employee(
 def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: Company = Depends(get_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     success = employee_service.delete_employee(db, employee_id)
     if not success:

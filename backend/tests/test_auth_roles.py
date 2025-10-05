@@ -75,7 +75,7 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from database import get_db, Base
 from models import User, Role, Company
-from utils.password import hash_password
+from utils.security import get_password_hash as hash_password
 
 # Configuración de base de datos de prueba en memoria
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"

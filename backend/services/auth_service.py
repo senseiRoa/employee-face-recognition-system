@@ -1,22 +1,22 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from services.user_service import get_user_by_username, get_user_by_email
-from utils.password import verify_password
+from utils.security import verify_password
 from utils.jwt_handler import create_access_token
 
 
 def login(db: Session, username_or_email: str, password: str) -> dict:
     """
-    Authenticate user by username or email
+    Autenticar usuario por username o email
     """
-    # Try by username first
+    # Intentar por username primero
     user = get_user_by_username(db, username_or_email)
 
-    # If not found by username, try by email
+    # Si no se encuentra por username, intentar por email
     if not user:
         user = get_user_by_email(db, username_or_email)
 
-    # Check if user exists and password is correct
+    # Verificar si el usuario existe y la contraseña es correcta
     if not user or not verify_password(password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -24,14 +24,14 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Check if user is active
+    # Verificar si el usuario está activo
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is disabled",
         )
 
-    # Create token with user information
+    # Crear token con información del usuario
     access_token = create_access_token(
         data={
             "sub": user.username,
@@ -65,14 +65,14 @@ def register_user(
     first_name: str = None,
     last_name: str = None,
     company_id: int = None,
-    role_id: int = 3,  # Default role 'employee'
+    role_id: int = 3,  # Por defecto rol 'employee'
 ) -> dict:
     """
-    Register a new user
+    Registrar un nuevo usuario
     """
     from services.user_service import create_user
 
-    # Check if username already exists
+    # Verificar si el username ya existe
     existing_user = get_user_by_username(db, username)
     if existing_user:
         raise HTTPException(
@@ -80,14 +80,14 @@ def register_user(
             detail="Username already registered",
         )
 
-    # Check if email already exists
+    # Verificar si el email ya existe
     existing_email = get_user_by_email(db, email)
     if existing_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
-    # Create the user
+    # Crear el usuario
     user = create_user(
         db=db,
         username=username,

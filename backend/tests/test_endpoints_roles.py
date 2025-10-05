@@ -12,7 +12,7 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from database import get_db, Base
 from models import User, Role, Company, Warehouse, Employee
-from utils.password import hash_password
+from utils.security import get_password_hash as hash_password
 
 # Usar la misma configuración de DB que test_auth_roles.py
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test_endpoints.db"

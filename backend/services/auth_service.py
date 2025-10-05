@@ -36,7 +36,7 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
         data={
             "sub": user.username,
             "user_id": user.id,
-            "company_id": user.company_id,
+            "warehouse_id": user.warehouse_id,
             "role": user.role.name,
         }
     )
@@ -51,8 +51,8 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role": user.role.name,
-            "company_id": user.company_id,
-            "company_name": user.company.name,
+            "warehouse_id": user.warehouse_id,
+            "warehouse_name": user.warehouse.name,
         },
     }
 
@@ -64,15 +64,15 @@ def register_user(
     password: str,
     first_name: str = None,
     last_name: str = None,
-    company_id: int = None,
-    role_id: int = 3,  # Por defecto rol 'employee'
+    warehouse_id: int = None,
+    role_id: int = 3,  # Default role 'employee'
 ) -> dict:
     """
-    Registrar un nuevo usuario
+    Register a new user
     """
     from services.user_service import create_user
 
-    # Verificar si el username ya existe
+    # Check if username already exists
     existing_user = get_user_by_username(db, username)
     if existing_user:
         raise HTTPException(
@@ -95,7 +95,7 @@ def register_user(
         password=password,
         first_name=first_name,
         last_name=last_name,
-        company_id=company_id or 1,  # Default demo company
+        warehouse_id=warehouse_id or 1,  # Default demo warehouse
         role_id=role_id,
     )
 

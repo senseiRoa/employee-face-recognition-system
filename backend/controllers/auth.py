@@ -12,19 +12,19 @@ from utils.password_policy import PasswordValidator, PasswordValidationError
 router = APIRouter()
 
 
-# Esquemas para las requests
+# Request schemas
 class UserRegisterRequest(BaseModel):
     username: str
     email: EmailStr
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
-    company_id: Optional[int] = None
-    role_id: Optional[int] = 3  # Por defecto role 'employee'
+    warehouse_id: Optional[int] = 1
+    role_id: Optional[int] = 3  # Default role 'employee'
 
     @validator("password")
     def validate_password(cls, v, values):
-        """Validar que la contraseña cumpla con las políticas de seguridad"""
+        """Validate that password complies with security policies"""
         try:
             username = values.get("username")
             email = values.get("email")
@@ -61,18 +61,18 @@ def register_user(
             detail="Insufficient permissions to create users. Only admins and managers can register new users.",
         )
 
-    # Si no es admin, solo puede crear usuarios en su propia compañía
-    target_company_id = user_data.company_id or current_user.company_id
+    # If not admin, can only create users in their own warehouse
+    target_warehouse_id = user_data.warehouse_id or current_user.warehouse_id
     if (
         current_user.role.name != "admin"
-        and target_company_id != current_user.company_id
+        and target_warehouse_id != current_user.warehouse_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Managers can only create users in their own company",
+            detail="Managers can only create users in their own warehouse",
         )
 
-    # Verificar que el role_id sea válido según los permisos del usuario actual
+    # Verify that role_id is valid according to current user permissions
     if current_user.role.name == "manager" and user_data.role_id == 1:  # admin role
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -87,7 +87,7 @@ def register_user(
             password=user_data.password,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
-            company_id=target_company_id,
+            warehouse_id=target_warehouse_id,
             role_id=user_data.role_id,
         )
         return result
@@ -132,7 +132,7 @@ def setup_first_admin(user_data: UserRegisterRequest, db: Session = Depends(get_
             password=user_data.password,
             first_name=user_data.first_name,
             last_name=user_data.last_name,
-            company_id=1,  # Company demo por defecto
+            warehouse_id=1,  # Default demo warehouse
             role_id=1,  # Admin role
         )
         return {
@@ -181,8 +181,8 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
         "first_name": current_user.first_name,
         "last_name": current_user.last_name,
         "role": current_user.role.name,
-        "company_id": current_user.company_id,
-        "company_name": current_user.company.name,
+        "warehouse_id": current_user.warehouse_id,
+        "warehouse_name": current_user.warehouse.name,
         "is_active": current_user.is_active,
         "last_login": current_user.last_login,
     }

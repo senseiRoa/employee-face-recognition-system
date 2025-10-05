@@ -11,7 +11,7 @@ from models import User
 router = APIRouter()
 
 
-# Esquemas para respuestas y requests
+# Response and request schemas
 class UserResponse(BaseModel):
     id: int
     username: str
@@ -19,7 +19,7 @@ class UserResponse(BaseModel):
     first_name: str = None
     last_name: str = None
     is_active: bool
-    company_id: int
+    warehouse_id: int
     role_id: int
 
     class Config:
@@ -32,7 +32,7 @@ class UserCreateRequest(BaseModel):
     password: str
     first_name: str = None
     last_name: str = None
-    company_id: int = None
+    warehouse_id: int = None
     role_id: int = 3  # Default: employee
 
 
@@ -60,29 +60,29 @@ def create_user(
     db: Session = Depends(get_db),
 ):
     """
-    Crear un nuevo usuario
-    Solo admins pueden crear usuarios de cualquier compañía
-    Managers solo pueden crear usuarios en su compañía
+    Create a new user
+    Only admins can create users in any warehouse
+    Managers can only create users in their warehouse
     """
-    # Verificar permisos
+    # Verify permissions
     if current_user.role.name == "employee":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Insufficient permissions to create users",
         )
 
-    # Si no es admin, solo puede crear usuarios en su propia compañía
-    target_company_id = user_data.company_id or current_user.company_id
+    # If not admin, can only create users in their own warehouse
+    target_warehouse_id = user_data.warehouse_id or current_user.warehouse_id
     if (
         current_user.role.name != "admin"
-        and target_company_id != current_user.company_id
+        and target_warehouse_id != current_user.warehouse_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only create users in your own company",
+            detail="Can only create users in your own warehouse",
         )
 
-    # Verificar si username ya existe
+    # Check if username already exists
     existing_user = user_service.get_user_by_username(db, user_data.username)
     if existing_user:
         raise HTTPException(
@@ -90,7 +90,7 @@ def create_user(
             detail="Username already registered",
         )
 
-    # Verificar si email ya existe
+    # Check if email already exists
     existing_email = user_service.get_user_by_email(db, user_data.email)
     if existing_email:
         raise HTTPException(
@@ -104,7 +104,7 @@ def create_user(
         password=user_data.password,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
-        company_id=target_company_id,
+        warehouse_id=target_warehouse_id,
         role_id=user_data.role_id,
     )
 
@@ -113,17 +113,17 @@ def create_user(
 
 @router.get("/", response_model=List[UserResponse])
 def list_users(
-    company_id: Optional[int] = None,
+    warehouse_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Listar usuarios
-    Admins pueden ver todos los usuarios
-    Managers solo pueden ver usuarios de su compañía
-    Employees no pueden ver otros usuarios
+    List users
+    Admins can see all users
+    Managers can only see users from their warehouse
+    Employees cannot see other users
     """
     if current_user.role.name == "employee":
         raise HTTPException(
@@ -131,16 +131,16 @@ def list_users(
             detail="Insufficient permissions to list users",
         )
 
-    # Determinar qué usuarios puede ver
+    # Determine which users can be seen
     if current_user.role.name == "admin":
-        # Admin puede especificar company_id o ver todos
-        filter_company_id = company_id
+        # Admin can specify warehouse_id or see all
+        filter_warehouse_id = warehouse_id
     else:
-        # Manager solo puede ver su propia compañía
-        filter_company_id = current_user.company_id
+        # Manager can only see their own warehouse
+        filter_warehouse_id = current_user.warehouse_id
 
     users = user_service.get_users(
-        db, company_id=filter_company_id, skip=skip, limit=limit
+        db, warehouse_id=filter_warehouse_id, skip=skip, limit=limit
     )
     return users
 

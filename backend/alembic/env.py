@@ -18,12 +18,12 @@ from models import (  # noqa: F401, E402
     Role,
     User,
     Warehouse,
-    Tablet,
     Employee,
     FaceEncoding,
     AccessLog,
-    LoginLog,
     UserLoginLog,
+    PasswordHistory,
+    RefreshToken,
 )
 
 # Alembic configuration

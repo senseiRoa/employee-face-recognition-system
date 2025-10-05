@@ -10,7 +10,6 @@ from controllers import (
     roles,
     users,
     warehouses,
-    tablets,
     companies,
     reports,
 )
@@ -67,7 +66,6 @@ app.include_router(companies.router, prefix="/companies", tags=["companies"])
 app.include_router(roles.router, prefix="/roles", tags=["roles"])
 app.include_router(users.router, prefix="/users", tags=["users"])
 app.include_router(warehouses.router, prefix="/warehouses", tags=["warehouses"])
-app.include_router(tablets.router, prefix="/tablets", tags=["tablets"])
 app.include_router(employees.router, prefix="/employees", tags=["employees"])
 app.include_router(logs.router, prefix="/logs", tags=["logs"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])

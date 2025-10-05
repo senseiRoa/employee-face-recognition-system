@@ -20,7 +20,7 @@ class UserService:
         password: str,
         first_name: str = None,
         last_name: str = None,
-        company_id: int = 1,
+        warehouse_id: int = 1,
         role_id: int = 3,
     ) -> User:
         """
@@ -34,7 +34,7 @@ class UserService:
             password=hashed_password,
             first_name=first_name,
             last_name=last_name,
-            company_id=company_id,
+            warehouse_id=warehouse_id,
             role_id=role_id,
             is_active=True,
             created_at=datetime.datetime.utcnow(),
@@ -78,14 +78,14 @@ class UserService:
         )
 
     def get_users(
-        self, company_id: Optional[int] = None, skip: int = 0, limit: int = 100
+        self, warehouse_id: Optional[int] = None, skip: int = 0, limit: int = 100
     ) -> List[User]:
         """
         Get list of users with optional filters
         """
         query = self.db.query(User)
-        if company_id:
-            query = query.filter(User.company_id == company_id)
+        if warehouse_id:
+            query = query.filter(User.warehouse_id == warehouse_id)
         return query.offset(skip).limit(limit).all()
 
     def update_user(
@@ -157,12 +157,12 @@ def create_user(
     password: str,
     first_name: str = None,
     last_name: str = None,
-    company_id: int = 1,
+    warehouse_id: int = 1,
     role_id: int = 3,
 ) -> User:
     service = UserService(db)
     return service.create_user(
-        username, email, password, first_name, last_name, company_id, role_id
+        username, email, password, first_name, last_name, warehouse_id, role_id
     )
 
 
@@ -182,10 +182,10 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
 
 
 def get_users(
-    db: Session, company_id: Optional[int] = None, skip: int = 0, limit: int = 100
+    db: Session, warehouse_id: Optional[int] = None, skip: int = 0, limit: int = 100
 ) -> List[User]:
     service = UserService(db)
-    return service.get_users(company_id, skip, limit)
+    return service.get_users(warehouse_id, skip, limit)
 
 
 def update_user(

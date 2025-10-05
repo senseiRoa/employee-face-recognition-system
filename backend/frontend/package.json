@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:open": "vite --open",
     "build": "vite build",
     "preview": "vite preview",
     "build:prod": "vite build && npm run copy-to-www",
     "copy-to-www": "npm run clean-www && cp -r dist/* ../www/admin/",
-    "clean-www": "rm -rf ../www/admin && mkdir -p ../www/admin"
+    "clean-www": "rm -rf ../www/admin && mkdir -p ../www/admin",
+    "dev:help": "echo 'Desarrollo: npm run dev (puerto automático) | Integrado: npm run build:prod'"
   },
   "dependencies": {
     "vue": "^3.4.0",

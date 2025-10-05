@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from fastapi import Request
 from sqlalchemy import create_engine
 import os
 
@@ -84,7 +86,39 @@ else:
 # Configurar archivos estáticos para el panel de administración
 admin_static_path = os.path.join(os.path.dirname(__file__), "www", "admin")
 if os.path.exists(admin_static_path):
-    app.mount("/admin", StaticFiles(directory=admin_static_path, html=True), name="admin")
+    # Montar archivos estáticos primero
+    app.mount("/admin/assets", StaticFiles(directory=os.path.join(admin_static_path, "assets")), name="admin-assets")
+    
+    # Manejar rutas SPA - servir index.html para rutas que no sean archivos
+    @app.get("/admin/{full_path:path}")
+    async def serve_spa(request: Request, full_path: str):
+        """
+        Sirve el index.html para todas las rutas SPA del admin panel.
+        Esto permite que Vue Router maneje el routing del lado del cliente.
+        """
+        # Si es una ruta a un archivo estático (con extensión), intentar servirlo
+        if "." in full_path.split("/")[-1]:
+            file_path = os.path.join(admin_static_path, full_path)
+            if os.path.exists(file_path):
+                return FileResponse(file_path)
+        
+        # Para todas las demás rutas, servir index.html
+        index_path = os.path.join(admin_static_path, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        
+        return {"detail": "Admin panel not found"}
+    
+    # Ruta raíz del admin
+    @app.get("/admin")
+    @app.get("/admin/")
+    async def serve_admin_root():
+        """Sirve el index.html para la ruta raíz del admin"""
+        index_path = os.path.join(admin_static_path, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"detail": "Admin panel not found"}
+    
     print(f"✅ Admin panel mounted at /admin from {admin_static_path}")
 else:
     print(f"⚠️ Admin panel directory not found: {admin_static_path}")

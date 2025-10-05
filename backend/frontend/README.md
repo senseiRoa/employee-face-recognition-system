@@ -25,22 +25,31 @@ cd frontend
 npm install
 ```
 
-### 2. Desarrollo local
+### 2. Desarrollo local (Opción A - Recomendada)
 ```bash
+# Terminal 1: Levantar el backend FastAPI
+cd backend
+python -m uvicorn main:app --host 0.0.0.0 --port 8081 --reload
+
+# Terminal 2: Levantar el frontend en modo desarrollo
+cd frontend
 npm run dev
 ```
-El servidor de desarrollo estará disponible en `http://localhost:3000`
+- **Frontend:** `http://localhost:3000` (con proxy automático al backend)
+- **Backend API:** `http://localhost:8081`
+- **Ventajas:** Hot reload, debugging, development tools
 
-### 3. Construcción para producción
+### 3. Desarrollo integrado (Opción B)
+```bash
+# Construir y servir desde FastAPI
+npm run build:prod
+```
+- **Panel integrado:** `http://localhost:8081/admin/`
+- **Ventajas:** Prueba el comportamiento de producción
+
+### 4. Solo construcción para producción
 ```bash
 npm run build
-```
-
-### 4. Construcción y despliegue automático
-```bash
-# En el directorio raíz del backend
-./build_frontend.sh   # Linux/Mac
-build_frontend.bat    # Windows
 ```
 
 ## 📁 Estructura del Proyecto
@@ -77,6 +86,19 @@ frontend/
 ```
 
 ## 🔧 Configuración
+
+### Configuración Automática de Desarrollo vs Producción
+
+El archivo `vite.config.js` está configurado para detectar automáticamente el entorno:
+
+- **Desarrollo (`npm run dev`)**: 
+  - Base URL: `/` 
+  - Proxy automático al backend en `localhost:8081`
+  - Hot reload y development tools
+
+- **Producción (`npm run build`)**: 
+  - Base URL: `/admin/`
+  - Assets optimizados para servir desde FastAPI
 
 ### Variables de Entorno (opcional)
 Crear `.env.local` en el directorio `frontend/`:

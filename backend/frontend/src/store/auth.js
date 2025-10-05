@@ -12,15 +12,12 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (credentials) => {
     loading.value = true
     try {
-      const formData = new FormData()
-      formData.append('username', credentials.username)
-      formData.append('password', credentials.password)
+      const loginData = {
+        username_or_email: credentials.username,
+        password: credentials.password
+      }
 
-      const response = await api.post('/auth/login', formData, {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      })
+      const response = await api.post('/auth/login', loginData)
 
       const { access_token, user: userData } = response.data
       

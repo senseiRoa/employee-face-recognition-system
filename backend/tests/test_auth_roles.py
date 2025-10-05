@@ -2,6 +2,7 @@
 Tests de autenticación y autorización por roles
 Utiliza configuración unificada de conftest.py
 """
+
 import pytest
 from .conftest import client, get_auth_token
 
@@ -63,6 +64,7 @@ class TestAuthentication:
         )
         assert response.status_code == 401
 
+
 import pytest
 import json
 from fastapi.testclient import TestClient
@@ -121,15 +123,39 @@ def setup_database():
 
     # Crear usuarios de prueba con diferentes roles
     users = [
-        User(id=1, username="admin_test", email="admin@test.com", 
-             password=hash_password("admin123"), company_id=1, role_id=1, is_active=True,
-             first_name="Admin", last_name="Test"),
-        User(id=2, username="manager_test", email="manager@test.com", 
-             password=hash_password("manager123"), company_id=1, role_id=2, is_active=True,
-             first_name="Manager", last_name="Test"),
-        User(id=3, username="employee_test", email="employee@test.com", 
-             password=hash_password("employee123"), company_id=1, role_id=3, is_active=True,
-             first_name="Employee", last_name="Test"),
+        User(
+            id=1,
+            username="admin_test",
+            email="admin@test.com",
+            password=hash_password("admin123"),
+            company_id=1,
+            role_id=1,
+            is_active=True,
+            first_name="Admin",
+            last_name="Test",
+        ),
+        User(
+            id=2,
+            username="manager_test",
+            email="manager@test.com",
+            password=hash_password("manager123"),
+            company_id=1,
+            role_id=2,
+            is_active=True,
+            first_name="Manager",
+            last_name="Test",
+        ),
+        User(
+            id=3,
+            username="employee_test",
+            email="employee@test.com",
+            password=hash_password("employee123"),
+            company_id=1,
+            role_id=3,
+            is_active=True,
+            first_name="Employee",
+            last_name="Test",
+        ),
     ]
 
     for user in users:

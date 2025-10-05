@@ -2,6 +2,7 @@
 Configuración común para todos los tests
 Fixtures compartidas y configuración de base de datos unificada
 """
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -11,7 +12,15 @@ from sqlalchemy.pool import StaticPool
 from main import app
 from database import get_db, Base
 from models import User, Role, Company, Warehouse, Employee
-from utils.password import hash_password
+from utils.security import get_password_hash as hash_password
+
+# Contraseñas fuertes para tests
+TEST_PASSWORDS = {
+    "admin": "SystemHead2024!",
+    "manager": "OfficeChief2024#",
+    "employee": "StaffMember2024$",
+    "temp": "TempAccess123!",
+}
 
 # Configuración unificada de base de datos de prueba
 SQLALCHEMY_TEST_DATABASE_URL = "sqlite:///./test_unified.db"
@@ -52,9 +61,9 @@ def db_session(test_db):
     connection = test_db.connect()
     transaction = connection.begin()
     session = TestingSessionLocal(bind=connection)
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()
@@ -75,25 +84,57 @@ def setup_test_data(db_session):
     # Crear compañías
     companies = [
         Company(id=1, name="Test Company A", email="companya@test.com"),
-        Company(id=2, name="Test Company B", email="companyb@test.com")
+        Company(id=2, name="Test Company B", email="companyb@test.com"),
     ]
     for company in companies:
         db_session.add(company)
 
     # Crear usuarios de prueba con diferentes roles
     users = [
-        User(id=1, username="admin_test", email="admin@test.com",
-             password=hash_password("admin123"), company_id=1, role_id=1, is_active=True,
-             first_name="Admin", last_name="Test"),
-        User(id=2, username="manager_test", email="manager@test.com",
-             password=hash_password("manager123"), company_id=1, role_id=2, is_active=True,
-             first_name="Manager", last_name="Test"),
-        User(id=3, username="employee_test", email="employee@test.com",
-             password=hash_password("employee123"), company_id=1, role_id=3, is_active=True,
-             first_name="Employee", last_name="Test"),
-        User(id=4, username="manager2_test", email="manager2@test.com",
-             password=hash_password("manager123"), company_id=2, role_id=2, is_active=True,
-             first_name="Manager2", last_name="Test"),
+        User(
+            id=1,
+            username="admin_test",
+            email="admin@test.com",
+            password=hash_password(TEST_PASSWORDS["admin"]),
+            company_id=1,
+            role_id=1,
+            is_active=True,
+            first_name="Admin",
+            last_name="Test",
+        ),
+        User(
+            id=2,
+            username="manager_test",
+            email="manager@test.com",
+            password=hash_password(TEST_PASSWORDS["manager"]),
+            company_id=1,
+            role_id=2,
+            is_active=True,
+            first_name="Manager",
+            last_name="Test",
+        ),
+        User(
+            id=3,
+            username="employee_test",
+            email="employee@test.com",
+            password=hash_password(TEST_PASSWORDS["employee"]),
+            company_id=1,
+            role_id=3,
+            is_active=True,
+            first_name="Employee",
+            last_name="Test",
+        ),
+        User(
+            id=4,
+            username="manager2_test",
+            email="manager2@test.com",
+            password=hash_password(TEST_PASSWORDS["manager"]),
+            company_id=2,
+            role_id=2,
+            is_active=True,
+            first_name="Manager2",
+            last_name="Test",
+        ),
     ]
     for user in users:
         db_session.add(user)
@@ -109,9 +150,27 @@ def setup_test_data(db_session):
 
     # Crear employees
     employees = [
-        Employee(id=1, warehouse_id=1, first_name="John", last_name="Doe", email="john@test.com"),
-        Employee(id=2, warehouse_id=2, first_name="Jane", last_name="Smith", email="jane@test.com"),
-        Employee(id=3, warehouse_id=3, first_name="Bob", last_name="Wilson", email="bob@test.com"),
+        Employee(
+            id=1,
+            warehouse_id=1,
+            first_name="John",
+            last_name="Doe",
+            email="john@test.com",
+        ),
+        Employee(
+            id=2,
+            warehouse_id=2,
+            first_name="Jane",
+            last_name="Smith",
+            email="jane@test.com",
+        ),
+        Employee(
+            id=3,
+            warehouse_id=3,
+            first_name="Bob",
+            last_name="Wilson",
+            email="bob@test.com",
+        ),
     ]
     for employee in employees:
         db_session.add(employee)
@@ -122,16 +181,15 @@ def setup_test_data(db_session):
         "companies": companies,
         "warehouses": warehouses,
         "employees": employees,
-        "roles": roles_data
+        "roles": roles_data,
     }
 
 
 def get_auth_token(username: str, password: str) -> str:
     """Helper para obtener token de autenticación"""
-    response = client.post("/auth/login", json={
-        "username_or_email": username,
-        "password": password
-    })
+    response = client.post(
+        "/auth/login", json={"username_or_email": username, "password": password}
+    )
     assert response.status_code == 200, f"Login failed for {username}: {response.text}"
     return response.json()["access_token"]
 
@@ -139,19 +197,19 @@ def get_auth_token(username: str, password: str) -> str:
 @pytest.fixture
 def admin_token(setup_test_data):
     """Token de admin para tests"""
-    return get_auth_token("admin_test", "admin123")
+    return get_auth_token("admin_test", TEST_PASSWORDS["admin"])
 
 
 @pytest.fixture
 def manager_token(setup_test_data):
     """Token de manager para tests"""
-    return get_auth_token("manager_test", "manager123")
+    return get_auth_token("manager_test", TEST_PASSWORDS["manager"])
 
 
 @pytest.fixture
 def employee_token(setup_test_data):
     """Token de employee para tests"""
-    return get_auth_token("employee_test", "employee123")
+    return get_auth_token("employee_test", TEST_PASSWORDS["employee"])
 
 
 @pytest.fixture

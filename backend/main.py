@@ -14,6 +14,17 @@ from controllers import (
     companies,
     reports,
 )
+
+try:
+    from controllers import password
+
+    PASSWORD_CONTROLLER_AVAILABLE = True
+except ImportError:
+    PASSWORD_CONTROLLER_AVAILABLE = False
+    print(
+        "Warning: Password controller not available - password management endpoints disabled"
+    )
+
 from config.openapi_config import configure_openapi_schema, get_openapi_tags
 
 engine = create_engine(DATABASE_URL, future=True)
@@ -60,6 +71,13 @@ app.include_router(tablets.router, prefix="/tablets", tags=["tablets"])
 app.include_router(employees.router, prefix="/employees", tags=["employees"])
 app.include_router(logs.router, prefix="/logs", tags=["logs"])
 app.include_router(reports.router, prefix="/reports", tags=["reports"])
+
+# Incluir controlador de password si está disponible
+if PASSWORD_CONTROLLER_AVAILABLE:
+    app.include_router(password.router, tags=["password"])
+    print("✅ Password management endpoints enabled")
+else:
+    print("⚠️ Password management endpoints disabled")
 
 
 @app.get("/health")

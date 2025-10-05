@@ -44,9 +44,17 @@ class User(Base):
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
 
+    # Campos para gestión de contraseñas
+    password_changed_at = Column(DateTime, nullable=True)
+    reset_token = Column(String(255), nullable=True)
+    reset_token_expires = Column(DateTime, nullable=True)
+
     company = relationship("Company", back_populates="users")
     role = relationship("Role", back_populates="users")
     login_logs = relationship("UserLoginLog", back_populates="user")
+    password_history = relationship(
+        "PasswordHistory", back_populates="user", cascade="all, delete-orphan"
+    )
 
 
 class Warehouse(Base):
@@ -134,3 +142,41 @@ class UserLoginLog(Base):
     browser = Column(String(100))
 
     user = relationship("User", back_populates="login_logs")
+
+
+class PasswordHistory(Base):
+    """
+    Modelo para almacenar historial de contraseñas hasheadas
+    """
+
+    __tablename__ = "password_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    # Relación con el usuario
+    user = relationship("User", back_populates="password_history")
+
+
+class RefreshToken(Base):
+    """
+    Modelo para almacenar tokens de refresh
+    """
+
+    __tablename__ = "refresh_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    token = Column(String(255), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime, nullable=False)
+    is_revoked = Column(Boolean, default=False, nullable=False)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+
+    # Información adicional para tracking
+    user_agent = Column(String(500), nullable=True)
+    ip_address = Column(String(45), nullable=True)  # IPv6 compatible
+
+    # Relación con el usuario
+    user = relationship("User")

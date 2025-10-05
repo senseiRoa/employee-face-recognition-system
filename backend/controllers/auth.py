@@ -1,12 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 
 from services import auth_service
 from database import get_db
 from dependencies import get_current_user
 from models import User
+from utils.password_policy import PasswordValidator, PasswordValidationError
 
 router = APIRouter()
 
@@ -20,6 +21,17 @@ class UserRegisterRequest(BaseModel):
     last_name: Optional[str] = None
     company_id: Optional[int] = None
     role_id: Optional[int] = 3  # Por defecto role 'employee'
+
+    @validator("password")
+    def validate_password(cls, v, values):
+        """Validar que la contraseña cumpla con las políticas de seguridad"""
+        try:
+            username = values.get("username")
+            email = values.get("email")
+            PasswordValidator.validate_password(v, username, email)
+        except PasswordValidationError as e:
+            raise ValueError(f"Password validation failed: {e.message}")
+        return v
 
 
 class LoginRequest(BaseModel):

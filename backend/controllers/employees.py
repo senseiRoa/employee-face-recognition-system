@@ -3,7 +3,15 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from database import get_db
-from schemas import RegisterFaceReq, RegisterFaceRes, CheckReq, CheckRes, Employee, EmployeeCreate, EmployeeUpdate
+from schemas import (
+    RegisterFaceReq,
+    RegisterFaceRes,
+    CheckReq,
+    CheckRes,
+    Employee,
+    EmployeeCreate,
+    EmployeeUpdate,
+)
 from services.face_recognition_service import (
     compute_encoding,
     serialize_encoding,
@@ -36,21 +44,21 @@ def register_face(
         warehouse_id=req.warehouse_id,
         first_name=req.first_name,
         last_name=req.last_name,
-        email=req.email
+        email=req.email,
     )
     db.add(emp)
     db.flush()
 
     new_encoding = FaceEncoding(employee_id=emp.id, encoding=enc_s)
     db.add(new_encoding)
-    
+
     db.commit()
     db.refresh(emp)
-    
+
     return {
         "status": "ok",
         "employee_id": emp.id,
-        "employee_name": f"{emp.first_name} {emp.last_name}"
+        "employee_name": f"{emp.first_name} {emp.last_name}",
     }
 
 
@@ -65,9 +73,9 @@ def check_in_out(
     query = select(EmployeeModel).options(selectinload(EmployeeModel.encodings))
     if req.warehouse_id:
         query = query.filter(EmployeeModel.warehouse_id == req.warehouse_id)
-    
+
     employees = db.execute(query).scalars().all()
-    
+
     if not employees:
         raise HTTPException(status_code=400, detail="No hay empleados registrados.")
 
@@ -83,7 +91,11 @@ def check_in_out(
         min_dist = min(distances) if distances else 1e9
 
         if min_dist < best_dist:
-            best_id, best_name, best_dist = e.id, f"{e.first_name} {e.last_name}", min_dist
+            best_id, best_name, best_dist = (
+                e.id,
+                f"{e.first_name} {e.last_name}",
+                min_dist,
+            )
 
     if best_dist > TOLERANCE:
         return {"recognized": False}
@@ -95,11 +107,7 @@ def check_in_out(
         db.add(new_encoding)
 
     event = decide_event(db, best_id)
-    log = AccessLog(
-        employee_id=best_id,
-        warehouse_id=req.warehouse_id,
-        event=event
-    )
+    log = AccessLog(employee_id=best_id, warehouse_id=req.warehouse_id, event=event)
     db.add(log)
     db.commit()
 
@@ -119,34 +127,36 @@ def list_employees(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     # Solo admin y manager pueden listar employees, employee no puede
     if current_user.role.name == "employee":
         raise HTTPException(
-            status_code=403,
-            detail="Insufficient permissions to list employees"
+            status_code=403, detail="Insufficient permissions to list employees"
         )
-    
+
     # Admins pueden especificar warehouse_id, otros solo de su compañía
     if current_user.role.name != "admin" and warehouse_id:
         # Verificar que el warehouse pertenece a su compañía
         from services import warehouse_service
+
         warehouse = warehouse_service.get_warehouse(db, warehouse_id)
         if not warehouse or warehouse.company_id != current_user.company_id:
             raise HTTPException(
                 status_code=403,
-                detail="Cannot access employees from warehouses outside your company"
+                detail="Cannot access employees from warehouses outside your company",
             )
-    
-    return employee_service.get_employees(db, warehouse_id=warehouse_id, skip=skip, limit=limit)
+
+    return employee_service.get_employees(
+        db, warehouse_id=warehouse_id, skip=skip, limit=limit
+    )
 
 
 @router.get("/{employee_id}", response_model=Employee)
 def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     employee = employee_service.get_employee(db, employee_id)
     if not employee:
@@ -158,7 +168,7 @@ def get_employee(
 def create_employee(
     employee: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     return employee_service.create_employee(db, employee)
 
@@ -168,7 +178,7 @@ def update_employee(
     employee_id: int,
     employee_update: EmployeeUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     employee = employee_service.update_employee(db, employee_id, employee_update)
     if not employee:
@@ -180,9 +190,8 @@ def update_employee(
 def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     success = employee_service.delete_employee(db, employee_id)
     if not success:
         raise HTTPException(status_code=404, detail="Employee not found")
-

@@ -2,6 +2,28 @@
 
 This is the backend API for the Employee Time Tracker application. It provides functionalities for face recognition-based employee check-in/out, user management, and logging.
 
+## 🚀 Quick Start
+
+### Development Setup
+- **[QUICK_START.md](./QUICK_START.md)** - Fast development setup
+- **[VS Code Dev Container](./.devcontainer/)** - Containerized development
+
+### Production Deployment
+- **[DOCKER_BUILD_GUIDE.md](./DOCKER_BUILD_GUIDE.md)** - Complete Docker build process
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Production deployment guide
+
+### Build & Deploy Commands
+```bash
+# Build complete system (admin-panel + backend)
+./scripts/build-docker.sh -t v1.0.0 -p
+
+# Quick local build
+./scripts/build-docker.sh -l
+
+# Deploy to production
+docker-compose -f docker-compose.prod.yml up -d
+```
+
 ## Project Structure
 
 The project is organized into the following structure:

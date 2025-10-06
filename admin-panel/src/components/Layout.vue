@@ -97,16 +97,16 @@ export default {
 
     const pageTitle = computed(() => {
       const titles = {
-        'Dashboard': 'Panel de Control',
-        'Companies': 'Gestión de Empresas',
-        'Warehouses': 'Gestión de Warehouses',
-        'Employees': 'Gestión de Empleados',
-        'Users': 'Gestión de Usuarios',
-        'Roles': 'Gestión de Roles',
-        'Logs': 'Auditoría y Logs',
-        'Reports': 'Reportes'
+      'Dashboard': 'Dashboard',
+      'Companies': 'Companies Management',
+      'Warehouses': 'Warehouses Management',
+      'Employees': 'Employees Management',
+      'Users': 'Users Management',
+      'Roles': 'Roles Management',
+      'Logs': 'Audit & Logs',
+      'Reports': 'Reports & Statistics2222'
       }
-      return titles[route.name] || 'Panel de Administración'
+      return titles[route.name] || 'Admin Panel'
     })
 
     const logout = () => {

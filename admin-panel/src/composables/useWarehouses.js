@@ -17,7 +17,7 @@ export function useWarehouses() {
       const response = await api.get(url)
       warehouses.value = response.data
     } catch (error) {
-      toast.error('Error al cargar warehouses')
+      toast.error('Error loading warehouses')
       console.error('Error fetching warehouses:', error)
     } finally {
       loading.value = false
@@ -29,11 +29,11 @@ export function useWarehouses() {
     try {
       const response = await api.post('/warehouses/', warehouseData)
       warehouses.value.push(response.data)
-      toast.success('Warehouse creado exitosamente')
+      toast.success('Warehouse created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al crear warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error creating warehouse')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -47,11 +47,11 @@ export function useWarehouses() {
       if (index !== -1) {
         warehouses.value[index] = response.data
       }
-      toast.success('Warehouse actualizado exitosamente')
+      toast.success('Warehouse updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al actualizar warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error updating warehouse')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -62,11 +62,11 @@ export function useWarehouses() {
     try {
       await api.delete(`/warehouses/${id}`)
       warehouses.value = warehouses.value.filter(w => w.id !== id)
-      toast.success('Warehouse eliminado exitosamente')
+      toast.success('Warehouse deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error al eliminar warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error deleting warehouse')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -78,8 +78,8 @@ export function useWarehouses() {
       const response = await api.get(`/warehouses/${id}`)
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al obtener warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error getting warehouse')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }

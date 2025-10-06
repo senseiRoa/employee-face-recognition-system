@@ -98,45 +98,78 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useWarehouses } from '@/composables/useWarehouses'
+import { useCompanies } from '@/composables/useCompanies'
+import { format } from 'date-fns'
 
 export default {
   name: 'Warehouses',
   setup() {
-    const {
-      warehouses,
-      loading,
-      fetchWarehouses,
-      createWarehouse,
-      updateWarehouse,
-      deleteWarehouse
-    } = useWarehouses()
-
+    const { warehouses, loading, fetchWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses()
+    const { companies, fetchCompanies } = useCompanies()
+    
     const searchTerm = ref('')
+    const selectedCompany = ref('')
     const showCreateModal = ref(false)
     const showEditModal = ref(false)
+    const showDeleteModal = ref(false)
     const editingWarehouse = ref(null)
+    const warehouseToDelete = ref(null)
+    const errors = ref({})
 
     const warehouseForm = reactive({
       name: '',
       location: '',
+      company_id: '',
+      timezone: 'UTC',
       is_active: true
     })
 
     const filteredWarehouses = computed(() => {
-      if (!searchTerm.value) return warehouses.value
-      const term = searchTerm.value.toLowerCase()
-      return warehouses.value.filter(w => 
-        w.name.toLowerCase().includes(term) ||
-        (w.location && w.location.toLowerCase().includes(term))
-      )
+      let filtered = warehouses.value
+
+      if (searchTerm.value) {
+        const search = searchTerm.value.toLowerCase()
+        filtered = filtered.filter(warehouse => 
+          warehouse.name?.toLowerCase().includes(search) ||
+          warehouse.location?.toLowerCase().includes(search) ||
+          warehouse.company?.name?.toLowerCase().includes(search)
+        )
+      }
+
+      if (selectedCompany.value) {
+        filtered = filtered.filter(warehouse => warehouse.company_id === parseInt(selectedCompany.value))
+      }
+
+      return filtered
     })
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy')
+      } catch {
+        return '-'
+      }
+    }
 
     const resetForm = () => {
       Object.assign(warehouseForm, {
         name: '',
         location: '',
+        company_id: '',
+        timezone: 'UTC',
         is_active: true
       })
+      errors.value = {}
+    }
+
+    const closeModals = () => {
+      showCreateModal.value = false
+      showEditModal.value = false
+      showDeleteModal.value = false
+      editingWarehouse.value = null
+      warehouseToDelete.value = null
+      resetForm()
     }
 
     const editWarehouse = (warehouse) => {
@@ -144,60 +177,110 @@ export default {
       Object.assign(warehouseForm, {
         name: warehouse.name,
         location: warehouse.location || '',
-        is_active: warehouse.is_active
+        company_id: warehouse.company_id,
+        timezone: warehouse.timezone || 'UTC',
+        is_active: warehouse.is_active !== undefined ? warehouse.is_active : true
       })
       showEditModal.value = true
     }
 
-    const deleteWarehouseConfirm = async (warehouse) => {
-      if (confirm(`¿Eliminar warehouse "${warehouse.name}"?`)) {
-        await deleteWarehouse(warehouse.id)
+    const validateForm = () => {
+      errors.value = {}
+      let isValid = true
+
+      if (!warehouseForm.name.trim()) {
+        errors.value.name = 'Warehouse name is required'
+        isValid = false
       }
+
+      if (!warehouseForm.company_id) {
+        errors.value.company_id = 'Company is required'
+        isValid = false
+      }
+
+      return isValid
     }
 
     const saveWarehouse = async () => {
-      const data = { ...warehouseForm }
-      
-      if (editingWarehouse.value) {
-        await updateWarehouse(editingWarehouse.value.id, data)
-      } else {
-        await createWarehouse(data)
+      if (!validateForm()) return
+
+      const warehouseData = {
+        ...warehouseForm,
+        company_id: parseInt(warehouseForm.company_id)
       }
-      
-      closeModals()
+
+      // Remove empty location
+      if (!warehouseData.location) {
+        delete warehouseData.location
+      }
+
+      let result
+      if (editingWarehouse.value) {
+        result = await updateWarehouse(editingWarehouse.value.id, warehouseData)
+      } else {
+        result = await createWarehouse(warehouseData)
+      }
+
+      if (result.success) {
+        closeModals()
+        await fetchWarehouses()
+      } else {
+        // Handle API validation errors
+        if (result.error && typeof result.error === 'object') {
+          errors.value = result.error
+        }
+      }
     }
 
-    const closeModals = () => {
-      showCreateModal.value = false
-      showEditModal.value = false
-      editingWarehouse.value = null
-      resetForm()
+    const deleteWarehouseConfirm = (warehouse) => {
+      warehouseToDelete.value = warehouse
+      showDeleteModal.value = true
     }
 
-    onMounted(() => {
-      fetchWarehouses()
+    const confirmDeleteWarehouse = async () => {
+      if (!warehouseToDelete.value) return
+
+      const result = await deleteWarehouse(warehouseToDelete.value.id)
+      if (result.success) {
+        closeModals()
+        await fetchWarehouses()
+      }
+    }
+
+    onMounted(async () => {
+      await Promise.all([
+        fetchWarehouses(),
+        fetchCompanies()
+      ])
     })
 
     return {
       warehouses,
+      companies,
       loading,
       searchTerm,
-      filteredWarehouses,
+      selectedCompany,
       showCreateModal,
       showEditModal,
+      showDeleteModal,
       editingWarehouse,
+      warehouseToDelete,
       warehouseForm,
+      errors,
+      filteredWarehouses,
+      formatDate,
+      closeModals,
       editWarehouse,
-      deleteWarehouseConfirm,
       saveWarehouse,
-      closeModals
+      deleteWarehouseConfirm,
+      confirmDeleteWarehouse
     }
   }
 }
 </script>
 
 <style scoped>
-/* Reutilizar estilos similares a Companies */
+/* Reuse similar styles to Companies */
 .warehouses {
   display: flex;
   flex-direction: column;

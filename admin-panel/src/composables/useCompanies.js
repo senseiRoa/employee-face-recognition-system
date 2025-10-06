@@ -13,7 +13,7 @@ export function useCompanies() {
       const response = await api.get('/companies/')
       companies.value = response.data
     } catch (error) {
-      toast.error('Error al cargar empresas')
+      toast.error('Error loading companies')
       console.error('Error fetching companies:', error)
     } finally {
       loading.value = false
@@ -25,11 +25,11 @@ export function useCompanies() {
     try {
       const response = await api.post('/companies/', companyData)
       companies.value.push(response.data)
-      toast.success('Empresa creada exitosamente')
+      toast.success('Company created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al crear empresa')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error creating company')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -43,11 +43,11 @@ export function useCompanies() {
       if (index !== -1) {
         companies.value[index] = response.data
       }
-      toast.success('Empresa actualizada exitosamente')
+      toast.success('Company updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al actualizar empresa')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error updating company')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -58,11 +58,11 @@ export function useCompanies() {
     try {
       await api.delete(`/companies/${id}`)
       companies.value = companies.value.filter(c => c.id !== id)
-      toast.success('Empresa eliminada exitosamente')
+      toast.success('Company deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error al eliminar empresa')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error deleting company')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }
@@ -74,8 +74,8 @@ export function useCompanies() {
       const response = await api.get(`/companies/${id}`)
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al obtener empresa')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      toast.error('Error getting company')
+      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
     } finally {
       loading.value = false
     }

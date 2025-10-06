@@ -178,7 +178,6 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useCompanies } from '@/composables/useCompanies'
 import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 
 export default {
   name: 'Companies',
@@ -247,12 +246,12 @@ export default {
       })
 
       if (!companyForm.name.trim()) {
-        errors.name = 'El nombre es requerido'
+        errors.name = 'Company name is required'
         isValid = false
       }
 
       if (companyForm.email && !isValidEmail(companyForm.email)) {
-        errors.email = 'Email inválido'
+        errors.email = 'Invalid email format'
         isValid = false
       }
 
@@ -319,7 +318,11 @@ export default {
 
     const formatDate = (dateString) => {
       if (!dateString) return '-'
-      return format(new Date(dateString), 'dd/MM/yyyy', { locale: es })
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy')
+      } catch {
+        return '-'
+      }
     }
 
     onMounted(() => {

@@ -3,3 +3,4 @@ backend/*.db
 backend/reto2.md
 backend/www/admin/**
 README.md.backup
+.github/copilot-instructions.md

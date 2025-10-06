@@ -8,8 +8,24 @@
       </button>
     </div>
 
+    <!-- Filters -->
     <div class="filters">
-      <input v-model="searchTerm" type="text" placeholder="Search employees..." class="form-control" />
+      <div class="search-box">
+        <input
+          v-model="searchTerm"
+          type="text"
+          placeholder="Search employees..."
+          class="form-control"
+        />
+      </div>
+      <div class="filter-group">
+        <select v-model="selectedWarehouse" class="form-control">
+          <option value="">All Warehouses</option>
+          <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+            {{ warehouse.name }}
+          </option>
+        </select>
+      </div>
     </div>
 
     <div class="table-container">
@@ -20,8 +36,8 @@
             <th>Name</th>
             <th>Email</th>
             <th>Warehouse</th>
-            <th>Photo</th>
-            <th>Status</th>
+            <th>Face Registered</th>
+            <th>Created At</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -29,26 +45,25 @@
           <tr v-if="loading">
             <td colspan="7" class="text-center">Loading...</td>
           </tr>
+          <tr v-else-if="filteredEmployees.length === 0">
+            <td colspan="7" class="text-center">No employees found</td>
+          </tr>
           <tr v-else v-for="employee in filteredEmployees" :key="employee.id">
             <td>{{ employee.id }}</td>
-            <td>{{ employee.name }}</td>
+            <td>{{ getEmployeeFullName(employee) }}</td>
             <td>{{ employee.email || '-' }}</td>
             <td>{{ employee.warehouse?.name || '-' }}</td>
             <td>
-              <div class="photo-preview">
-                <img v-if="employee.img_base64" :src="'data:image/jpeg;base64,' + employee.img_base64" alt="Photo" />
-                <span v-else>No photo</span>
-              </div>
-            </td>
-            <td>
-              <span class="status-badge" :class="employee.is_active ? 'active' : 'inactive'">
-                {{ employee.is_active ? 'Active' : 'Inactive' }}
+              <span class="status-badge" :class="employee.has_face ? 'active' : 'inactive'">
+                {{ employee.has_face ? 'Yes' : 'No' }}
               </span>
             </td>
+            <td>{{ formatDate(employee.created_at) }}</td>
             <td>
               <div class="action-buttons">
-                <button @click="editEmployee(employee)" class="btn btn-outline btn-sm">✏️</button>
-                <button @click="deleteEmployee(employee)" class="btn btn-danger btn-sm">🗑️</button>
+                <button @click="editEmployee(employee)" class="btn btn-outline btn-sm" title="Edit">✏️</button>
+                <button @click="registerFace(employee)" class="btn btn-success btn-sm" title="Register Face">📷</button>
+                <button @click="deleteEmployeeConfirm(employee)" class="btn btn-danger btn-sm" title="Delete">🗑️</button>
               </div>
             </td>
           </tr>
@@ -56,30 +71,135 @@
       </table>
     </div>
 
-    <!-- Simplified Modal -->
-    <div v-if="showCreateModal" class="modal-overlay" @click.self="showCreateModal = false">
+    <!-- Create/Edit Employee Modal -->
+    <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal">
         <div class="modal-header">
-          <h3>New Employee</h3>
-          <button @click="showCreateModal = false" class="btn btn-outline">✕</button>
+          <h3>{{ editingEmployee ? 'Edit Employee' : 'New Employee' }}</h3>
+          <button @click="closeModals" class="btn btn-outline">✕</button>
         </div>
-        <div class="modal-body">
+        
+        <form @submit.prevent="saveEmployee" class="modal-body">
           <div class="form-group">
-            <label class="form-label">Name *</label>
-            <input v-model="employeeForm.name" type="text" class="form-control" required />
+            <label class="form-label">First Name *</label>
+            <input
+              v-model="employeeForm.first_name"
+              type="text"
+              class="form-control"
+              :class="{ error: errors.first_name }"
+              required
+            />
+            <div v-if="errors.first_name" class="form-error">{{ errors.first_name }}</div>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">Last Name *</label>
+            <input
+              v-model="employeeForm.last_name"
+              type="text"
+              class="form-control"
+              :class="{ error: errors.last_name }"
+              required
+            />
+            <div v-if="errors.last_name" class="form-error">{{ errors.last_name }}</div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Email</label>
-            <input v-model="employeeForm.email" type="email" class="form-control" />
+            <input
+              v-model="employeeForm.email"
+              type="email"
+              class="form-control"
+              :class="{ error: errors.email }"
+            />
+            <div v-if="errors.email" class="form-error">{{ errors.email }}</div>
           </div>
+
           <div class="form-group">
-            <label class="form-label">Photo</label>
-            <input @change="handlePhotoUpload" type="file" accept="image/*" class="form-control" />
+            <label class="form-label">Warehouse *</label>
+            <select
+              v-model="employeeForm.warehouse_id"
+              class="form-control"
+              :class="{ error: errors.warehouse_id }"
+              required
+            >
+              <option value="">Select Warehouse</option>
+              <option v-for="warehouse in warehouses" :key="warehouse.id" :value="warehouse.id">
+                {{ warehouse.name }}
+              </option>
+            </select>
+            <div v-if="errors.warehouse_id" class="form-error">{{ errors.warehouse_id }}</div>
+          </div>
+        </form>
+        
+        <div class="modal-footer">
+          <button @click="closeModals" type="button" class="btn btn-outline">
+            Cancel
+          </button>
+          <button @click="saveEmployee" type="submit" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Face Registration Modal -->
+    <div v-if="showFaceModal" class="modal-overlay" @click.self="showFaceModal = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Register Face for {{ faceEmployee?.first_name }} {{ faceEmployee?.last_name }}</h3>
+          <button @click="showFaceModal = false" class="btn btn-outline">✕</button>
+        </div>
+        
+        <div class="modal-body">
+          <div class="form-group">
+            <label class="form-label">Upload Photo *</label>
+            <input
+              @change="handlePhotoUpload"
+              type="file"
+              accept="image/*"
+              class="form-control"
+              :class="{ error: errors.photo }"
+              required
+            />
+            <div v-if="errors.photo" class="form-error">{{ errors.photo }}</div>
+            <small class="form-hint">
+              Please upload a clear photo with the person's face clearly visible.
+            </small>
+          </div>
+
+          <div v-if="photoPreview" class="photo-preview-container">
+            <img :src="photoPreview" alt="Photo preview" class="photo-preview" />
           </div>
         </div>
+        
         <div class="modal-footer">
-          <button @click="showCreateModal = false" class="btn btn-outline">Cancel</button>
-          <button @click="saveEmployee" class="btn btn-primary">Save</button>
+          <button @click="showFaceModal = false" type="button" class="btn btn-outline">
+            Cancel
+          </button>
+          <button @click="submitFaceRegistration" class="btn btn-primary" :disabled="loading || !photoBase64">
+            {{ loading ? 'Registering...' : 'Register Face' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Confirm Delete</h3>
+          <button @click="showDeleteModal = false" class="btn btn-outline">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete employee <strong>{{ employeeToDelete?.first_name }} {{ employeeToDelete?.last_name }}</strong>?</p>
+          <p class="text-danger">This action cannot be undone and will remove all associated face recognition data.</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="showDeleteModal = false" class="btn btn-outline">Cancel</button>
+          <button @click="confirmDeleteEmployee" class="btn btn-danger" :disabled="loading">
+            {{ loading ? 'Deleting...' : 'Delete' }}
+          </button>
         </div>
       </div>
     </div>
@@ -87,57 +207,285 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useEmployees } from '@/composables/useEmployees'
+import { useWarehouses } from '@/composables/useWarehouses'
+import { format } from 'date-fns'
+import api from '@/composables/api'
 
 export default {
   name: 'Employees',
   setup() {
-    const { employees, loading, fetchEmployees, createEmployee, deleteEmployee } = useEmployees()
+    const { employees, loading, fetchEmployees, createEmployee, updateEmployee, deleteEmployee } = useEmployees()
+    const { warehouses, fetchWarehouses } = useWarehouses()
     
     const searchTerm = ref('')
+    const selectedWarehouse = ref('')
     const showCreateModal = ref(false)
-    const employeeForm = reactive({ name: '', email: '', img_base64: '' })
+    const showEditModal = ref(false)
+    const showFaceModal = ref(false)
+    const showDeleteModal = ref(false)
+    const editingEmployee = ref(null)
+    const faceEmployee = ref(null)
+    const employeeToDelete = ref(null)
+    const photoPreview = ref('')
+    const photoBase64 = ref('')
+    const errors = ref({})
 
-    const filteredEmployees = computed(() => {
-      if (!searchTerm.value) return employees.value
-      const term = searchTerm.value.toLowerCase()
-      return employees.value.filter(e => 
-        e.name.toLowerCase().includes(term) ||
-        (e.email && e.email.toLowerCase().includes(term))
-      )
+    const employeeForm = reactive({
+      first_name: '',
+      last_name: '',
+      email: '',
+      warehouse_id: ''
     })
 
-    const handlePhotoUpload = (event) => {
-      const file = event.target.files[0]
-      if (file) {
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          employeeForm.img_base64 = e.target.result.split(',')[1]
-        }
-        reader.readAsDataURL(file)
+    const filteredEmployees = computed(() => {
+      let filtered = employees.value
+
+      if (searchTerm.value) {
+        const search = searchTerm.value.toLowerCase()
+        filtered = filtered.filter(employee => 
+          employee.first_name?.toLowerCase().includes(search) ||
+          employee.last_name?.toLowerCase().includes(search) ||
+          employee.email?.toLowerCase().includes(search)
+        )
+      }
+
+      if (selectedWarehouse.value) {
+        filtered = filtered.filter(employee => employee.warehouse_id === parseInt(selectedWarehouse.value))
+      }
+
+      return filtered
+    })
+
+    const getEmployeeFullName = (employee) => {
+      return `${employee.first_name} ${employee.last_name}`
+    }
+
+    const formatDate = (dateString) => {
+      if (!dateString) return '-'
+      try {
+        return format(new Date(dateString), 'MMM dd, yyyy')
+      } catch {
+        return '-'
       }
     }
 
-    const saveEmployee = async () => {
-      await createEmployee(employeeForm)
-      showCreateModal.value = false
-      Object.assign(employeeForm, { name: '', email: '', img_base64: '' })
+    const resetForm = () => {
+      Object.assign(employeeForm, {
+        first_name: '',
+        last_name: '',
+        email: '',
+        warehouse_id: ''
+      })
+      errors.value = {}
     }
 
-    onMounted(() => fetchEmployees())
+    const resetFaceForm = () => {
+      photoPreview.value = ''
+      photoBase64.value = ''
+      errors.value = {}
+    }
+
+    const closeModals = () => {
+      showCreateModal.value = false
+      showEditModal.value = false
+      showFaceModal.value = false
+      showDeleteModal.value = false
+      editingEmployee.value = null
+      faceEmployee.value = null
+      employeeToDelete.value = null
+      resetForm()
+      resetFaceForm()
+    }
+
+    const editEmployee = (employee) => {
+      editingEmployee.value = employee
+      Object.assign(employeeForm, {
+        first_name: employee.first_name,
+        last_name: employee.last_name,
+        email: employee.email || '',
+        warehouse_id: employee.warehouse_id
+      })
+      showEditModal.value = true
+    }
+
+    const registerFace = (employee) => {
+      faceEmployee.value = employee
+      resetFaceForm()
+      showFaceModal.value = true
+    }
+
+    const validateForm = () => {
+      errors.value = {}
+      let isValid = true
+
+      if (!employeeForm.first_name.trim()) {
+        errors.value.first_name = 'First name is required'
+        isValid = false
+      }
+
+      if (!employeeForm.last_name.trim()) {
+        errors.value.last_name = 'Last name is required'
+        isValid = false
+      }
+
+      if (employeeForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(employeeForm.email)) {
+        errors.value.email = 'Please enter a valid email address'
+        isValid = false
+      }
+
+      if (!employeeForm.warehouse_id) {
+        errors.value.warehouse_id = 'Warehouse is required'
+        isValid = false
+      }
+
+      return isValid
+    }
+
+    const saveEmployee = async () => {
+      if (!validateForm()) return
+
+      const employeeData = {
+        ...employeeForm,
+        warehouse_id: parseInt(employeeForm.warehouse_id)
+      }
+
+      // Remove empty email
+      if (!employeeData.email) {
+        delete employeeData.email
+      }
+
+      let result
+      if (editingEmployee.value) {
+        result = await updateEmployee(editingEmployee.value.id, employeeData)
+      } else {
+        result = await createEmployee(employeeData)
+      }
+
+      if (result.success) {
+        closeModals()
+        await fetchEmployees()
+      } else {
+        // Handle API validation errors
+        if (result.error && typeof result.error === 'object') {
+          errors.value = result.error
+        }
+      }
+    }
+
+    const handlePhotoUpload = (event) => {
+      const file = event.target.files[0]
+      if (!file) return
+
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        errors.value.photo = 'Please select a valid image file'
+        return
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        errors.value.photo = 'Image file size must be less than 5MB'
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        photoPreview.value = e.target.result
+        // Extract base64 without data:image prefix
+        photoBase64.value = e.target.result.split(',')[1]
+        errors.value.photo = ''
+      }
+      reader.readAsDataURL(file)
+    }
+
+    const submitFaceRegistration = async () => {
+      if (!photoBase64.value) {
+        errors.value.photo = 'Please select a photo'
+        return
+      }
+
+      try {
+        const faceData = {
+          warehouse_id: faceEmployee.value.warehouse_id,
+          first_name: faceEmployee.value.first_name,
+          last_name: faceEmployee.value.last_name,
+          email: faceEmployee.value.email,
+          image_base64: photoBase64.value
+        }
+
+        const response = await api.post('/employees/register_face', faceData)
+        
+        if (response.data.status === 'ok') {
+          closeModals()
+          await fetchEmployees()
+        }
+      } catch (error) {
+        console.error('Error registering face:', error)
+        errors.value.photo = error.response?.data?.detail || 'Error registering face'
+      }
+    }
+
+    const deleteEmployeeConfirm = (employee) => {
+      employeeToDelete.value = employee
+      showDeleteModal.value = true
+    }
+
+    const confirmDeleteEmployee = async () => {
+      if (!employeeToDelete.value) return
+
+      const result = await deleteEmployee(employeeToDelete.value.id)
+      if (result.success) {
+        closeModals()
+        await fetchEmployees()
+      }
+    }
+
+    // Watch for warehouse filter changes
+    watch(selectedWarehouse, () => {
+      if (selectedWarehouse.value) {
+        fetchEmployees(parseInt(selectedWarehouse.value))
+      } else {
+        fetchEmployees()
+      }
+    })
+
+    onMounted(async () => {
+      await Promise.all([
+        fetchEmployees(),
+        fetchWarehouses()
+      ])
+    })
 
     return {
       employees,
       loading,
       searchTerm,
-      filteredEmployees,
+      selectedWarehouse,
       showCreateModal,
+      showEditModal,
+      showFaceModal,
+      showDeleteModal,
+      editingEmployee,
+      faceEmployee,
+      employeeToDelete,
       employeeForm,
-      handlePhotoUpload,
+      errors,
+      warehouses,
+      filteredEmployees,
+      photoPreview,
+      photoBase64,
+      getEmployeeFullName,
+      formatDate,
+      closeModals,
+      editEmployee,
+      registerFace,
       saveEmployee,
-      editEmployee: () => {},
-      deleteEmployee: (emp) => confirm(`¿Eliminar ${emp.name}?`) && deleteEmployee(emp.id)
+      handlePhotoUpload,
+      submitFaceRegistration,
+      deleteEmployeeConfirm,
+      confirmDeleteEmployee
     }
   }
 }

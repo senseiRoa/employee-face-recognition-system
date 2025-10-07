@@ -8,6 +8,7 @@ from database import get_db
 from services import user_service
 from dependencies import get_current_user
 from models import User
+from utils.password_policy import PasswordValidator, PasswordValidationError
 
 router = APIRouter()
 
@@ -32,19 +33,19 @@ class UserCreateRequest(BaseModel):
     username: str
     email: EmailStr
     password: str
-    first_name: str = None
-    last_name: str = None
-    warehouse_id: int = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    warehouse_id: Optional[int] = None
     role_id: int = 3  # Default: employee
 
 
 class UserUpdateRequest(BaseModel):
-    username: str = None
-    email: EmailStr = None
-    password: str = None
-    first_name: str = None
-    last_name: str = None
-    is_active: bool = None
+    username: Optional[str] = None
+    email: Optional[EmailStr] = None
+    password: Optional[str] = None
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 @router.get("/me", response_model=UserResponse)
@@ -62,15 +63,26 @@ def create_user(
     db: Session = Depends(get_db),
 ):
     """
-    Create a new user
-    Only admins can create users in any warehouse
-    Managers can only create users in their warehouse
+    Create a new user with strong password validation
+    Only admins and managers can create users
+    Managers can only create users in their warehouse and cannot create admin users
     """
-    # Verify permissions
-    if current_user.role.name == "employee":
+    # Validate password first
+    try:
+        PasswordValidator.validate_password(
+            user_data.password, user_data.username, user_data.email
+        )
+    except PasswordValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Password validation failed: {e.message}"
+        )
+
+    # Verify permissions - only admin and manager can create users
+    if current_user.role.name not in ["admin", "manager"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to create users",
+            detail="Insufficient permissions to create users. Only admins and managers can create new users.",
         )
 
     # If not admin, can only create users in their own warehouse
@@ -81,7 +93,14 @@ def create_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only create users in your own warehouse",
+            detail="Managers can only create users in their own warehouse",
+        )
+
+    # Verify that role_id is valid according to current user permissions
+    if current_user.role.name == "manager" and user_data.role_id == 1:  # admin role
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Managers cannot create admin users",
         )
 
     # Check if username already exists
@@ -99,18 +118,23 @@ def create_user(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
         )
 
-    new_user = user_service.create_user(
-        db=db,
-        username=user_data.username,
-        email=user_data.email,
-        password=user_data.password,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        warehouse_id=target_warehouse_id,
-        role_id=user_data.role_id,
-    )
-
-    return new_user
+    try:
+        new_user = user_service.create_user(
+            db=db,
+            username=user_data.username,
+            email=user_data.email,
+            password=user_data.password,
+            first_name=user_data.first_name,
+            last_name=user_data.last_name,
+            warehouse_id=target_warehouse_id,
+            role_id=user_data.role_id,
+        )
+        return new_user
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating user: {str(e)}",
+        )
 
 
 @router.get("/", response_model=List[UserResponse])
@@ -227,6 +251,21 @@ def update_user(
         if existing:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Email already taken"
+            )
+
+    # Validate password if provided
+    if user_update.password:
+        try:
+            # Use new username/email if provided, otherwise use existing ones
+            username_for_validation = user_update.username or target_user.username
+            email_for_validation = user_update.email or target_user.email
+            PasswordValidator.validate_password(
+                user_update.password, username_for_validation, email_for_validation
+            )
+        except PasswordValidationError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Password validation failed: {e.message}"
             )
 
     updated_user = user_service.update_user(

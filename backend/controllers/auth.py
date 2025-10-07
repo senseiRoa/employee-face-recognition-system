@@ -45,61 +45,6 @@ class LoginResponse(BaseModel):
     user: dict
 
 
-@router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(
-    user_data: UserRegisterRequest,
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
-):
-    """
-    Register a new user (for admins and managers only)
-    """
-    # Verify permissions - only admin and manager can create users
-    if current_user.role.name not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to create users. Only admins and managers can register new users.",
-        )
-
-    # If not admin, can only create users in their own warehouse
-    target_warehouse_id = user_data.warehouse_id or current_user.warehouse_id
-    if (
-        current_user.role.name != "admin"
-        and target_warehouse_id != current_user.warehouse_id
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Managers can only create users in their own warehouse",
-        )
-
-    # Verify that role_id is valid according to current user permissions
-    if current_user.role.name == "manager" and user_data.role_id == 1:  # admin role
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Managers cannot create admin users",
-        )
-
-    try:
-        result = auth_service.register_user(
-            db=db,
-            username=user_data.username,
-            email=user_data.email,
-            password=user_data.password,
-            first_name=user_data.first_name,
-            last_name=user_data.last_name,
-            warehouse_id=target_warehouse_id,
-            role_id=user_data.role_id,
-        )
-        return result
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating user: {str(e)}",
-        )
-
-
 @router.post("/setup-admin", status_code=status.HTTP_201_CREATED)
 def setup_first_admin(user_data: UserRegisterRequest, db: Session = Depends(get_db)):
     """

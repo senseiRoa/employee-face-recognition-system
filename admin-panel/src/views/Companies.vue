@@ -47,8 +47,8 @@
             <td>{{ company.email || '-' }}</td>
             <td>{{ company.phone || '-' }}</td>
             <td>
-              <span class="status-badge" :class="company.is_active ? 'active' : 'inactive'">
-                {{ company.is_active ? 'Active' : 'Inactive' }}
+              <span class="status-badge" :class="company.status ? 'active' : 'inactive'">
+                {{ company.status ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>{{ formatDate(company.created_at) }}</td>
@@ -130,7 +130,7 @@
           <div class="form-group">
             <label class="checkbox-label">
               <input
-                v-model="companyForm.is_active"
+                v-model="companyForm.status"
                 type="checkbox"
               />
               <span>Active company</span>
@@ -203,7 +203,7 @@ export default {
       email: '',
       phone: '',
       address: '',
-      is_active: true
+      status: true
     })
 
     const errors = reactive({
@@ -230,7 +230,7 @@ export default {
         email: '',
         phone: '',
         address: '',
-        is_active: true
+        status: true
       })
       
       Object.keys(errors).forEach(key => {
@@ -270,7 +270,7 @@ export default {
         email: company.email || '',
         phone: company.phone || '',
         address: company.address || '',
-        is_active: company.is_active
+        status: company.status
       })
       showEditModal.value = true
     }

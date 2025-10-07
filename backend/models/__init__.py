@@ -13,7 +13,9 @@ class Company(Base):
     email = Column(String(100), nullable=True)
     phone = Column(String(20), nullable=True)
     address = Column(String(255), nullable=True)
+    status = Column(Boolean, default=True, nullable=False)  # True = Active, False = Inactive
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
     # Relationships
     warehouses = relationship(

@@ -11,7 +11,7 @@ export function useCompanies() {
     loading.value = true
     try {
       const response = await api.get('/companies/')
-      companies.value = response.data
+      companies.value = response.data.companies;
     } catch (error) {
       toast.error('Error loading companies')
       console.error('Error fetching companies:', error)

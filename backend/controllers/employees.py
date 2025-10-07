@@ -21,6 +21,11 @@ from services.face_recognition_service import (
 from services import employee_service
 from models import Employee as EmployeeModel, FaceEncoding, AccessLog
 from dependencies import get_current_user
+from utils.permission_decorators import (
+    require_employee_read,
+    require_employee_write,
+    require_employee_delete,
+)
 from models import User
 import numpy as np
 from sqlalchemy import select
@@ -120,14 +125,11 @@ def list_employees(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_employee_read),
 ):
-    # Only admin and manager can list employees, employee cannot
-    if current_user.role.name == "employee":
-        raise HTTPException(
-            status_code=403, detail="Insufficient permissions to list employees"
-        )
-
+    """
+    List employees with warehouse scope validation
+    """
     # Admins can specify warehouse_id, others only from their company
     if current_user.role.name != "admin" and warehouse_id:
         # Verify that the warehouse belongs to their company
@@ -149,8 +151,11 @@ def list_employees(
 def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_employee_read),
 ):
+    """
+    Get employee details with validation
+    """
     employee = employee_service.get_employee(db, employee_id)
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -161,8 +166,11 @@ def get_employee(
 def create_employee(
     employee: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_employee_write),
 ):
+    """
+    Create new employee
+    """
     return employee_service.create_employee(db, employee)
 
 
@@ -171,8 +179,11 @@ def update_employee(
     employee_id: int,
     employee_update: EmployeeUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_employee_write),
 ):
+    """
+    Update employee information
+    """
     employee = employee_service.update_employee(db, employee_id, employee_update)
     if not employee:
         raise HTTPException(status_code=404, detail="Employee not found")
@@ -183,8 +194,11 @@ def update_employee(
 def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_employee_delete),
 ):
+    """
+    Delete employee
+    """
     success = employee_service.delete_employee(db, employee_id)
     if not success:
         raise HTTPException(status_code=404, detail="Employee not found")

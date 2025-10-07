@@ -5,7 +5,7 @@ from datetime import datetime
 
 from database import get_db
 from services import report_service
-from dependencies import get_current_user
+from utils.permission_decorators import require_reports_read
 from models import User
 
 router = APIRouter()
@@ -18,16 +18,19 @@ def get_checkin_report(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_reports_read),
 ):
+    """
+    Get employee checkin report with analytics permissions
+    """
     results = report_service.get_employee_checkin_report(
-        db, 
+        db,
         employee_id=employee_id,
         warehouse_id=warehouse_id,
         start_date=start_date,
-        end_date=end_date
+        end_date=end_date,
     )
-    
+
     return [
         {
             "employee_id": r.employee_id,
@@ -35,7 +38,9 @@ def get_checkin_report(
             "total_check_ins": r.total_check_ins,
             "total_check_outs": r.total_check_outs,
             "last_event": r.last_event,
-            "last_event_time": r.last_event_time.isoformat() if r.last_event_time else None
+            "last_event_time": r.last_event_time.isoformat()
+            if r.last_event_time
+            else None,
         }
         for r in results
     ]
@@ -47,21 +52,21 @@ def get_warehouse_activity(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_reports_read),
 ):
+    """
+    Get warehouse activity report with analytics permissions
+    """
     results = report_service.get_warehouse_activity_report(
-        db,
-        warehouse_id=warehouse_id,
-        start_date=start_date,
-        end_date=end_date
+        db, warehouse_id=warehouse_id, start_date=start_date, end_date=end_date
     )
-    
+
     return [
         {
             "warehouse_id": r.warehouse_id,
             "warehouse_name": r.warehouse_name,
             "total_events": r.total_events,
-            "unique_employees": r.unique_employees
+            "unique_employees": r.unique_employees,
         }
         for r in results
     ]
@@ -73,20 +78,16 @@ def get_frequent_employees(
     days: int = Query(7, ge=1, le=365),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_reports_read),
 ):
+    """
+    Get frequent employees report with analytics permissions
+    """
     results = report_service.get_frequent_employees(
-        db,
-        warehouse_id=warehouse_id,
-        days=days,
-        limit=limit
+        db, warehouse_id=warehouse_id, days=days, limit=limit
     )
-    
+
     return [
-        {
-            "employee_id": r.id,
-            "employee_name": r.name,
-            "total_events": r.total_events
-        }
+        {"employee_id": r.id, "employee_name": r.name, "total_events": r.total_events}
         for r in results
     ]

@@ -5,7 +5,11 @@ from typing import List, Optional
 from database import get_db
 from schemas import Warehouse, WarehouseCreate, WarehouseUpdate
 from services import warehouse_service
-from dependencies import get_current_user
+from utils.permission_decorators import (
+    require_warehouse_read,
+    require_warehouse_write,
+    require_warehouse_delete,
+)
 from models import User
 
 router = APIRouter()
@@ -15,15 +19,11 @@ router = APIRouter()
 def create_warehouse(
     warehouse: WarehouseCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_warehouse_write),
 ):
-    # Only admins and managers can create warehouses
-    if current_user.role.name == "employee":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to create warehouses",
-        )
-
+    """
+    Create a new warehouse with company scope validation
+    """
     # If not admin, can only create warehouses in their own company
     target_company_id = (
         warehouse.company_id
@@ -48,8 +48,11 @@ def list_warehouses(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_warehouse_read),
 ):
+    """
+    List warehouses with company scope validation
+    """
     # Determine which warehouses the user can see
     if current_user.role.name == "admin":
         # Admin puede especificar company_id o ver todos
@@ -67,8 +70,11 @@ def list_warehouses(
 def get_warehouse(
     warehouse_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_warehouse_read),
 ):
+    """
+    Get warehouse details with company scope validation
+    """
     warehouse = warehouse_service.get_warehouse(db, warehouse_id)
     if not warehouse:
         raise HTTPException(
@@ -93,22 +99,43 @@ def update_warehouse(
     warehouse_id: int,
     warehouse_update: WarehouseUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_warehouse_write),
 ):
-    warehouse = warehouse_service.update_warehouse(db, warehouse_id, warehouse_update)
+    """
+    Update warehouse with company scope validation
+    """
+    # Verify warehouse exists first
+    warehouse = warehouse_service.get_warehouse(db, warehouse_id)
     if not warehouse:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
         )
-    return warehouse
+
+    # Verify permissions: only admin or users from the same company can update
+    if (
+        current_user.role.name != "admin"
+        and warehouse.company_id != current_user.warehouse.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to update this warehouse",
+        )
+
+    updated_warehouse = warehouse_service.update_warehouse(
+        db, warehouse_id, warehouse_update
+    )
+    return updated_warehouse
 
 
 @router.delete("/{warehouse_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_warehouse(
     warehouse_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_warehouse_delete),
 ):
+    """
+    Delete warehouse with company scope validation
+    """
     # Verify warehouse exists and user has access
     warehouse = warehouse_service.get_warehouse(db, warehouse_id)
     if not warehouse:

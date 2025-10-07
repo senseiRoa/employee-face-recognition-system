@@ -9,6 +9,12 @@ from services import user_service
 from dependencies import get_current_user
 from models import User
 from utils.password_policy import PasswordValidator, PasswordValidationError
+from utils.permission_decorators import (
+    require_user_read,
+    require_user_write,
+    require_user_delete,
+    validate_warehouse_scope,
+)
 
 router = APIRouter()
 
@@ -61,13 +67,12 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     user_data: UserCreateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_user_write),
     db: Session = Depends(get_db),
 ):
     """
     Create a new user with strong password validation
-    Only admins and managers can create users
-    Managers can only create users in their warehouse and cannot create admin users
+    Permissions automatically validated by require_user_write dependency
     """
     # Validate password first
     try:
@@ -80,19 +85,9 @@ def create_user(
             detail=f"Password validation failed: {e.message}",
         )
 
-    # Verify permissions - only admin and manager can create users
-    if current_user.role.name not in ["admin", "manager"]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to create users. Only admins and managers can create new users.",
-        )
-
-    # If not admin, can only create users in their own warehouse
+    # Validate scope - managers can only create users in their own warehouse
     target_warehouse_id = user_data.warehouse_id or current_user.warehouse_id
-    if (
-        current_user.role.name != "admin"
-        and target_warehouse_id != current_user.warehouse_id
-    ):
+    if not validate_warehouse_scope(current_user, target_warehouse_id):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Managers can only create users in their own warehouse",
@@ -144,22 +139,14 @@ def list_users(
     warehouse_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 100,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_user_read),
     db: Session = Depends(get_db),
 ):
     """
-    List users
-    Admins can see all users
-    Managers can only see users from their warehouse
-    Employees cannot see other users
+    List users with permission-based access control
+    Admin can see all users, managers only from their warehouse
     """
-    if current_user.role.name == "employee":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to list users",
-        )
-
-    # Determine which users can be seen
+    # Determine scope based on role
     if current_user.role.name == "admin":
         # Admin can specify warehouse_id or see all
         filter_warehouse_id = warehouse_id
@@ -176,11 +163,11 @@ def list_users(
 @router.get("/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_user_read),
     db: Session = Depends(get_db),
 ):
     """
-    Get information for a specific user
+    Get information for a specific user with scope validation
     """
     user = user_service.get_user(db, user_id)
     if not user:
@@ -188,7 +175,7 @@ def get_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Verify permissions
+    # Validate scope - employees can only view themselves, managers only their warehouse
     if current_user.role.name == "employee" and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -201,7 +188,7 @@ def get_user(
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Can only view users from your company",
+            detail="Can only view users from your warehouse",
         )
 
     return user
@@ -211,11 +198,11 @@ def get_user(
 def update_user(
     user_id: int,
     user_update: UserUpdateRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_user_write),
     db: Session = Depends(get_db),
 ):
     """
-    Update user information
+    Update user information with scope validation
     """
     target_user = user_service.get_user(db, user_id)
     if not target_user:
@@ -223,7 +210,7 @@ def update_user(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Verify permissions
+    # Validate scope - employees can only update themselves, managers only their warehouse
     if current_user.role.name == "employee" and current_user.id != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -327,19 +314,12 @@ def update_user(
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_user_delete),
     db: Session = Depends(get_db),
 ):
     """
-    Delete a user
-    Only admins and managers can delete users
+    Delete a user with scope validation
     """
-    if current_user.role.name == "employee":
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions to delete users",
-        )
-
     target_user = user_service.get_user(db, user_id)
     if not target_user:
         raise HTTPException(

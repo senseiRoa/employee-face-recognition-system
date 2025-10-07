@@ -6,7 +6,7 @@ from datetime import datetime
 from database import get_db
 from services import log_service
 from schemas import AccessLog, LoginLog, UserLoginLog
-from dependencies import get_current_user
+from utils.permission_decorators import require_logs_audit
 from models import User
 
 router = APIRouter()
@@ -21,8 +21,11 @@ def list_access_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_logs_audit),
 ):
+    """
+    List access logs with audit permissions
+    """
     return log_service.get_access_logs(
         db,
         employee_id=employee_id,
@@ -30,7 +33,7 @@ def list_access_logs(
         start_date=start_date,
         end_date=end_date,
         skip=skip,
-        limit=limit
+        limit=limit,
     )
 
 
@@ -42,15 +45,18 @@ def list_login_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_logs_audit),
 ):
+    """
+    List login logs with audit permissions
+    """
     return log_service.get_login_logs(
         db,
         company_id=company_id,
         start_date=start_date,
         end_date=end_date,
         skip=skip,
-        limit=limit
+        limit=limit,
     )
 
 
@@ -62,13 +68,16 @@ def list_user_login_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(require_logs_audit),
 ):
+    """
+    List user login logs with audit permissions
+    """
     return log_service.get_user_login_logs(
         db,
         user_id=user_id,
         start_date=start_date,
         end_date=end_date,
         skip=skip,
-        limit=limit
+        limit=limit,
     )

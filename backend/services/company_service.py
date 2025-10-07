@@ -6,12 +6,12 @@ import datetime
 
 
 def create_company(
-    db: Session, 
-    name: str, 
-    email: str = None, 
-    phone: str = None, 
+    db: Session,
+    name: str,
+    email: str = None,
+    phone: str = None,
     address: str = None,
-    status: bool = True
+    status: bool = True,
 ) -> Company:
     """
     Create a new company
@@ -39,21 +39,21 @@ def get_company(db: Session, company_id: int) -> Optional[Company]:
 
 
 def get_companies(
-    db: Session, 
-    skip: int = 0, 
-    limit: int = 100, 
+    db: Session,
+    skip: int = 0,
+    limit: int = 100,
     status: Optional[bool] = None,
-    search: Optional[str] = None
+    search: Optional[str] = None,
 ) -> List[Company]:
     """
     Get list of companies with optional filtering
     """
     query = db.query(Company)
-    
+
     # Filter by status if provided
     if status is not None:
         query = query.filter(Company.status == status)
-    
+
     # Search by name, email or address if provided
     if search:
         search_filter = f"%{search}%"
@@ -61,36 +61,34 @@ def get_companies(
             or_(
                 Company.name.ilike(search_filter),
                 Company.email.ilike(search_filter),
-                Company.address.ilike(search_filter)
+                Company.address.ilike(search_filter),
             )
         )
-    
+
     return query.offset(skip).limit(limit).all()
 
 
 def get_companies_count(
-    db: Session, 
-    status: Optional[bool] = None,
-    search: Optional[str] = None
+    db: Session, status: Optional[bool] = None, search: Optional[str] = None
 ) -> int:
     """
     Get total count of companies with optional filtering
     """
     query = db.query(Company)
-    
+
     if status is not None:
         query = query.filter(Company.status == status)
-    
+
     if search:
         search_filter = f"%{search}%"
         query = query.filter(
             or_(
                 Company.name.ilike(search_filter),
                 Company.email.ilike(search_filter),
-                Company.address.ilike(search_filter)
+                Company.address.ilike(search_filter),
             )
         )
-    
+
     return query.count()
 
 
@@ -98,7 +96,9 @@ def get_active_companies(db: Session, skip: int = 0, limit: int = 100) -> List[C
     """
     Get only active companies
     """
-    return db.query(Company).filter(Company.status == True).offset(skip).limit(limit).all()
+    return (
+        db.query(Company).filter(Company.status == True).offset(skip).limit(limit).all()
+    )
 
 
 def update_company(
@@ -127,7 +127,7 @@ def update_company(
         db_company.address = address
     if status is not None:
         db_company.status = status
-    
+
     db_company.updated_at = datetime.datetime.utcnow()
 
     db.commit()
@@ -145,17 +145,10 @@ def toggle_company_status(db: Session, company_id: int) -> Optional[Company]:
 
     db_company.status = not db_company.status
     db_company.updated_at = datetime.datetime.utcnow()
-    
+
     db.commit()
     db.refresh(db_company)
     return db_company
-
-
-def soft_delete_company(db: Session, company_id: int) -> Optional[Company]:
-    """
-    Soft delete a company (set status to inactive)
-    """
-    return update_company(db, company_id, status=False)
 
 
 def delete_company(db: Session, company_id: int) -> bool:
@@ -176,11 +169,8 @@ def company_exists_by_name(db: Session, name: str, exclude_id: int = None) -> bo
     Check if a company with the given name already exists
     """
     query = db.query(Company).filter(Company.name == name)
-    
+
     if exclude_id:
         query = query.filter(Company.id != exclude_id)
-    
+
     return query.first() is not None
-
-
-

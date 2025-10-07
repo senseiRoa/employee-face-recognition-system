@@ -20,16 +20,16 @@ class CompanyCreate(BaseModel):
     address: Optional[str] = None
     status: Optional[bool] = True
 
-    @validator('name')
+    @validator("name")
     def validate_name(cls, v):
         if not v or len(v.strip()) < 2:
-            raise ValueError('Company name must be at least 2 characters')
+            raise ValueError("Company name must be at least 2 characters")
         return v.strip()
 
-    @validator('phone')
+    @validator("phone")
     def validate_phone(cls, v):
         if v and len(v.strip()) < 10:
-            raise ValueError('Phone number must be at least 10 characters')
+            raise ValueError("Phone number must be at least 10 characters")
         return v.strip() if v else None
 
 
@@ -40,16 +40,16 @@ class CompanyUpdate(BaseModel):
     address: Optional[str] = None
     status: Optional[bool] = None
 
-    @validator('name')
+    @validator("name")
     def validate_name(cls, v):
         if v is not None and (not v or len(v.strip()) < 2):
-            raise ValueError('Company name must be at least 2 characters')
+            raise ValueError("Company name must be at least 2 characters")
         return v.strip() if v else None
 
-    @validator('phone')
+    @validator("phone")
     def validate_phone(cls, v):
         if v is not None and v and len(v.strip()) < 10:
-            raise ValueError('Phone number must be at least 10 characters')
+            raise ValueError("Phone number must be at least 10 characters")
         return v.strip() if v else None
 
 
@@ -91,7 +91,7 @@ def create_company(
     if company_service.company_exists_by_name(db, company_data.name):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A company with this name already exists"
+            detail="A company with this name already exists",
         )
 
     try:
@@ -101,19 +101,21 @@ def create_company(
             email=company_data.email,
             phone=company_data.phone,
             address=company_data.address,
-            status=company_data.status
+            status=company_data.status,
         )
-        
+
         # Add warehouses count
         response_data = CompanyResponse.from_orm(new_company)
-        response_data.warehouses_count = len(new_company.warehouses) if new_company.warehouses else 0
-        
+        response_data.warehouses_count = (
+            len(new_company.warehouses) if new_company.warehouses else 0
+        )
+
         return response_data
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create company: {str(e)}"
+            detail=f"Failed to create company: {str(e)}",
         )
 
 
@@ -121,7 +123,9 @@ def create_company(
 def get_companies(
     skip: int = Query(0, ge=0, description="Number of companies to skip"),
     limit: int = Query(20, ge=1, le=100, description="Number of companies to return"),
-    status: Optional[bool] = Query(None, description="Filter by status (true=active, false=inactive)"),
+    status: Optional[bool] = Query(
+        None, description="Filter by status (true=active, false=inactive)"
+    ),
     search: Optional[str] = Query(None, description="Search in name, email or address"),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
@@ -139,27 +143,27 @@ def get_companies(
                     total=1,
                     page=1,
                     per_page=1,
-                    total_pages=1
+                    total_pages=1,
                 )
         return CompanyListResponse(
-            companies=[],
-            total=0,
-            page=1,
-            per_page=limit,
-            total_pages=0
+            companies=[], total=0, page=1, per_page=limit, total_pages=0
         )
 
     # Get companies with filtering
-    companies = company_service.get_companies(db, skip=skip, limit=limit, status=status, search=search)
+    companies = company_service.get_companies(
+        db, skip=skip, limit=limit, status=status, search=search
+    )
     total = company_service.get_companies_count(db, status=status, search=search)
-    
+
     # Add warehouses count to each company
     companies_response = []
     for company in companies:
         company_data = CompanyResponse.from_orm(company)
-        company_data.warehouses_count = len(company.warehouses) if company.warehouses else 0
+        company_data.warehouses_count = (
+            len(company.warehouses) if company.warehouses else 0
+        )
         companies_response.append(company_data)
-    
+
     total_pages = (total + limit - 1) // limit
     page = (skip // limit) + 1
 
@@ -168,14 +172,13 @@ def get_companies(
         total=total,
         page=page,
         per_page=limit,
-        total_pages=total_pages
+        total_pages=total_pages,
     )
 
 
 @router.get("/me", response_model=CompanyResponse)
 def get_my_company(
-    current_user: User = Depends(get_current_user), 
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ):
     """
     Get information of the current user's company
@@ -183,19 +186,20 @@ def get_my_company(
     if not current_user.company_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User is not associated with any company"
+            detail="User is not associated with any company",
         )
-    
+
     company = company_service.get_company(db, current_user.company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
-    
+
     response_data = CompanyResponse.from_orm(company)
-    response_data.warehouses_count = len(company.warehouses) if company.warehouses else 0
-    
+    response_data.warehouses_count = (
+        len(company.warehouses) if company.warehouses else 0
+    )
+
     return response_data
 
 
@@ -210,13 +214,15 @@ def get_active_companies(
     Get list of active companies (admins only)
     """
     companies = company_service.get_active_companies(db, skip=skip, limit=limit)
-    
+
     companies_response = []
     for company in companies:
         company_data = CompanyResponse.from_orm(company)
-        company_data.warehouses_count = len(company.warehouses) if company.warehouses else 0
+        company_data.warehouses_count = (
+            len(company.warehouses) if company.warehouses else 0
+        )
         companies_response.append(company_data)
-    
+
     return companies_response
 
 
@@ -239,13 +245,14 @@ def get_company(
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     response_data = CompanyResponse.from_orm(company)
-    response_data.warehouses_count = len(company.warehouses) if company.warehouses else 0
-    
+    response_data.warehouses_count = (
+        len(company.warehouses) if company.warehouses else 0
+    )
+
     return response_data
 
 
@@ -271,15 +278,16 @@ def update_company(
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     # Check if new name already exists (if name is being updated)
-    if company_update.name and company_service.company_exists_by_name(db, company_update.name, exclude_id=company_id):
+    if company_update.name and company_service.company_exists_by_name(
+        db, company_update.name, exclude_id=company_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="A company with this name already exists"
+            detail="A company with this name already exists",
         )
 
     try:
@@ -296,18 +304,20 @@ def update_company(
         if not updated_company:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to update company"
+                detail="Failed to update company",
             )
 
         response_data = CompanyResponse.from_orm(updated_company)
-        response_data.warehouses_count = len(updated_company.warehouses) if updated_company.warehouses else 0
-        
+        response_data.warehouses_count = (
+            len(updated_company.warehouses) if updated_company.warehouses else 0
+        )
+
         return response_data
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update company: {str(e)}"
+            detail=f"Failed to update company: {str(e)}",
         )
 
 
@@ -323,8 +333,7 @@ def toggle_company_status(
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     try:
@@ -332,60 +341,20 @@ def toggle_company_status(
         if not updated_company:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to toggle company status"
+                detail="Failed to toggle company status",
             )
 
         response_data = CompanyResponse.from_orm(updated_company)
-        response_data.warehouses_count = len(updated_company.warehouses) if updated_company.warehouses else 0
-        
+        response_data.warehouses_count = (
+            len(updated_company.warehouses) if updated_company.warehouses else 0
+        )
+
         return response_data
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to toggle company status: {str(e)}"
-        )
-
-
-@router.delete("/{company_id}/soft", response_model=CompanyResponse)
-def soft_delete_company(
-    company_id: int,
-    current_user: User = Depends(require_admin),
-    db: Session = Depends(get_db),
-):
-    """
-    Soft delete a company (set status to inactive) - admins only
-    """
-    company = company_service.get_company(db, company_id)
-    if not company:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Company not found"
-        )
-
-    if not company.status:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Company is already inactive"
-        )
-
-    try:
-        deactivated_company = company_service.soft_delete_company(db, company_id)
-        if not deactivated_company:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to deactivate company"
-            )
-
-        response_data = CompanyResponse.from_orm(deactivated_company)
-        response_data.warehouses_count = len(deactivated_company.warehouses) if deactivated_company.warehouses else 0
-        
-        return response_data
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to deactivate company: {str(e)}"
+            detail=f"Failed to toggle company status: {str(e)}",
         )
 
 
@@ -401,15 +370,14 @@ def delete_company(
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
-            detail="Company not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     # Check if company has related data (warehouses, employees)
     if company.warehouses and len(company.warehouses) > 0:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot delete company with associated warehouses. Remove warehouses first or use soft delete."
+            detail="Cannot delete company with associated warehouses. Remove warehouses first or use soft delete.",
         )
 
     try:
@@ -422,5 +390,5 @@ def delete_company(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to delete company: {str(e)}"
+            detail=f"Failed to delete company: {str(e)}",
         )

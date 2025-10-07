@@ -109,6 +109,40 @@ def delete_warehouse(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    # Verify warehouse exists and user has access
+    warehouse = warehouse_service.get_warehouse(db, warehouse_id)
+    if not warehouse:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Warehouse not found"
+        )
+
+    # Verify permissions: only admin or users from the same company can delete
+    if (
+        current_user.role.name != "admin"
+        and warehouse.company_id != current_user.company_id
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions to delete this warehouse",
+        )
+
+    # Check for associated users and employees
+    user_count, employee_count = warehouse_service.check_warehouse_dependencies(
+        db, warehouse_id
+    )
+
+    if user_count > 0 or employee_count > 0:
+        details = []
+        if user_count > 0:
+            details.append(f"{user_count} user(s)")
+        if employee_count > 0:
+            details.append(f"{employee_count} employee(s)")
+
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Cannot delete warehouse. It has {' and '.join(details)} associated. Please remove or reassign them first.",
+        )
+
     success = warehouse_service.delete_warehouse(db, warehouse_id)
     if not success:
         raise HTTPException(

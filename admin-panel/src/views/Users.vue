@@ -205,6 +205,9 @@
         <div class="modal-body">
           <p>Are you sure you want to delete user <strong>{{ userToDelete?.username }}</strong>?</p>
           <p class="text-danger">This action cannot be undone.</p>
+          <div v-if="errors.delete" class="alert alert-error">
+            {{ errors.delete }}
+          </div>
         </div>
         <div class="modal-footer">
           <button @click="showDeleteModal = false" class="btn btn-outline">Cancel</button>
@@ -392,16 +395,21 @@ export default {
 
     const deleteUserConfirm = (user) => {
       userToDelete.value = user
+      errors.value.delete = ''
       showDeleteModal.value = true
     }
 
     const confirmDeleteUser = async () => {
       if (!userToDelete.value) return
 
+      errors.value.delete = ''
       const result = await deleteUser(userToDelete.value.id)
       if (result.success) {
         closeModals()
         await fetchUsers()
+      } else {
+        // Show error message from API
+        errors.value.delete = result.error?.detail || result.error || 'Error deleting user'
       }
     }
 
@@ -501,5 +509,18 @@ export default {
 .btn-sm {
   padding: 4px 8px;
   font-size: 12px;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 </style>

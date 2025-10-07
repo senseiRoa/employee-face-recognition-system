@@ -159,6 +159,9 @@
         <div class="modal-body">
           <p>Are you sure you want to delete the company <strong>{{ companyToDelete?.name }}</strong>?</p>
           <p class="text-warning">This action cannot be undone.</p>
+          <div v-if="deleteError" class="alert alert-error">
+            {{ deleteError }}
+          </div>
         </div>
         
         <div class="modal-footer">
@@ -197,6 +200,7 @@ export default {
     const showDeleteModal = ref(false)
     const editingCompany = ref(null)
     const companyToDelete = ref(null)
+    const deleteError = ref('')
 
     const companyForm = reactive({
       name: '',
@@ -277,16 +281,21 @@ export default {
 
     const deleteCompanyConfirm = (company) => {
       companyToDelete.value = company
+      deleteError.value = ''
       showDeleteModal.value = true
     }
 
     const confirmDelete = async () => {
       if (!companyToDelete.value) return
       
+      deleteError.value = ''
       const result = await deleteCompany(companyToDelete.value.id)
       if (result.success) {
         showDeleteModal.value = false
         companyToDelete.value = null
+      } else {
+        // Show error message from API
+        deleteError.value = result.error?.detail || result.error || 'Error deleting company'
       }
     }
 
@@ -341,6 +350,7 @@ export default {
       companyToDelete,
       companyForm,
       errors,
+      deleteError,
       editCompany,
       deleteCompanyConfirm,
       confirmDelete,
@@ -432,6 +442,19 @@ export default {
 
 .checkbox-label input[type="checkbox"] {
   margin: 0;
+}
+
+.alert {
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.alert-error {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--error-color);
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
 
 @media (max-width: 768px) {

@@ -6,8 +6,14 @@ from datetime import datetime
 
 from database import get_db
 from services import company_service
-from dependencies import get_current_user, require_admin
+from dependencies import get_current_user
 from models import User
+from utils.permission_decorators import (
+    require_company_read,
+    require_company_write,
+    require_company_delete,
+)
+from utils.permissions import can_read_companies
 
 router = APIRouter()
 
@@ -81,7 +87,7 @@ class CompanyListResponse(BaseModel):
 @router.post("/", response_model=CompanyResponse, status_code=status.HTTP_201_CREATED)
 def create_company(
     company_data: CompanyCreate,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_company_write),
     db: Session = Depends(get_db),
 ):
     """
@@ -127,33 +133,32 @@ def get_companies(
         None, description="Filter by status (true=active, false=inactive)"
     ),
     search: Optional[str] = Query(None, description="Search in name, email or address"),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_company_read),
     db: Session = Depends(get_db),
 ):
     """
     Get list of companies with pagination and filtering
+    Admin can see all companies, others only their own
     """
-    # Non-admin users can only see their own company
-    if current_user.role.name != "admin":
+    # Admin can see all companies
+    if current_user.role.name == "admin":
+        companies = company_service.get_companies(
+            db, skip=skip, limit=limit, status=status, search=search
+        )
+        total = company_service.get_companies_count(db, status=status, search=search)
+    else:
+        # Manager/Employee can only see their own company
         if current_user.warehouse.company_id:
             company = company_service.get_company(db, current_user.warehouse.company_id)
             if company:
-                return CompanyListResponse(
-                    companies=[CompanyResponse.from_orm(company)],
-                    total=1,
-                    page=1,
-                    per_page=1,
-                    total_pages=1,
-                )
-        return CompanyListResponse(
-            companies=[], total=0, page=1, per_page=limit, total_pages=0
-        )
-
-    # Get companies with filtering
-    companies = company_service.get_companies(
-        db, skip=skip, limit=limit, status=status, search=search
-    )
-    total = company_service.get_companies_count(db, status=status, search=search)
+                companies = [company]
+                total = 1
+            else:
+                companies = []
+                total = 0
+        else:
+            companies = []
+            total = 0
 
     # Add warehouses count to each company
     companies_response = []
@@ -207,12 +212,19 @@ def get_my_company(
 def get_active_companies(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=100),
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_company_read),
     db: Session = Depends(get_db),
 ):
     """
     Get list of active companies (admins only)
     """
+    # Solo admins pueden ver todas las empresas activas
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can view all active companies",
+        )
+
     companies = company_service.get_active_companies(db, skip=skip, limit=limit)
 
     companies_response = []
@@ -229,13 +241,19 @@ def get_active_companies(
 @router.get("/{company_id}", response_model=CompanyResponse)
 def get_company(
     company_id: int,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_company_read),
     db: Session = Depends(get_db),
 ):
     """
     Get information of a specific company
     """
-    # Only admin can view any company, others can only view their own
+    company = company_service.get_company(db, company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        )
+
+    # Validate scope - only admin can view any company, others only their own
     if (
         current_user.role.name != "admin"
         and current_user.warehouse.company_id != company_id
@@ -243,12 +261,6 @@ def get_company(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this company",
-        )
-
-    company = company_service.get_company(db, company_id)
-    if not company:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     response_data = CompanyResponse.from_orm(company)
@@ -263,26 +275,27 @@ def get_company(
 def update_company(
     company_id: int,
     company_update: CompanyUpdate,
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_company_write),
     db: Session = Depends(get_db),
 ):
     """
     Update company information
+    Admin can update any company, managers only their own
     """
-    # Only admin can update any company, managers can only update their own
-    if current_user.role.name not in ["admin", "manager"] or (
+    company = company_service.get_company(db, company_id)
+    if not company:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
+        )
+
+    # Validate scope - managers can only update their own company
+    if (
         current_user.role.name == "manager"
         and current_user.warehouse.company_id != company_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to update this company",
-        )
-
-    company = company_service.get_company(db, company_id)
-    if not company:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
         )
 
     # Check if new name already exists (if name is being updated)
@@ -328,12 +341,19 @@ def update_company(
 @router.patch("/{company_id}/toggle-status", response_model=CompanyResponse)
 def toggle_company_status(
     company_id: int,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_company_write),
     db: Session = Depends(get_db),
 ):
     """
-    Toggle company status (active/inactive) - admins only
+    Toggle company status (active/inactive) - requires company write permissions
     """
+    # Solo admin puede cambiar status de empresas
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can toggle company status",
+        )
+
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(
@@ -365,12 +385,19 @@ def toggle_company_status(
 @router.delete("/{company_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_company(
     company_id: int,
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(require_company_delete),
     db: Session = Depends(get_db),
 ):
     """
     Hard delete a company - PERMANENT (admins only)
     """
+    # Solo admin puede eliminar empresas
+    if current_user.role.name != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only administrators can delete companies",
+        )
+
     company = company_service.get_company(db, company_id)
     if not company:
         raise HTTPException(

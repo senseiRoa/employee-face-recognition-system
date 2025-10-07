@@ -83,6 +83,7 @@ ROLE_PERMISSIONS: Dict[str, List[PermissionSet]] = {
         PermissionSet(
             Permission.EMPLOYEE_MANAGEMENT, {Action.READ}
         ),  # Solo ver empleados
+        PermissionSet(Permission.COMPANY_MANAGEMENT, {Action.READ}),  # Solo su empresa
         PermissionSet(
             Permission.REPORTS_ANALYTICS, {Action.READ}
         ),  # Solo ver reportes básicos

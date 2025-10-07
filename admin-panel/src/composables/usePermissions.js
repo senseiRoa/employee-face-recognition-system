@@ -13,14 +13,17 @@ export function usePermissions() {
   // Funciones de verificación de permisos
   const hasPermission = (permission, action = null) => {
     try {
-      if (!currentUserRole.value) return false
-      if (!rolesStore.roles || rolesStore.roles.length === 0) return false
-      return rolesStore.hasPermission(currentUserRole.value, permission, action)
-    } catch (error) {
-      // Solo loguear errores críticos
-      if (error.message !== 'Network Error') {
-        console.warn('Permission check failed:', permission, action)
+      if (!currentUserRole.value) {
+        return false
       }
+      if (!rolesStore.roles || rolesStore.roles.length === 0) {
+        return false
+      }
+      
+      const result = rolesStore.hasPermission(currentUserRole.value, permission, action)
+      return result
+    } catch (error) {
+      console.warn('Permission check failed:', permission, action, error)
       return false
     }
   }
@@ -41,7 +44,8 @@ export function usePermissions() {
     dashboard: {
       view: () => {
         try {
-          return hasPermission('dashboard', 'read')
+          const result = hasPermission('dashboard', 'read')
+          return result || true // Fallback: permitir dashboard por defecto
         } catch (error) {
           return true // Fallback: permitir dashboard por defecto
         }
@@ -52,7 +56,8 @@ export function usePermissions() {
     companies: {
       view: () => {
         try {
-          return hasPermission('companies', 'read')
+          // Usar tanto 'companies' como 'company_management' 
+          return hasPermission('companies', 'read') || hasPermission('company_management', 'read')
         } catch (error) {
           console.error('Error checking companies view permission:', error)
           return false
@@ -60,7 +65,7 @@ export function usePermissions() {
       },
       create: () => {
         try {
-          return hasPermission('companies', 'create')
+          return hasPermission('companies', 'create') || hasPermission('company_management', 'write')
         } catch (error) {
           console.error('Error checking companies create permission:', error)
           return false
@@ -68,7 +73,7 @@ export function usePermissions() {
       },
       update: () => {
         try {
-          return hasPermission('companies', 'update')
+          return hasPermission('companies', 'update') || hasPermission('company_management', 'write')
         } catch (error) {
           console.error('Error checking companies update permission:', error)
           return false
@@ -76,7 +81,7 @@ export function usePermissions() {
       },
       delete: () => {
         try {
-          return hasPermission('companies', 'delete')
+          return hasPermission('companies', 'delete') || hasPermission('company_management', 'delete')
         } catch (error) {
           console.error('Error checking companies delete permission:', error)
           return false
@@ -88,7 +93,7 @@ export function usePermissions() {
     warehouses: {
       view: () => {
         try {
-          return hasPermission('warehouses', 'read')
+          return hasPermission('warehouses', 'read') || hasPermission('warehouse_access', 'read')
         } catch (error) {
           console.error('Error checking warehouses view permission:', error)
           return false
@@ -96,7 +101,7 @@ export function usePermissions() {
       },
       create: () => {
         try {
-          return hasPermission('warehouses', 'create')
+          return hasPermission('warehouses', 'create') || hasPermission('warehouse_access', 'write')
         } catch (error) {
           console.error('Error checking warehouses create permission:', error)
           return false
@@ -104,7 +109,7 @@ export function usePermissions() {
       },
       update: () => {
         try {
-          return hasPermission('warehouses', 'update')
+          return hasPermission('warehouses', 'update') || hasPermission('warehouse_access', 'write')
         } catch (error) {
           console.error('Error checking warehouses update permission:', error)
           return false
@@ -112,7 +117,7 @@ export function usePermissions() {
       },
       delete: () => {
         try {
-          return hasPermission('warehouses', 'delete')
+          return hasPermission('warehouses', 'delete') || hasPermission('warehouse_access', 'delete')
         } catch (error) {
           console.error('Error checking warehouses delete permission:', error)
           return false
@@ -124,7 +129,7 @@ export function usePermissions() {
     employees: {
       view: () => {
         try {
-          return hasPermission('employees', 'read')
+          return hasPermission('employees', 'read') || hasPermission('employee_management', 'read')
         } catch (error) {
           console.error('Error checking employees view permission:', error)
           return false
@@ -132,7 +137,7 @@ export function usePermissions() {
       },
       create: () => {
         try {
-          return hasPermission('employees', 'create')
+          return hasPermission('employees', 'create') || hasPermission('employee_management', 'write')
         } catch (error) {
           console.error('Error checking employees create permission:', error)
           return false
@@ -140,7 +145,7 @@ export function usePermissions() {
       },
       update: () => {
         try {
-          return hasPermission('employees', 'update')
+          return hasPermission('employees', 'update') || hasPermission('employee_management', 'write')
         } catch (error) {
           console.error('Error checking employees update permission:', error)
           return false
@@ -148,7 +153,7 @@ export function usePermissions() {
       },
       delete: () => {
         try {
-          return hasPermission('employees', 'delete')
+          return hasPermission('employees', 'delete') || hasPermission('employee_management', 'delete')
         } catch (error) {
           console.error('Error checking employees delete permission:', error)
           return false
@@ -156,7 +161,7 @@ export function usePermissions() {
       },
       registerFace: () => {
         try {
-          return hasPermission('employees', 'register_face')
+          return hasPermission('employees', 'register_face') || hasPermission('employee_management', 'write')
         } catch (error) {
           console.error('Error checking employees register face permission:', error)
           return false
@@ -168,7 +173,7 @@ export function usePermissions() {
     users: {
       view: () => {
         try {
-          return hasPermission('users', 'read')
+          return hasPermission('users', 'read') || hasPermission('user_management', 'read')
         } catch (error) {
           console.error('Error checking users view permission:', error)
           return false
@@ -176,7 +181,7 @@ export function usePermissions() {
       },
       create: () => {
         try {
-          return hasPermission('users', 'create')
+          return hasPermission('users', 'create') || hasPermission('user_management', 'write')
         } catch (error) {
           console.error('Error checking users create permission:', error)
           return false
@@ -184,7 +189,7 @@ export function usePermissions() {
       },
       update: () => {
         try {
-          return hasPermission('users', 'update')
+          return hasPermission('users', 'update') || hasPermission('user_management', 'write')
         } catch (error) {
           console.error('Error checking users update permission:', error)
           return false
@@ -192,7 +197,7 @@ export function usePermissions() {
       },
       delete: () => {
         try {
-          return hasPermission('users', 'delete')
+          return hasPermission('users', 'delete') || hasPermission('user_management', 'delete')
         } catch (error) {
           console.error('Error checking users delete permission:', error)
           return false
@@ -200,11 +205,12 @@ export function usePermissions() {
       }
     },
 
-    // Roles
+    // Roles (usar permisos de users como fallback ya que no hay permiso específico de roles)
     roles: {
       view: () => {
         try {
-          return hasPermission('roles', 'read')
+          // Intentar permiso específico de roles, si no existe usar user_management como fallback
+          return hasPermission('roles', 'read') || hasPermission('user_management', 'read')
         } catch (error) {
           console.error('Error checking roles view permission:', error)
           return false
@@ -213,11 +219,12 @@ export function usePermissions() {
       // No create, update, delete ya que los roles son solo lectura
     },
 
-    // Logs
+    // Logs (usar 'read' o 'audit' como válidos)
     logs: {
       view: () => {
         try {
-          return hasPermission('logs', 'read')
+          return hasPermission('logs', 'read') || hasPermission('logs', 'audit') || 
+                 hasPermission('system_logs', 'read') || hasPermission('system_logs', 'audit')
         } catch (error) {
           console.error('Error checking logs view permission:', error)
           return false
@@ -225,7 +232,8 @@ export function usePermissions() {
       },
       export: () => {
         try {
-          return hasPermission('logs', 'export')
+          return hasPermission('logs', 'export') || hasPermission('logs', 'read') ||
+                 hasPermission('system_logs', 'export') || hasPermission('system_logs', 'read')
         } catch (error) {
           console.error('Error checking logs export permission:', error)
           return false
@@ -237,7 +245,7 @@ export function usePermissions() {
     reports: {
       view: () => {
         try {
-          return hasPermission('reports', 'read')
+          return hasPermission('reports', 'read') || hasPermission('reports_analytics', 'read')
         } catch (error) {
           console.error('Error checking reports view permission:', error)
           return false
@@ -245,7 +253,8 @@ export function usePermissions() {
       },
       generate: () => {
         try {
-          return hasPermission('reports', 'generate')
+          // Usar 'write' para generar reportes ya que no hay 'generate' en backend
+          return hasPermission('reports', 'write') || hasPermission('reports_analytics', 'write')
         } catch (error) {
           console.error('Error checking reports generate permission:', error)
           return false
@@ -253,7 +262,7 @@ export function usePermissions() {
       },
       export: () => {
         try {
-          return hasPermission('reports', 'export')
+          return hasPermission('reports', 'export') || hasPermission('reports_analytics', 'export')
         } catch (error) {
           console.error('Error checking reports export permission:', error)
           return false
@@ -278,7 +287,8 @@ export function usePermissions() {
         'Reports': permissions.reports.view()
       }
 
-      return routePermissions[routeName] || false
+      const result = routePermissions[routeName] || false
+      return result
     } catch (error) {
       console.error('Error checking route access for', routeName, error)
       // Fallback: permitir solo dashboard para evitar errores
@@ -307,7 +317,8 @@ export function usePermissions() {
 
       const filteredRoutes = routes.filter(route => {
         try {
-          return route && route.name && canAccessRoute(route.name)
+          const hasAccess = route && route.name && canAccessRoute(route.name)
+          return hasAccess
         } catch (error) {
           console.error('Error filtering route:', route, error)
           return false

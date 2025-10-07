@@ -1,19 +1,19 @@
 <template>
   <div class="layout">
     <!-- Sidebar -->
-    <aside class="sidebar" :class="{ 'open': sidebarOpen }">
+    <aside class="sidebar" :class="{ open: sidebarOpen }">
       <div class="sidebar-header">
         <h2>Employee Tracker</h2>
         <button @click="toggleSidebar" class="sidebar-toggle">
           <span>☰</span>
         </button>
       </div>
-      
+
       <nav class="sidebar-nav">
-        <router-link 
-          v-for="navItem in validNavItems" 
+        <router-link
+          v-for="navItem in validNavItems"
           :key="navItem.path"
-          :to="navItem.path" 
+          :to="navItem.path"
           class="nav-item"
         >
           <span class="nav-icon">{{ navItem.icon }}</span>
@@ -32,22 +32,22 @@
           </button>
           <h1>{{ pageTitle }}</h1>
         </div>
-        
+
         <div class="header-right">
-          <div class="user-menu" :class="{ 'open': userMenuOpen }">
+          <div class="user-menu" :class="{ open: userMenuOpen }">
             <div class="user-info" @click="toggleUserMenu">
               <div class="user-avatar">
                 <span>{{ getUserInitials() }}</span>
               </div>
               <div class="user-details">
                 <div class="user-name">{{ getUserFullName() }}</div>
-                <div class="user-role">{{ user?.role || 'User' }}</div>
+                <div class="user-role">{{ user?.role || "User" }}</div>
               </div>
               <div class="user-dropdown-icon">
-                <span>{{ userMenuOpen ? '▲' : '▼' }}</span>
+                <span>{{ userMenuOpen ? "▲" : "▼" }}</span>
               </div>
             </div>
-            
+
             <div class="user-dropdown" v-show="userMenuOpen">
               <div class="user-profile">
                 <div class="profile-header">
@@ -56,26 +56,31 @@
                   </div>
                   <div class="profile-info">
                     <div class="profile-name">{{ getUserFullName() }}</div>
-                    <div class="profile-email">{{ user?.email || 'No email' }}</div>
+                    <div class="profile-email">
+                      {{ user?.email || "No email" }}
+                    </div>
                   </div>
                 </div>
-                
+
                 <div class="profile-details">
                   <div class="detail-item">
                     <span class="detail-label">Username:</span>
-                    <span class="detail-value">{{ user?.username || '-' }}</span>
+                    <span class="detail-value">{{
+                      user?.username || "-"
+                    }}</span>
                   </div>
                   <div class="detail-item">
                     <span class="detail-label">Role:</span>
-                    <span class="detail-value">{{ user?.role || '-' }}</span>
+                    <span class="detail-value">{{ user?.role || "-" }}</span>
                   </div>
                   <div class="detail-item">
                     <span class="detail-label">Warehouse:</span>
-                    <span class="detail-value">{{ user?.warehouse_name || '-' }}</span>
+                    <span class="detail-value">{{
+                      user?.warehouse_name || "-"
+                    }}</span>
                   </div>
-                 
                 </div>
-                
+
                 <div class="profile-actions">
                   <button @click="logout" class="btn btn-danger btn-sm">
                     <span>🚪</span>
@@ -97,136 +102,149 @@
 </template>
 
 <script>
-import { computed, ref, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { useAuthStore } from '@/store/auth'
-import { useAppStore } from '@/store/app'
-import { usePermissions } from '@/composables/usePermissions'
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from "vue-router";
+import { useAuthStore } from "@/store/auth";
+import { useAppStore } from "@/store/app";
+import { usePermissions } from "@/composables/usePermissions";
 
 export default {
-  name: 'Layout',
+  name: "Layout",
   setup() {
-    const route = useRoute()
-    const router = useRouter()
-    const authStore = useAuthStore()
-    const appStore = useAppStore()
-    const permissions = usePermissions()
-    const userMenuOpen = ref(false)
+    const route = useRoute();
+    const router = useRouter();
+    const authStore = useAuthStore();
+    const appStore = useAppStore();
+    const permissions = usePermissions();
+    const userMenuOpen = ref(false);
 
     const pageTitle = computed(() => {
       const titles = {
-      'Dashboard': 'Dashboard',
-      'Companies': 'Companies Management',
-      'Warehouses': 'Warehouses Management',
-      'Employees': 'Employees Management',
-      'Users': 'Users Management',
-      'Roles': 'Roles & Permissions',
-      'Logs': 'Audit & Logs',
-      'Reports': 'Reports & Statistics'
-      }
-      return titles[route.name] || 'Admin Panel'
-    })
+        Dashboard: "Dashboard",
+        Companies: "Companies Management",
+        Warehouses: "Warehouses Management",
+        Employees: "Employees Management",
+        Users: "Users Management",
+        Roles: "Roles & Permissions",
+        Logs: "Audit & Logs",
+        Reports: "Reports & Statistics"
+      };
+      return titles[route.name] || "Admin Panel";
+    });
 
     // Elementos de navegación filtrados por permisos
     const availableNavItems = computed(() => {
       try {
-        return permissions.availableRoutes || []
+        const routes = permissions.availableRoutes.value || [];
+        return routes;
       } catch (error) {
-        console.error('Error getting available routes:', error)
         // Fallback: rutas básicas sin permisos
-        return [
-          { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' }
-        ]
+        return [{ name: "Dashboard", path: "/admin/dashboard", icon: "📊" }];
       }
-    })
+    });
 
     // Validar que los elementos de navegación tengan todas las propiedades requeridas
     const validNavItems = computed(() => {
       try {
-        const items = availableNavItems.value || []
+        const rawItems = availableNavItems.value || [];
         
-        const validItems = items.filter(item => {
-          return item && 
-            typeof item === 'object' && 
+        // Asegurar que tenemos un array
+        const items = Array.isArray(rawItems) ? rawItems : [];
+
+        const validItems = items.filter((item, index) => {
+          const isValid = item && 
+            typeof item === "object" && 
             item.path && 
             item.name && 
-            item.icon
-        })
-        
-        // Solo loguear si hay problemas
-        if (validItems.length !== items.length) {
-          console.warn('Some nav items were filtered out. Valid:', validItems.length, 'Total:', items.length)
-        }
-        
-        return validItems
+            item.icon;
+          
+          
+          return isValid;
+        });
+
+        return validItems;
       } catch (error) {
-        console.error('Error validating nav items:', error)
-        return [
-          { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' }
-        ]
+        return [{ name: "Dashboard", path: "/admin/dashboard", icon: "📊" }];
       }
-    })
+    });
 
     const getUserFullName = () => {
-      const user = authStore.user
+      const user = authStore.user;
       if (user?.first_name && user?.last_name) {
-        return `${user.first_name} ${user.last_name}`
+        return `${user.first_name} ${user.last_name}`;
       }
-      return user?.username || 'User'
-    }
+      return user?.username || "User";
+    };
 
     const getUserInitials = () => {
-      const user = authStore.user
+      const user = authStore.user;
       if (user?.first_name && user?.last_name) {
-        return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+        return `${user.first_name.charAt(0)}${user.last_name.charAt(
+          0
+        )}`.toUpperCase();
       }
       if (user?.username) {
-        return user.username.substring(0, 2).toUpperCase()
+        return user.username.substring(0, 2).toUpperCase();
       }
-      return 'U'
-    }
+      return "U";
+    };
 
     const toggleUserMenu = () => {
-      userMenuOpen.value = !userMenuOpen.value
-    }
+      userMenuOpen.value = !userMenuOpen.value;
+    };
 
     const closeUserMenu = (event) => {
-      if (!event.target.closest('.user-menu')) {
-        userMenuOpen.value = false
+      if (!event.target.closest(".user-menu")) {
+        userMenuOpen.value = false;
       }
-    }
+    };
 
     const logout = () => {
-      userMenuOpen.value = false
-      authStore.logout()
-      router.push('/admin/login')
-    }
+      userMenuOpen.value = false;
+      authStore.logout();
+      router.push("/admin/login");
+    };
 
     const toggleSidebar = () => {
-      appStore.toggleSidebar()
-    }
+      appStore.toggleSidebar();
+    };
 
-    onMounted(() => {
-      document.addEventListener('click', closeUserMenu)
-      
-      // Asegurar que los roles estén cargados
-      if (authStore.isAuthenticated && permissions.rolesStore.roles.length === 0) {
-        permissions.rolesStore.fetchRoles().catch(error => {
+    onMounted(async () => {
+      document.addEventListener("click", closeUserMenu);
+
+      // Asegurar que los roles estén cargados ANTES de continuar
+      if (authStore.isAuthenticated) {
+        try {
+          // Esperar a que los roles se carguen completamente
+          await permissions.rolesStore.fetchRoles()
+        } catch (error) {
           console.warn('Could not load roles in Layout:', error)
-        })
+        }
       }
+      
+      
+    });
 
-      // Debug info en desarrollo
-      if (import.meta.env.DEV) {
-        console.log('🔐 User role ID:', permissions.currentUserRole.value)
-        console.log('🔑 Available roles:', permissions.rolesStore.roles)
-        console.log('🧭 Available routes:', permissions.availableRoutes.value)
+    // Watcher para reaccionar cuando los roles se carguen
+    watch(() => permissions.rolesStore.roles.length, async (newLength, oldLength) => {
+      if (newLength > 0 && oldLength === 0) {
+        console.log('🔄 Roles loaded, refreshing navigation...')
+        
+        // Forzar reactividad
+        await nextTick()
+        
+        if (import.meta.env.DEV) {
+          setTimeout(() => {
+            console.log('🧭 Updated available routes:', permissions.availableRoutes.value)
+            console.log('🎯 Updated valid nav items:', validNavItems.value)
+          }, 50)
+        }
       }
     })
 
     onUnmounted(() => {
-      document.removeEventListener('click', closeUserMenu)
-    })
+      document.removeEventListener("click", closeUserMenu);
+    });
 
     return {
       user: authStore.user,
@@ -240,9 +258,9 @@ export default {
       toggleUserMenu,
       logout,
       toggleSidebar
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
@@ -518,20 +536,20 @@ export default {
   .user-details {
     display: none;
   }
-  
+
   .user-dropdown {
     width: 260px;
     right: -40px;
   }
-  
+
   .profile-header {
     padding: 16px;
   }
-  
+
   .profile-details {
     padding: 12px 16px;
   }
-  
+
   .profile-actions {
     padding: 12px 16px;
   }
@@ -552,27 +570,27 @@ export default {
     transform: translateX(-100%);
     transition: transform 0.3s;
   }
-  
+
   .sidebar.open {
     transform: translateX(0);
   }
-  
+
   .sidebar-toggle {
     display: block;
   }
-  
+
   .menu-toggle {
     display: block;
   }
-  
+
   .main-content {
     margin-left: 0;
   }
-  
+
   .header-left h1 {
     font-size: 16px;
   }
-  
+
   .content {
     padding: 16px;
   }

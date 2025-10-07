@@ -108,13 +108,14 @@
           </div>
 
           <div class="form-group">
-            <label class="form-label">{{ editingUser ? 'New Password (leave empty to keep current)' : 'Password *' }}</label>
+            <label class="form-label">{{ editingUser ? 'New Password (leave empty to keep current)' : 'Password  *' }}</label>
             <input
               v-model="userForm.password"
               type="password"
               class="form-control"
               :class="{ error: errors.password }"
               :required="!editingUser"
+              autocomplete="off"
             />
             <div v-if="errors.password" class="form-error">{{ errors.password }}</div>
           </div>

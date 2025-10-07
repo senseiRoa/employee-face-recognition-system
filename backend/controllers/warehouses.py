@@ -28,11 +28,11 @@ def create_warehouse(
     target_company_id = (
         warehouse.company_id
         if hasattr(warehouse, "company_id")
-        else current_user.company_id
+        else current_user.warehouse.company_id
     )
     if (
         current_user.role.name != "admin"
-        and target_company_id != current_user.company_id
+        and target_company_id != current_user.warehouse.company_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -56,7 +56,7 @@ def list_warehouses(
         filter_company_id = company_id
     else:
         # Other roles can only see warehouses from their company
-        filter_company_id = current_user.company_id
+        filter_company_id = current_user.warehouse.company_id
 
     return warehouse_service.get_warehouses(
         db, company_id=filter_company_id, skip=skip, limit=limit
@@ -78,7 +78,7 @@ def get_warehouse(
     # Verify permissions: only admin or users from the same company
     if (
         current_user.role.name != "admin"
-        and warehouse.company_id != current_user.company_id
+        and warehouse.company_id != current_user.warehouse.company_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -119,7 +119,7 @@ def delete_warehouse(
     # Verify permissions: only admin or users from the same company can delete
     if (
         current_user.role.name != "admin"
-        and warehouse.company_id != current_user.company_id
+        and warehouse.company_id != current_user.warehouse.company_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

@@ -45,6 +45,8 @@ class UserUpdateRequest(BaseModel):
     password: Optional[str] = None
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    warehouse_id: Optional[int] = None
+    role_id: Optional[int] = None
     is_active: Optional[bool] = None
 
 
@@ -75,7 +77,7 @@ def create_user(
     except PasswordValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Password validation failed: {e.message}"
+            detail=f"Password validation failed: {e.message}",
         )
 
     # Verify permissions - only admin and manager can create users
@@ -237,6 +239,44 @@ def update_user(
             detail="Can only update users from your warehouse",
         )
 
+    # Validate role_id changes - only admin and managers can change roles
+    if user_update.role_id is not None and user_update.role_id != target_user.role_id:
+        # Only admin and manager can change roles
+        if current_user.role.name == "employee":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to change user roles. Only admins and managers can modify roles.",
+            )
+
+        # Managers cannot assign admin role (role_id = 1)
+        if current_user.role.name == "manager" and user_update.role_id == 1:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Managers cannot assign admin roles",
+            )
+
+    # Validate warehouse_id changes - similar to role restrictions
+    if (
+        user_update.warehouse_id is not None
+        and user_update.warehouse_id != target_user.warehouse_id
+    ):
+        # Only admin and manager can change warehouse assignments
+        if current_user.role.name == "employee":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Insufficient permissions to change warehouse assignments. Only admins and managers can modify warehouse assignments.",
+            )
+
+        # If not admin, can only assign users to their own warehouse
+        if (
+            current_user.role.name != "admin"
+            and user_update.warehouse_id != current_user.warehouse_id
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Managers can only assign users to their own warehouse",
+            )
+
     # Check if new username already exists
     if user_update.username and user_update.username != target_user.username:
         existing = user_service.get_user_by_username(db, user_update.username)
@@ -265,7 +305,7 @@ def update_user(
         except PasswordValidationError as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Password validation failed: {e.message}"
+                detail=f"Password validation failed: {e.message}",
             )
 
     updated_user = user_service.update_user(
@@ -276,6 +316,8 @@ def update_user(
         password=user_update.password,
         first_name=user_update.first_name,
         last_name=user_update.last_name,
+        warehouse_id=user_update.warehouse_id,
+        role_id=user_update.role_id,
         is_active=user_update.is_active,
     )
 

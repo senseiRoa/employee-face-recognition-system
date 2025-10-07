@@ -134,7 +134,7 @@ def list_employees(
         from services import warehouse_service
 
         warehouse = warehouse_service.get_warehouse(db, warehouse_id)
-        if not warehouse or warehouse.company_id != current_user.company_id:
+        if not warehouse or warehouse.company_id != current_user.warehouse.company_id:
             raise HTTPException(
                 status_code=403,
                 detail="Cannot access employees from warehouses outside your company",

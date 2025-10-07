@@ -96,6 +96,8 @@ class UserService:
         password: str = None,
         first_name: str = None,
         last_name: str = None,
+        warehouse_id: int = None,
+        role_id: int = None,
         is_active: bool = None,
     ) -> Optional[User]:
         """
@@ -116,6 +118,10 @@ class UserService:
             db_user.first_name = first_name
         if last_name is not None:
             db_user.last_name = last_name
+        if warehouse_id is not None:
+            db_user.warehouse_id = warehouse_id
+        if role_id is not None:
+            db_user.role_id = role_id
         if is_active is not None:
             db_user.is_active = is_active
 
@@ -196,11 +202,21 @@ def update_user(
     password: str = None,
     first_name: str = None,
     last_name: str = None,
+    warehouse_id: int = None,
+    role_id: int = None,
     is_active: bool = None,
 ) -> Optional[User]:
     service = UserService(db)
     return service.update_user(
-        user_id, username, email, password, first_name, last_name, is_active
+        user_id,
+        username,
+        email,
+        password,
+        first_name,
+        last_name,
+        warehouse_id,
+        role_id,
+        is_active,
     )
 
 

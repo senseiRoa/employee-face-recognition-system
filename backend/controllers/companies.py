@@ -135,8 +135,8 @@ def get_companies(
     """
     # Non-admin users can only see their own company
     if current_user.role.name != "admin":
-        if current_user.company_id:
-            company = company_service.get_company(db, current_user.company_id)
+        if current_user.warehouse.company_id:
+            company = company_service.get_company(db, current_user.warehouse.company_id)
             if company:
                 return CompanyListResponse(
                     companies=[CompanyResponse.from_orm(company)],
@@ -183,13 +183,13 @@ def get_my_company(
     """
     Get information of the current user's company
     """
-    if not current_user.company_id:
+    if not current_user.warehouse.company_id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User is not associated with any company",
         )
 
-    company = company_service.get_company(db, current_user.company_id)
+    company = company_service.get_company(db, current_user.warehouse.company_id)
     if not company:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Company not found"
@@ -236,7 +236,10 @@ def get_company(
     Get information of a specific company
     """
     # Only admin can view any company, others can only view their own
-    if current_user.role.name != "admin" and current_user.company_id != company_id:
+    if (
+        current_user.role.name != "admin"
+        and current_user.warehouse.company_id != company_id
+    ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to access this company",
@@ -268,7 +271,8 @@ def update_company(
     """
     # Only admin can update any company, managers can only update their own
     if current_user.role.name not in ["admin", "manager"] or (
-        current_user.role.name == "manager" and current_user.company_id != company_id
+        current_user.role.name == "manager"
+        and current_user.warehouse.company_id != company_id
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

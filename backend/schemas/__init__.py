@@ -128,11 +128,13 @@ class WarehouseCreate(BaseModel):
     company_id: int
     name: str
     location: Optional[str] = None
+    is_active: bool = None
 
 
 class WarehouseUpdate(BaseModel):
     name: Optional[str] = None
     location: Optional[str] = None
+    is_active: Optional[bool] = None
 
 
 class Warehouse(BaseModel):
@@ -141,6 +143,7 @@ class Warehouse(BaseModel):
     name: str
     location: Optional[str] = None
     created_at: datetime.datetime
+    is_active: bool = False
 
     class Config:
         from_attributes = True
@@ -179,6 +182,7 @@ class EmployeeCreate(BaseModel):
     first_name: str
     last_name: str
     email: Optional[str] = None
+    is_active: bool = True
 
 
 class EmployeeUpdate(BaseModel):
@@ -186,6 +190,7 @@ class EmployeeUpdate(BaseModel):
     last_name: Optional[str] = None
     email: Optional[str] = None
     warehouse_id: Optional[int] = None
+    is_active: Optional[bool] = None
 
 
 class Employee(BaseModel):
@@ -196,6 +201,7 @@ class Employee(BaseModel):
     email: Optional[str] = None
     created_at: datetime.datetime
     has_face: bool = False
+    is_active: bool = True
 
     class Config:
         from_attributes = True

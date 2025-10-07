@@ -37,25 +37,31 @@
             <th>Email</th>
             <th>Warehouse</th>
             <th>Face Registered</th>
+            <th>Status</th>
             <th>Created At</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Loading...</td>
+            <td colspan="8" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredEmployees.length === 0">
-            <td colspan="7" class="text-center">No employees found</td>
+            <td colspan="8" class="text-center">No employees found</td>
           </tr>
           <tr v-else v-for="employee in filteredEmployees" :key="employee.id">
             <td>{{ employee.id }}</td>
             <td>{{ getEmployeeFullName(employee) }}</td>
             <td>{{ employee.email || '-' }}</td>
-            <td>{{ employee.warehouse?.name || '-' }}</td>
+            <td>{{ getUserWarehouseName(employee) }}</td>
             <td>
               <span class="status-badge" :class="employee.has_face ? 'active' : 'inactive'">
                 {{ employee.has_face ? 'Yes' : 'No' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-badge" :class="employee.is_active ? 'active' : 'inactive'">
+                {{ employee.is_active ? 'Active' : 'Inactive' }}
               </span>
             </td>
             <td>{{ formatDate(employee.created_at) }}</td>
@@ -129,6 +135,16 @@
               </option>
             </select>
             <div v-if="errors.warehouse_id" class="form-error">{{ errors.warehouse_id }}</div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input
+                v-model="employeeForm.is_active"
+                type="checkbox"
+              />
+              <span>Active employee</span>
+            </label>
           </div>
 
           <div v-if="errors.general" class="alert alert-error">
@@ -243,7 +259,8 @@ export default {
       first_name: '',
       last_name: '',
       email: '',
-      warehouse_id: ''
+      warehouse_id: '',
+      is_active: true
     })
 
     const filteredEmployees = computed(() => {
@@ -268,7 +285,11 @@ export default {
     const getEmployeeFullName = (employee) => {
       return `${employee.first_name} ${employee.last_name}`
     }
-
+   const getUserWarehouseName = (employee) => {
+      if (employee.warehouse?.name) return employee.warehouse.name
+      const warehouse = warehouses.value.find(w => w.id === employee.warehouse_id)
+      return warehouse?.name || '-'
+    }
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       try {
@@ -283,7 +304,8 @@ export default {
         first_name: '',
         last_name: '',
         email: '',
-        warehouse_id: ''
+        warehouse_id: '',
+        is_active: true
       })
       errors.value = {}
     }
@@ -312,7 +334,8 @@ export default {
         first_name: employee.first_name,
         last_name: employee.last_name,
         email: employee.email || '',
-        warehouse_id: employee.warehouse_id
+        warehouse_id: employee.warehouse_id,
+        is_active: employee.is_active !== undefined ? employee.is_active : true
       })
       showEditModal.value = true
     }
@@ -468,8 +491,8 @@ export default {
 
     onMounted(async () => {
       await Promise.all([
-        fetchEmployees(),
-        fetchWarehouses()
+        fetchWarehouses(),
+        fetchEmployees()
       ])
     })
 
@@ -492,6 +515,7 @@ export default {
       photoPreview,
       photoBase64,
       getEmployeeFullName,
+      getUserWarehouseName,
       formatDate,
       closeModals,
       editEmployee,
@@ -588,5 +612,13 @@ export default {
   background: rgba(239, 68, 68, 0.1);
   color: var(--error-color);
   border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  cursor: pointer;
 }
 </style>

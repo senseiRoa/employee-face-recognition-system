@@ -75,7 +75,7 @@ def check_in_out(
     employees = db.execute(query).scalars().all()
 
     if not employees:
-        raise HTTPException(status_code=400, detail="No hay empleados registrados.")
+        raise HTTPException(status_code=400, detail="No employees registered.")
 
     best_id, best_name, best_dist = None, None, 1e9
     for e in employees:

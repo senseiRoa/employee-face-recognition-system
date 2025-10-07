@@ -42,6 +42,7 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             "user_id": user.id,
             "warehouse_id": user.warehouse_id,
             "role": user.role.name,
+            "role_id": user.role.id,
         }
     )
 
@@ -55,6 +56,7 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             "first_name": user.first_name,
             "last_name": user.last_name,
             "role": user.role.name,
+            "role_id": user.role.id,
             "warehouse_id": user.warehouse_id,
             "warehouse_name": user.warehouse.name,
         },

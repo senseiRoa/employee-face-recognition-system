@@ -1,11 +1,14 @@
 <template>
   <div class="roles">
     <div class="page-header">
-      <h2>Role Management</h2>
-      <button @click="showCreateModal = true" class="btn btn-primary">
-        <span>➕</span>
-        New Role
-      </button>
+      <h2>Roles & Permissions</h2>
+      <div class="header-info">
+        <p class="info-text">📋 View system roles and their permissions (Read-only)</p>
+        <button @click="refreshRoles" class="btn btn-secondary" :disabled="loading">
+          <span>🔄</span>
+          Refresh
+        </button>
+      </div>
     </div>
 
     <!-- Filters -->
@@ -27,45 +30,47 @@
             <th>ID</th>
             <th>Name</th>
             <th>Description</th>
-            <th>Scope</th>
             <th>Permissions</th>
-            <th>Users Count</th>
             <th>Created At</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="8" class="text-center">Loading...</td>
+            <td colspan="6" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredRoles.length === 0">
-            <td colspan="8" class="text-center">No roles found</td>
+            <td colspan="6" class="text-center">No roles found</td>
           </tr>
           <tr v-else v-for="role in filteredRoles" :key="role.id">
             <td>{{ role.id }}</td>
-            <td>{{ role.name }}</td>
-            <td>{{ role.description || '-' }}</td>
             <td>
-              <span class="scope-badge" :class="role.scope">
-                {{ role.scope || 'warehouse' }}
-              </span>
-            </td>
-            <td>
-              <div class="permissions-list">
-                <span v-for="permission in getPermissionsList(role.permissions)" :key="permission" class="permission-tag">
-                  {{ permission }}
-                </span>
-                <span v-if="!role.permissions || Object.keys(role.permissions).length === 0" class="text-muted">
-                  No permissions
-                </span>
+              <div class="role-name">
+                <strong>{{ role.name }}</strong>
               </div>
             </td>
-            <td>{{ role.users_count || 0 }}</td>
+            <td>{{ role.description || '-' }}</td>
+            <td>
+              <div class="permissions-container">
+                <div v-if="role.permissions && role.permissions.length > 0" class="permissions-list">
+                  <div v-for="permission in role.permissions" :key="permission.permission" class="permission-item">
+                    <span class="permission-name">{{ permission.permission }}</span>
+                    <div class="permission-actions">
+                      <span v-for="action in permission.actions" :key="action" class="action-tag">
+                        {{ action }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <span v-else class="text-muted">No permissions assigned</span>
+              </div>
+            </td>
             <td>{{ formatDate(role.created_at) }}</td>
             <td>
               <div class="action-buttons">
-                <button @click="editRole(role)" class="btn btn-outline btn-sm" title="Edit">✏️</button>
-                <button @click="deleteRoleConfirm(role)" class="btn btn-danger btn-sm" title="Delete" :disabled="role.users_count > 0">🗑️</button>
+                <button @click="viewRoleDetails(role)" class="btn btn-outline btn-sm" title="View Details">
+                  👁️ View
+                </button>
               </div>
             </td>
           </tr>
@@ -73,334 +78,151 @@
       </table>
     </div>
 
-    <!-- Create/Edit Modal -->
-    <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
-      <div class="modal">
+    <!-- Role Details Modal -->
+    <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeModals">
+      <div class="modal modal-large">
         <div class="modal-header">
-          <h3>{{ editingRole ? 'Edit Role' : 'New Role' }}</h3>
+          <h3>Role Details: {{ selectedRole?.name }}</h3>
           <button @click="closeModals" class="btn btn-outline">✕</button>
         </div>
         
-        <form @submit.prevent="saveRole" class="modal-body">
-          <div class="form-group">
-            <label class="form-label">Name *</label>
-            <input
-              v-model="roleForm.name"
-              type="text"
-              class="form-control"
-              :class="{ error: errors.name }"
-              required
-            />
-            <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
-          </div>
+        <div class="modal-body">
+          <div class="role-details">
+            <div class="detail-section">
+              <h4>Basic Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>ID:</label>
+                  <span>{{ selectedRole?.id }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Name:</label>
+                  <span>{{ selectedRole?.name }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Description:</label>
+                  <span>{{ selectedRole?.description || 'No description' }}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Created At:</label>
+                  <span>{{ formatDate(selectedRole?.created_at) }}</span>
+                </div>
+              </div>
+            </div>
 
-          <div class="form-group">
-            <label class="form-label">Description</label>
-            <textarea
-              v-model="roleForm.description"
-              class="form-control"
-              :class="{ error: errors.description }"
-              rows="3"
-              placeholder="Describe the role's responsibilities..."
-            ></textarea>
-            <div v-if="errors.description" class="form-error">{{ errors.description }}</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Scope</label>
-            <select
-              v-model="roleForm.scope"
-              class="form-control"
-              :class="{ error: errors.scope }"
-            >
-              <option value="global">Global</option>
-              <option value="warehouse">Warehouse</option>
-              <option value="local">Local</option>
-            </select>
-            <div v-if="errors.scope" class="form-error">{{ errors.scope }}</div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Permissions</label>
-            <div class="permissions-grid">
-              <div v-for="category in permissionCategories" :key="category.key" class="permission-category">
-                <h4>{{ category.name }}</h4>
-                <label v-for="permission in category.permissions" :key="permission" class="checkbox-label">
-                  <input 
-                    v-model="roleForm.permissions[category.key]" 
-                    :value="permission" 
-                    type="checkbox" 
-                  />
-                  <span>{{ formatPermissionName(permission) }}</span>
-                </label>
+            <div class="detail-section">
+              <h4>Permissions & Actions</h4>
+              <div v-if="selectedRole?.permissions && selectedRole.permissions.length > 0" class="permissions-detailed">
+                <div v-for="permission in selectedRole.permissions" :key="permission.permission" class="permission-card">
+                  <div class="permission-header">
+                    <h5>{{ permission.permission }}</h5>
+                  </div>
+                  <div class="permission-body">
+                    <div class="actions-grid">
+                      <span v-for="action in permission.actions" :key="action" class="action-badge">
+                        {{ action }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="no-permissions">
+                <p>No permissions assigned to this role</p>
               </div>
             </div>
           </div>
+        </div>
 
-          <div v-if="errors.general" class="alert alert-error">
-            {{ errors.general }}
-          </div>
-        </form>
-        
         <div class="modal-footer">
-          <button @click="closeModals" type="button" class="btn btn-outline">
-            Cancel
-          </button>
-          <button @click="saveRole" type="submit" class="btn btn-primary" :disabled="loading">
-            {{ loading ? 'Saving...' : 'Save' }}
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Delete Confirmation Modal -->
-    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
-      <div class="modal">
-        <div class="modal-header">
-          <h3>Confirm Delete</h3>
-          <button @click="showDeleteModal = false" class="btn btn-outline">✕</button>
-        </div>
-        <div class="modal-body">
-          <p>Are you sure you want to delete role <strong>{{ roleToDelete?.name }}</strong>?</p>
-          <p v-if="roleToDelete?.users_count > 0" class="text-danger">
-            This role is assigned to {{ roleToDelete.users_count }} user(s). Please reassign users before deleting.
-          </p>
-          <p v-else class="text-danger">This action cannot be undone.</p>
-          <div v-if="errors.delete" class="alert alert-error">
-            {{ errors.delete }}
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button @click="showDeleteModal = false" class="btn btn-outline">Cancel</button>
-          <button 
-            @click="confirmDeleteRole" 
-            class="btn btn-danger" 
-            :disabled="loading || (roleToDelete?.users_count > 0)"
-          >
-            {{ loading ? 'Deleting...' : 'Delete' }}
-          </button>
+          <button @click="closeModals" class="btn btn-secondary">Close</button>
         </div>
       </div>
     </div>
   </div>
+           
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoles } from '@/composables/useRoles'
+import { usePermissions } from '@/composables/usePermissions'
+import { useAccessControl } from '@/composables/useAccessControl'
 import { format } from 'date-fns'
 
 export default {
   name: 'Roles',
   setup() {
-    const { roles, loading, fetchRoles, createRole, updateRole, deleteRole } = useRoles()
+    const { roles, loading, fetchRoles, refreshRoles } = useRoles()
+    const permissions = usePermissions()
+    const accessControl = useAccessControl()
     
     const searchTerm = ref('')
-    const showCreateModal = ref(false)
-    const showEditModal = ref(false)
-    const showDeleteModal = ref(false)
-    const editingRole = ref(null)
-    const roleToDelete = ref(null)
-    const errors = ref({})
-    
-    const roleForm = reactive({
-      name: '',
-      description: '',
-      scope: 'warehouse',
-      permissions: {}
+    const showDetailsModal = ref(false)
+    const selectedRole = ref(null)
+
+    // Verificar acceso a la vista
+    onMounted(() => {
+      if (!accessControl.checkRouteAccess('Roles')) {
+        return
+      }
+      fetchRoles()
     })
 
-    const permissionCategories = ref([
-      {
-        key: 'warehouse_access',
-        name: 'Warehouse Access',
-        permissions: ['read', 'write', 'delete']
-      },
-      {
-        key: 'employee_management',
-        name: 'Employee Management',
-        permissions: ['read', 'write', 'delete']
-      },
-      {
-        key: 'user_management',
-        name: 'User Management',
-        permissions: ['read', 'write', 'delete']
-      },
-      {
-        key: 'company_management',
-        name: 'Company Management',
-        permissions: ['read', 'write', 'delete']
-      },
-      {
-        key: 'reports',
-        name: 'Reports & Analytics',
-        permissions: ['read', 'export']
-      },
-      {
-        key: 'logs',
-        name: 'System Logs',
-        permissions: ['read', 'audit']
-      }
-    ])
-
+    // Roles filtrados
     const filteredRoles = computed(() => {
       if (!searchTerm.value) return roles.value
       
       const search = searchTerm.value.toLowerCase()
       return roles.value.filter(role => 
-        role.name?.toLowerCase().includes(search) ||
+        role.name.toLowerCase().includes(search) ||
         role.description?.toLowerCase().includes(search)
       )
     })
 
-    const getPermissionsList = (permissions) => {
-      if (!permissions || typeof permissions !== 'object') return []
-      
-      const permList = []
-      Object.keys(permissions).forEach(category => {
-        if (Array.isArray(permissions[category]) && permissions[category].length > 0) {
-          permissions[category].forEach(perm => {
-            permList.push(`${category}:${perm}`)
-          })
-        }
-      })
-      return permList
+    // Ver detalles del rol
+    const viewRoleDetails = (role) => {
+      selectedRole.value = role
+      showDetailsModal.value = true
     }
 
-    const formatPermissionName = (permission) => {
-      return permission.charAt(0).toUpperCase() + permission.slice(1)
+    // Cerrar modales
+    const closeModals = () => {
+      showDetailsModal.value = false
+      selectedRole.value = null
     }
 
+    // Formatear fecha
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       try {
-        return format(new Date(dateString), 'MMM dd, yyyy')
-      } catch {
-        return '-'
+        return format(new Date(dateString), 'MMM dd, yyyy HH:mm')
+      } catch (error) {
+        return dateString
       }
     }
-
-    const resetForm = () => {
-      Object.assign(roleForm, {
-        name: '',
-        description: '',
-        scope: 'warehouse',
-        permissions: {}
-      })
-      errors.value = {}
-    }
-
-    const closeModals = () => {
-      showCreateModal.value = false
-      showEditModal.value = false
-      showDeleteModal.value = false
-      editingRole.value = null
-      roleToDelete.value = null
-      resetForm()
-    }
-
-    const editRole = (role) => {
-      editingRole.value = role
-      Object.assign(roleForm, {
-        name: role.name,
-        description: role.description || '',
-        scope: role.scope || 'warehouse',
-        permissions: role.permissions || {}
-      })
-      showEditModal.value = true
-    }
-
-    const validateForm = () => {
-      errors.value = {}
-      let isValid = true
-
-      if (!roleForm.name.trim()) {
-        errors.value.name = 'Role name is required'
-        isValid = false
-      }
-
-      return isValid
-    }
-
-    const saveRole = async () => {
-      if (!validateForm()) return
-
-      const roleData = {
-        name: roleForm.name,
-        description: roleForm.description || null,
-        scope: roleForm.scope,
-        permissions: roleForm.permissions
-      }
-
-      let result
-      if (editingRole.value) {
-        result = await updateRole(editingRole.value.id, roleData)
-      } else {
-        result = await createRole(roleData)
-      }
-
-      if (result.success) {
-        closeModals()
-        await fetchRoles()
-      } else {
-        // Handle API validation errors - composable already extracts detail
-        if (typeof result.error === 'object') {
-          errors.value = result.error
-        } else {
-          errors.value.general = result.error || 'Error saving role'
-        }
-      }
-    }
-
-    const deleteRoleConfirm = (role) => {
-      roleToDelete.value = role
-      errors.value.delete = ''
-      showDeleteModal.value = true
-    }
-
-    const confirmDeleteRole = async () => {
-      if (!roleToDelete.value || roleToDelete.value.users_count > 0) return
-
-      errors.value.delete = ''
-      const result = await deleteRole(roleToDelete.value.id)
-      if (result.success) {
-        closeModals()
-        await fetchRoles()
-      } else {
-        // Show error message from API - composable already extracts detail
-        errors.value.delete = result.error || 'Error deleting role'
-      }
-    }
-
-    onMounted(() => {
-      fetchRoles()
-    })
 
     return {
+      // Estados
       roles,
       loading,
       searchTerm,
-      showCreateModal,
-      showEditModal,
-      showDeleteModal,
-      editingRole,
-      roleToDelete,
-      roleForm,
-      errors,
-      permissionCategories,
+      showDetailsModal,
+      selectedRole,
       filteredRoles,
-      getPermissionsList,
-      formatPermissionName,
-      formatDate,
+
+      // Funciones
+      viewRoleDetails,
       closeModals,
-      editRole,
-      saveRole,
-      deleteRoleConfirm,
-      confirmDeleteRole
+      formatDate,
+      refreshRoles,
+
+      // Permisos
+      permissions,
+      accessControl
     }
-  }
-}
-</script>
+    }
+    }
+  </script>
 
 <style scoped>
 .roles {
@@ -417,40 +239,205 @@ export default {
 
 .page-header h2 {
   margin: 0;
-  color: var(--text-primary);
+  color: #1e293b;
   font-size: 24px;
   font-weight: 600;
 }
 
+.header-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.info-text {
+  color: #64748b;
+  font-size: 14px;
+  margin: 0;
+}
+
 .table-container {
-  background: var(--card-background);
+  background: white;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+.role-name strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.permissions-container {
+  max-width: 300px;
+}
+
 .permissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.permission-item {
+  background: #f1f5f9;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.permission-name {
+  display: block;
+  font-weight: 600;
+  color: #334155;
+  font-size: 12px;
+  margin-bottom: 4px;
+  text-transform: capitalize;
+}
+
+.permission-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
 }
 
-.permission-tag {
-  background: rgba(59, 130, 246, 0.1);
-  color: var(--primary-color);
+.action-tag {
+  background: #2563eb;
+  color: white;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+/* Modal Styles */
+.modal-large {
+  max-width: 800px;
+  width: 90vw;
+}
+
+.role-details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.detail-section h4 {
+  margin: 0 0 16px 0;
+  color: #1e293b;
+  font-size: 18px;
+  font-weight: 600;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 8px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-item label {
+  font-weight: 600;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item span {
+  color: #1e293b;
   font-weight: 500;
 }
 
-.permissions-grid {
+.permissions-detailed {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
 }
 
+.permission-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.permission-header {
+  background: #1e293b;
+  color: white;
+  padding: 12px 16px;
+}
+
+.permission-header h5 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.permission-body {
+  padding: 12px 16px;
+}
+
+.actions-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.action-badge {
+  background: #2563eb;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.no-permissions {
+  text-align: center;
+  padding: 32px;
+  color: #64748b;
+  font-style: italic;
+}
+
+.text-muted {
+  color: #64748b;
+  font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .permissions-container {
+    max-width: none;
+  }
+  
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .permissions-detailed {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-large {
+    width: 95vw;
+  }
+}
 .checkbox-label {
   display: flex;
   align-items: center;

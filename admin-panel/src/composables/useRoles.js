@@ -1,96 +1,57 @@
-import { ref } from 'vue'
-import api from './api'
+import { computed } from 'vue'
+import { useRolesStore } from '../store/roles'
 import { useToast } from 'vue-toastification'
 
 export function useRoles() {
-  const roles = ref([])
-  const loading = ref(false)
+  const rolesStore = useRolesStore()
   const toast = useToast()
 
+  // Estados reactivos del store
+  const roles = computed(() => rolesStore.roles)
+  const loading = computed(() => rolesStore.loading)
+
   const fetchRoles = async () => {
-    loading.value = true
     try {
-      const response = await api.get('/roles/')
-      roles.value = response.data
+      await rolesStore.fetchRoles()
     } catch (error) {
       toast.error('Error loading roles')
       console.error('Error fetching roles:', error)
-    } finally {
-      loading.value = false
     }
   }
 
-  const createRole = async (roleData) => {
-    loading.value = true
+  // Función para refrescar roles
+  const refreshRoles = async () => {
     try {
-      const response = await api.post('/roles/', roleData)
-      roles.value.push(response.data)
-      toast.success('Role created successfully')
-      return { success: true, data: response.data }
+      await rolesStore.refreshRoles()
+      toast.success('Roles refreshed successfully')
     } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Error creating role'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
-    } finally {
-      loading.value = false
+      toast.error('Error refreshing roles')
+      console.error('Error refreshing roles:', error)
     }
   }
 
-  const updateRole = async (id, roleData) => {
-    loading.value = true
-    try {
-      const response = await api.put(`/roles/${id}`, roleData)
-      const index = roles.value.findIndex(r => r.id === id)
-      if (index !== -1) {
-        roles.value[index] = response.data
-      }
-      toast.success('Role updated successfully')
-      return { success: true, data: response.data }
-    } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Error updating role'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
-    } finally {
-      loading.value = false
-    }
+  // Obtener rol por ID
+  const getRoleById = (roleId) => {
+    return rolesStore.getRoleById(roleId)
   }
 
-  const deleteRole = async (id) => {
-    loading.value = true
-    try {
-      await api.delete(`/roles/${id}`)
-      roles.value = roles.value.filter(r => r.id !== id)
-      toast.success('Role deleted successfully')
-      return { success: true }
-    } catch (error) {
-      const errorMessage = error.response?.data?.detail || 'Error deleting role'
-      toast.error(errorMessage)
-      return { success: false, error: errorMessage }
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const getRole = async (id) => {
-    loading.value = true
-    try {
-      const response = await api.get(`/roles/${id}`)
-      return { success: true, data: response.data }
-    } catch (error) {
-      toast.error('Error getting role')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
-    } finally {
-      loading.value = false
-    }
+  // Obtener permisos de un rol
+  const getRolePermissions = (roleId) => {
+    return rolesStore.getRolePermissions(roleId)
   }
 
   return {
+    // Estados
     roles,
     loading,
+
+    // Funciones de lectura únicamente
     fetchRoles,
-    createRole,
-    updateRole,
-    deleteRole,
-    getRole
+    refreshRoles,
+    getRoleById,
+    getRolePermissions,
+
+    // Acceso directo al store si se necesita
+    rolesStore
   }
 }

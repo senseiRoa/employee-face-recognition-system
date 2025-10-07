@@ -10,44 +10,14 @@
       </div>
       
       <nav class="sidebar-nav">
-        <router-link to="/admin/dashboard" class="nav-item">
-          <span class="nav-icon">📊</span>
-          <span class="nav-text">Dashboard</span>
-        </router-link>
-        
-        <router-link to="/admin/companies" class="nav-item">
-          <span class="nav-icon">🏢</span>
-          <span class="nav-text">Companies</span>
-        </router-link>
-        
-        <router-link to="/admin/warehouses" class="nav-item">
-          <span class="nav-icon">🏭</span>
-          <span class="nav-text">Warehouses</span>
-        </router-link>
-        
-        <router-link to="/admin/employees" class="nav-item">
-          <span class="nav-icon">👥</span>
-          <span class="nav-text">Employees</span>
-        </router-link>
-        
-        <router-link to="/admin/users" class="nav-item">
-          <span class="nav-icon">👤</span>
-          <span class="nav-text">Users</span>
-        </router-link>
-        
-        <router-link to="/admin/roles" class="nav-item">
-          <span class="nav-icon">🔑</span>
-          <span class="nav-text">Roles</span>
-        </router-link>
-        
-        <router-link to="/admin/logs" class="nav-item">
-          <span class="nav-icon">📋</span>
-          <span class="nav-text">Logs</span>
-        </router-link>
-        
-        <router-link to="/admin/reports" class="nav-item">
-          <span class="nav-icon">📈</span>
-          <span class="nav-text">Reports</span>
+        <router-link 
+          v-for="navItem in validNavItems" 
+          :key="navItem.path"
+          :to="navItem.path" 
+          class="nav-item"
+        >
+          <span class="nav-icon">{{ navItem.icon }}</span>
+          <span class="nav-text">{{ navItem.name }}</span>
         </router-link>
       </nav>
     </aside>
@@ -131,6 +101,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useAppStore } from '@/store/app'
+import { usePermissions } from '@/composables/usePermissions'
 
 export default {
   name: 'Layout',
@@ -139,6 +110,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const appStore = useAppStore()
+    const permissions = usePermissions()
     const userMenuOpen = ref(false)
 
     const pageTitle = computed(() => {
@@ -148,11 +120,51 @@ export default {
       'Warehouses': 'Warehouses Management',
       'Employees': 'Employees Management',
       'Users': 'Users Management',
-      'Roles': 'Roles Management',
+      'Roles': 'Roles & Permissions',
       'Logs': 'Audit & Logs',
-      'Reports': 'Reports & Statistics2222'
+      'Reports': 'Reports & Statistics'
       }
       return titles[route.name] || 'Admin Panel'
+    })
+
+    // Elementos de navegación filtrados por permisos
+    const availableNavItems = computed(() => {
+      try {
+        return permissions.availableRoutes || []
+      } catch (error) {
+        console.error('Error getting available routes:', error)
+        // Fallback: rutas básicas sin permisos
+        return [
+          { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' }
+        ]
+      }
+    })
+
+    // Validar que los elementos de navegación tengan todas las propiedades requeridas
+    const validNavItems = computed(() => {
+      try {
+        const items = availableNavItems.value || []
+        
+        const validItems = items.filter(item => {
+          return item && 
+            typeof item === 'object' && 
+            item.path && 
+            item.name && 
+            item.icon
+        })
+        
+        // Solo loguear si hay problemas
+        if (validItems.length !== items.length) {
+          console.warn('Some nav items were filtered out. Valid:', validItems.length, 'Total:', items.length)
+        }
+        
+        return validItems
+      } catch (error) {
+        console.error('Error validating nav items:', error)
+        return [
+          { name: 'Dashboard', path: '/admin/dashboard', icon: '📊' }
+        ]
+      }
     })
 
     const getUserFullName = () => {
@@ -196,6 +208,20 @@ export default {
 
     onMounted(() => {
       document.addEventListener('click', closeUserMenu)
+      
+      // Asegurar que los roles estén cargados
+      if (authStore.isAuthenticated && permissions.rolesStore.roles.length === 0) {
+        permissions.rolesStore.fetchRoles().catch(error => {
+          console.warn('Could not load roles in Layout:', error)
+        })
+      }
+
+      // Debug info en desarrollo
+      if (import.meta.env.DEV) {
+        console.log('🔐 User role ID:', permissions.currentUserRole.value)
+        console.log('🔑 Available roles:', permissions.rolesStore.roles)
+        console.log('🧭 Available routes:', permissions.availableRoutes.value)
+      }
     })
 
     onUnmounted(() => {
@@ -207,6 +233,8 @@ export default {
       sidebarOpen: appStore.sidebarOpen,
       userMenuOpen,
       pageTitle,
+      availableNavItems,
+      validNavItems,
       getUserFullName,
       getUserInitials,
       toggleUserMenu,

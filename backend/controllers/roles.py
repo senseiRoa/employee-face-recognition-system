@@ -24,31 +24,31 @@ def list_roles(
     """
     # Obtener roles de la base de datos
     roles = role_service.get_roles(db, skip=skip, limit=limit)
-    
+
     # Construir respuesta con permisos
     roles_with_permissions = []
-    
+
     for role in roles:
         # Obtener permisos del enum ROLE_PERMISSIONS
         role_perms = get_role_permissions(role.name)
-        
+
         # Convertir a formato PermissionDetail
         permissions = []
         for perm_set in role_perms:
             permission_detail = PermissionDetail(
                 permission=perm_set.permission.value,
-                actions=[action.value for action in perm_set.actions]
+                actions=[action.value for action in perm_set.actions],
             )
             permissions.append(permission_detail)
-        
+
         # Crear objeto RoleWithPermissions
         role_with_perms = RoleWithPermissions(
             id=role.id,
             name=role.name,
             description=role.description,
             created_at=role.created_at,
-            permissions=permissions
+            permissions=permissions,
         )
         roles_with_permissions.append(role_with_perms)
-    
+
     return roles_with_permissions

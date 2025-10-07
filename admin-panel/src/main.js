@@ -6,6 +6,7 @@ import 'vue-toastification/dist/index.css'
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './store/auth'
+import { useRolesStore } from './store/roles'
 import './assets/main.css'
 
 const app = createApp(App)
@@ -19,7 +20,7 @@ app.use(Toast, {
   newestOnTop: true
 })
 
-// Inicializar autenticación
+// Inicializar autenticación y roles
 const authStore = useAuthStore()
 authStore.initAuth()
 

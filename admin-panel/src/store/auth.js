@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/composables/api'
+import { useRolesStore } from './roles'
 
 export const useAuthStore = defineStore('auth', () => {
   const token = ref(localStorage.getItem('token') || null)
@@ -30,6 +31,14 @@ export const useAuthStore = defineStore('auth', () => {
       // Configurar el token para futuras peticiones
       api.defaults.headers.common['Authorization'] = `Bearer ${access_token}`
       
+      // Cargar roles después del login exitoso
+      const rolesStore = useRolesStore()
+      try {
+        await rolesStore.fetchRoles()
+      } catch (error) {
+        console.warn('Could not load roles after login:', error)
+      }
+      
       return { success: true }
     } catch (error) {
       return { 
@@ -47,11 +56,21 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('token')
     localStorage.removeItem('user')
     delete api.defaults.headers.common['Authorization']
+    
+    // Limpiar cache de roles
+    const rolesStore = useRolesStore()
+    rolesStore.clearCache()
   }
 
   const initAuth = () => {
     if (token.value) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
+      
+      // Cargar roles si ya estamos autenticados
+      const rolesStore = useRolesStore()
+      rolesStore.fetchRoles().catch(error => {
+        console.warn('Could not load roles on init:', error)
+      })
     }
   }
 

@@ -84,12 +84,14 @@ class Role(BaseModel):
 
 class PermissionDetail(BaseModel):
     """Schema para detalles de un permiso específico"""
+
     permission: str
     actions: List[str]
 
 
 class RoleWithPermissions(BaseModel):
     """Schema para rol con información detallada de permisos"""
+
     id: int
     name: str
     description: Optional[str] = None

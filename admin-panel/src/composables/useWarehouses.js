@@ -32,8 +32,9 @@ export function useWarehouses() {
       toast.success('Warehouse created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error creating warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error creating warehouse'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -50,8 +51,9 @@ export function useWarehouses() {
       toast.success('Warehouse updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error updating warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error updating warehouse'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -65,8 +67,9 @@ export function useWarehouses() {
       toast.success('Warehouse deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error deleting warehouse')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error deleting warehouse'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }

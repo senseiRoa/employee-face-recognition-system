@@ -33,8 +33,9 @@ export function useUsers() {
       toast.success('User created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error creating user')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error creating user'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -49,8 +50,9 @@ export function useUsers() {
       toast.success('User updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error updating user')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error updating user'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -64,8 +66,9 @@ export function useUsers() {
       toast.success('User deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error deleting user')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error deleting user'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }

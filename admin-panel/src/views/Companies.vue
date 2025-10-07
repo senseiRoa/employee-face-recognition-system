@@ -294,8 +294,8 @@ export default {
         showDeleteModal.value = false
         companyToDelete.value = null
       } else {
-        // Show error message from API
-        deleteError.value = result.error?.detail || result.error || 'Error deleting company'
+        // Show error message from API - composable already extracts detail
+        deleteError.value = result.error || 'Error deleting company'
       }
     }
 

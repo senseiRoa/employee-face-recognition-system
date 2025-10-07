@@ -28,8 +28,9 @@ export function useCompanies() {
       toast.success('Company created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error creating company')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error creating company'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -46,8 +47,9 @@ export function useCompanies() {
       toast.success('Company updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error updating company')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error updating company'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -61,8 +63,9 @@ export function useCompanies() {
       toast.success('Company deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error deleting company')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error deleting company'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }

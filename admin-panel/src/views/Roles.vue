@@ -136,6 +136,10 @@
               </div>
             </div>
           </div>
+
+          <div v-if="errors.general" class="alert alert-error">
+            {{ errors.general }}
+          </div>
         </form>
         
         <div class="modal-footer">
@@ -339,9 +343,11 @@ export default {
         closeModals()
         await fetchRoles()
       } else {
-        // Handle API validation errors
-        if (result.error && typeof result.error === 'object') {
+        // Handle API validation errors - composable already extracts detail
+        if (typeof result.error === 'object') {
           errors.value = result.error
+        } else {
+          errors.value.general = result.error || 'Error saving role'
         }
       }
     }
@@ -361,8 +367,8 @@ export default {
         closeModals()
         await fetchRoles()
       } else {
-        // Show error message from API
-        errors.value.delete = result.error?.detail || result.error || 'Error deleting role'
+        // Show error message from API - composable already extracts detail
+        errors.value.delete = result.error || 'Error deleting role'
       }
     }
 

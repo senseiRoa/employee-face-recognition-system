@@ -102,10 +102,10 @@ export default {
         ])
 
         metrics.value = {
-          companies: companiesRes.data.length,
+          companies: companiesRes.data.total,
           warehouses: warehousesRes.data.length,
           employees: employeesRes.data.length,
-          todayCheckIns: 0 // Se puede obtener de los logs
+          todayCheckIns: 15 //todo:roa- Se puede obtener de los logs
         }
       } catch (error) {
         console.error('Error loading metrics:', error)

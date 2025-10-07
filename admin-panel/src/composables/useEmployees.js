@@ -32,8 +32,9 @@ export function useEmployees() {
       toast.success('Employee created successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error creating employee')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error creating employee'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -50,8 +51,9 @@ export function useEmployees() {
       toast.success('Employee updated successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error updating employee')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error updating employee'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -65,8 +67,9 @@ export function useEmployees() {
       toast.success('Employee deleted successfully')
       return { success: true }
     } catch (error) {
-      toast.error('Error deleting employee')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error deleting employee'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }

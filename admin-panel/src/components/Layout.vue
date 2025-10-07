@@ -64,11 +64,56 @@
         </div>
         
         <div class="header-right">
-          <div class="user-menu">
-            <span class="user-name">{{ user?.name || 'User' }}</span>
-            <button @click="logout" class="btn btn-outline">
-              Log Out
-            </button>
+          <div class="user-menu" :class="{ 'open': userMenuOpen }">
+            <div class="user-info" @click="toggleUserMenu">
+              <div class="user-avatar">
+                <span>{{ getUserInitials() }}</span>
+              </div>
+              <div class="user-details">
+                <div class="user-name">{{ getUserFullName() }}</div>
+                <div class="user-role">{{ user?.role || 'User' }}</div>
+              </div>
+              <div class="user-dropdown-icon">
+                <span>{{ userMenuOpen ? '▲' : '▼' }}</span>
+              </div>
+            </div>
+            
+            <div class="user-dropdown" v-show="userMenuOpen">
+              <div class="user-profile">
+                <div class="profile-header">
+                  <div class="profile-avatar">
+                    <span>{{ getUserInitials() }}</span>
+                  </div>
+                  <div class="profile-info">
+                    <div class="profile-name">{{ getUserFullName() }}</div>
+                    <div class="profile-email">{{ user?.email || 'No email' }}</div>
+                  </div>
+                </div>
+                
+                <div class="profile-details">
+                  <div class="detail-item">
+                    <span class="detail-label">Username:</span>
+                    <span class="detail-value">{{ user?.username || '-' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Role:</span>
+                    <span class="detail-value">{{ user?.role || '-' }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Warehouse:</span>
+                    <span class="detail-value">{{ user?.warehouse_name || '-' }}</span>
+                  </div>
+                 
+                </div>
+                
+                <div class="profile-actions">
+                  <button @click="logout" class="btn btn-danger btn-sm">
+                    <span>🚪</span>
+                    Log Out
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
@@ -82,7 +127,7 @@
 </template>
 
 <script>
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useAppStore } from '@/store/app'
@@ -94,6 +139,7 @@ export default {
     const router = useRouter()
     const authStore = useAuthStore()
     const appStore = useAppStore()
+    const userMenuOpen = ref(false)
 
     const pageTitle = computed(() => {
       const titles = {
@@ -109,7 +155,37 @@ export default {
       return titles[route.name] || 'Admin Panel'
     })
 
+    const getUserFullName = () => {
+      const user = authStore.user
+      if (user?.first_name && user?.last_name) {
+        return `${user.first_name} ${user.last_name}`
+      }
+      return user?.username || 'User'
+    }
+
+    const getUserInitials = () => {
+      const user = authStore.user
+      if (user?.first_name && user?.last_name) {
+        return `${user.first_name.charAt(0)}${user.last_name.charAt(0)}`.toUpperCase()
+      }
+      if (user?.username) {
+        return user.username.substring(0, 2).toUpperCase()
+      }
+      return 'U'
+    }
+
+    const toggleUserMenu = () => {
+      userMenuOpen.value = !userMenuOpen.value
+    }
+
+    const closeUserMenu = (event) => {
+      if (!event.target.closest('.user-menu')) {
+        userMenuOpen.value = false
+      }
+    }
+
     const logout = () => {
+      userMenuOpen.value = false
       authStore.logout()
       router.push('/admin/login')
     }
@@ -118,10 +194,22 @@ export default {
       appStore.toggleSidebar()
     }
 
+    onMounted(() => {
+      document.addEventListener('click', closeUserMenu)
+    })
+
+    onUnmounted(() => {
+      document.removeEventListener('click', closeUserMenu)
+    })
+
     return {
       user: authStore.user,
       sidebarOpen: appStore.sidebarOpen,
+      userMenuOpen,
       pageTitle,
+      getUserFullName,
+      getUserInitials,
+      toggleUserMenu,
       logout,
       toggleSidebar
     }
@@ -236,14 +324,189 @@ export default {
 }
 
 .user-menu {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: 1px solid #e2e8f0;
+}
+
+.user-info:hover {
+  background-color: #f8fafc;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
 .user-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.user-dropdown-icon {
+  color: #64748b;
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.user-menu.open .user-dropdown-icon {
+  transform: rotate(180deg);
+}
+
+.user-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  width: 280px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.user-profile {
+  padding: 0;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: white;
+}
+
+.profile-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-name {
+  font-weight: 600;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.profile-email {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.profile-details {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.detail-label {
+  font-size: 13px;
+  color: #64748b;
   font-weight: 500;
-  color: var(--text-primary);
+}
+
+.detail-value {
+  font-size: 13px;
+  color: #1e293b;
+  font-weight: 500;
+}
+
+.profile-actions {
+  padding: 16px 20px;
+}
+
+.profile-actions .btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .user-details {
+    display: none;
+  }
+  
+  .user-dropdown {
+    width: 260px;
+    right: -40px;
+  }
+  
+  .profile-header {
+    padding: 16px;
+  }
+  
+  .profile-details {
+    padding: 12px 16px;
+  }
+  
+  .profile-actions {
+    padding: 12px 16px;
+  }
 }
 
 .content {

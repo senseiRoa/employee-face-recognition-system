@@ -3,79 +3,52 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from database import get_db
-from schemas import Role, RoleCreate, RoleUpdate
+from schemas import RoleWithPermissions, PermissionDetail
 from services import role_service
 from dependencies import get_current_user
+from utils.permissions import get_role_permissions
 from models import User
 
 router = APIRouter()
 
 
-@router.post("/", response_model=Role, status_code=status.HTTP_201_CREATED)
-def create_role(
-    role: RoleCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    existing_role = role_service.get_role_by_name(db, role.name)
-    if existing_role:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Role with this name already exists"
-        )
-    return role_service.create_role(db, role)
-
-
-@router.get("/", response_model=List[Role])
+@router.get("/", response_model=List[RoleWithPermissions])
 def list_roles(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
-    return role_service.get_roles(db, skip=skip, limit=limit)
-
-
-@router.get("/{role_id}", response_model=Role)
-def get_role(
-    role_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    role = role_service.get_role(db, role_id)
-    if not role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found"
+    """
+    List all roles with their permission details for frontend configuration
+    """
+    # Obtener roles de la base de datos
+    roles = role_service.get_roles(db, skip=skip, limit=limit)
+    
+    # Construir respuesta con permisos
+    roles_with_permissions = []
+    
+    for role in roles:
+        # Obtener permisos del enum ROLE_PERMISSIONS
+        role_perms = get_role_permissions(role.name)
+        
+        # Convertir a formato PermissionDetail
+        permissions = []
+        for perm_set in role_perms:
+            permission_detail = PermissionDetail(
+                permission=perm_set.permission.value,
+                actions=[action.value for action in perm_set.actions]
+            )
+            permissions.append(permission_detail)
+        
+        # Crear objeto RoleWithPermissions
+        role_with_perms = RoleWithPermissions(
+            id=role.id,
+            name=role.name,
+            description=role.description,
+            created_at=role.created_at,
+            permissions=permissions
         )
-    return role
-
-
-@router.put("/{role_id}", response_model=Role)
-def update_role(
-    role_id: int,
-    role_update: RoleUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    role = role_service.update_role(db, role_id, role_update)
-    if not role:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found"
-        )
-    return role
-
-
-@router.delete("/{role_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_role(
-    role_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    success = role_service.delete_role(db, role_id)
-    if not success:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Role not found"
-        )
+        roles_with_permissions.append(role_with_perms)
+    
+    return roles_with_permissions

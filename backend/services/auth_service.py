@@ -1,3 +1,4 @@
+from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from services.user_service import get_user_by_username, get_user_by_email
@@ -30,7 +31,10 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is disabled",
         )
-
+    # Update user's last_login
+    user.last_login = datetime.utcnow()
+    db.commit()
+    db.refresh(user)
     # Create token with user information
     access_token = create_access_token(
         data={

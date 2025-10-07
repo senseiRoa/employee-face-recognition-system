@@ -55,8 +55,8 @@
             <td>{{ user.username }}</td>
             <td>{{ user.email || '-' }}</td>
             <td>{{ getUserFullName(user) }}</td>
-            <td>{{ user.role?.name || '-' }}</td>
-            <td>{{ user.warehouse?.name || '-' }}</td>
+            <td>{{ getUserRoleName(user) }}</td>
+            <td>{{ getUserWarehouseName(user) }}</td>
             <td>
               <span class="status-badge" :class="user.is_active ? 'active' : 'inactive'">
                 {{ user.is_active ? 'Active' : 'Inactive' }}
@@ -279,6 +279,18 @@ export default {
       return parts.length > 0 ? parts.join(' ') : '-'
     }
 
+    const getUserWarehouseName = (user) => {
+      if (user.warehouse?.name) return user.warehouse.name
+      const warehouse = warehouses.value.find(w => w.id === user.warehouse_id)
+      return warehouse?.name || '-'
+    }
+
+    const getUserRoleName = (user) => {
+      if (user.role?.name) return user.role.name
+      const role = roles.value.find(r => r.id === user.role_id)
+      return role?.name || '-'
+    }
+
     const formatDate = (dateString) => {
       if (!dateString) return '-'
       try {
@@ -424,9 +436,9 @@ export default {
 
     onMounted(async () => {
       await Promise.all([
-        fetchUsers(),
         fetchRoles(),
-        fetchWarehouses()
+        fetchWarehouses(),
+        fetchUsers(),
       ])
     })
 
@@ -446,6 +458,8 @@ export default {
       roles,
       filteredUsers,
       getUserFullName,
+      getUserWarehouseName,
+      getUserRoleName,
       formatDate,
       closeModals,
       editUser,

@@ -1,3 +1,4 @@
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Optional
@@ -21,6 +22,7 @@ class UserResponse(BaseModel):
     is_active: bool
     warehouse_id: int
     role_id: int
+    last_login: Optional[datetime] = None
 
     class Config:
         from_attributes = True

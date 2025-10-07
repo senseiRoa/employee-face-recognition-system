@@ -408,6 +408,7 @@ export default {
 
       try {
         const faceData = {
+          employee_id: faceEmployee.value.id,
           warehouse_id: faceEmployee.value.warehouse_id,
           first_name: faceEmployee.value.first_name,
           last_name: faceEmployee.value.last_name,

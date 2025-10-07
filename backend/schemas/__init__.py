@@ -11,6 +11,7 @@ class RegisterFaceReq(BaseModel):
     last_name: str
     email: Optional[str] = None
     image_base64: str
+    employee_id: int
 
 
 class RegisterFaceRes(BaseModel):
@@ -194,6 +195,7 @@ class Employee(BaseModel):
     last_name: str
     email: Optional[str] = None
     created_at: datetime.datetime
+    has_face: bool = False
 
     class Config:
         from_attributes = True

@@ -61,7 +61,7 @@
       </table>
     </div>
 
-    <!-- Create/Edit Modal (simplified for brevity) -->
+    <!-- Create/Edit Modal -->
     <div v-if="showCreateModal || showEditModal" class="modal-overlay" @click.self="closeModals">
       <div class="modal">
         <div class="modal-header">
@@ -71,24 +71,83 @@
         
         <form @submit.prevent="saveWarehouse" class="modal-body">
           <div class="form-group">
-            <label class="form-label">Name *</label>
-            <input v-model="warehouseForm.name" type="text" class="form-control" required />
+            <label class="form-label">Company *</label>
+            <select
+              v-model="warehouseForm.company_id"
+              class="form-control"
+              :class="{ error: errors.company_id }"
+              required
+            >
+              <option value="">Select Company</option>
+              <option v-for="company in companies" :key="company.id" :value="company.id">
+                {{ company.name }}
+              </option>
+            </select>
+            <div v-if="errors.company_id" class="form-error">{{ errors.company_id }}</div>
           </div>
+
+          <div class="form-group">
+            <label class="form-label">Warehouse Name *</label>
+            <input
+              v-model="warehouseForm.name"
+              type="text"
+              class="form-control"
+              :class="{ error: errors.name }"
+              placeholder="Enter warehouse name"
+              required
+            />
+            <div v-if="errors.name" class="form-error">{{ errors.name }}</div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Location</label>
-            <input v-model="warehouseForm.location" type="text" class="form-control" />
+            <input
+              v-model="warehouseForm.location"
+              type="text"
+              class="form-control"
+              :class="{ error: errors.location }"
+              placeholder="Enter warehouse location"
+            />
+            <div v-if="errors.location" class="form-error">{{ errors.location }}</div>
           </div>
+
           <div class="form-group">
             <label class="checkbox-label">
-              <input v-model="warehouseForm.is_active" type="checkbox" />
-              <span>Active warehouse</span>
+              <input
+                v-model="warehouseForm.is_active"
+                type="checkbox"
+                class="form-checkbox"
+              />
+              <span class="checkbox-text">Active warehouse</span>
             </label>
           </div>
         </form>
         
         <div class="modal-footer">
           <button @click="closeModals" type="button" class="btn btn-outline">Cancel</button>
-          <button @click="saveWarehouse" class="btn btn-primary">Save</button>
+          <button @click="saveWarehouse" class="btn btn-primary" :disabled="loading">
+            {{ loading ? 'Saving...' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div v-if="showDeleteModal" class="modal-overlay" @click.self="showDeleteModal = false">
+      <div class="modal">
+        <div class="modal-header">
+          <h3>Confirm Delete</h3>
+          <button @click="showDeleteModal = false" class="btn btn-outline">✕</button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete warehouse <strong>{{ warehouseToDelete?.name }}</strong>?</p>
+          <p class="text-danger">This action cannot be undone and may affect associated employees.</p>
+        </div>
+        <div class="modal-footer">
+          <button @click="showDeleteModal = false" class="btn btn-outline">Cancel</button>
+          <button @click="confirmDeleteWarehouse" class="btn btn-danger" :disabled="loading">
+            {{ loading ? 'Deleting...' : 'Delete' }}
+          </button>
         </div>
       </div>
     </div>
@@ -120,7 +179,6 @@ export default {
       name: '',
       location: '',
       company_id: '',
-      timezone: 'UTC',
       is_active: true
     })
 
@@ -157,7 +215,6 @@ export default {
         name: '',
         location: '',
         company_id: '',
-        timezone: 'UTC',
         is_active: true
       })
       errors.value = {}
@@ -178,7 +235,6 @@ export default {
         name: warehouse.name,
         location: warehouse.location || '',
         company_id: warehouse.company_id,
-        timezone: warehouse.timezone || 'UTC',
         is_active: warehouse.is_active !== undefined ? warehouse.is_active : true
       })
       showEditModal.value = true
@@ -350,5 +406,72 @@ export default {
   gap: 8px;
   font-weight: 500;
   cursor: pointer;
+}
+
+.form-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.checkbox-text {
+  color: var(--text-primary);
+}
+
+.modal {
+  max-width: 500px;
+  width: 90vw;
+}
+
+.modal-body {
+  padding: 24px;
+  gap: 20px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  background: var(--input-background);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.1);
+}
+
+.form-control.error {
+  border-color: var(--error-color);
+}
+
+.form-error {
+  color: var(--error-color);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--border-color);
+  background: var(--background-secondary);
 }
 </style>

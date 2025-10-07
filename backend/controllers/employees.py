@@ -37,28 +37,21 @@ def register_face(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
+    employee = employee_service.get_employee(db, req.employee_id)
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
     enc = compute_encoding(req.image_base64)
     enc_s = serialize_encoding(enc)
 
-    emp = EmployeeModel(
-        warehouse_id=req.warehouse_id,
-        first_name=req.first_name,
-        last_name=req.last_name,
-        email=req.email,
-    )
-    db.add(emp)
-    db.flush()
-
-    new_encoding = FaceEncoding(employee_id=emp.id, encoding=enc_s)
+    new_encoding = FaceEncoding(employee_id=req.employee_id, encoding=enc_s)
     db.add(new_encoding)
 
     db.commit()
-    db.refresh(emp)
-
+    db.refresh(new_encoding)
     return {
         "status": "ok",
-        "employee_id": emp.id,
-        "employee_name": f"{emp.first_name} {emp.last_name}",
+        "employee_id": employee.id,
+        "employee_name": f"{employee.first_name} {employee.last_name}",
     }
 
 

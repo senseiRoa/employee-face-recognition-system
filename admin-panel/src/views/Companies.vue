@@ -2,7 +2,11 @@
   <div class="companies">
     <div class="page-header">
       <h2>Company Management</h2>
-      <button @click="showCreateModal = true" class="btn btn-primary">
+      <button 
+        v-if="permissions.canCreate.value"
+        @click="showCreateModal = true" 
+        class="btn btn-primary"
+      >
         <span>➕</span>
         New Company
       </button>
@@ -31,15 +35,15 @@
             <th>Phone</th>
             <th>Status</th>
             <th>Created At</th>
-            <th>Actions</th>
+            <th v-if="showActionsColumn">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Loading...</td>
+            <td :colspan="showActionsColumn ? 7 : 6" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredCompanies.length === 0">
-            <td colspan="7" class="text-center">No companies registered</td>
+            <td :colspan="showActionsColumn ? 7 : 6" class="text-center">No companies registered</td>
           </tr>
           <tr v-else v-for="company in filteredCompanies" :key="company.id">
             <td>{{ company.id }}</td>
@@ -52,9 +56,10 @@
               </span>
             </td>
             <td>{{ formatDate(company.created_at) }}</td>
-            <td>
+            <td v-if="showActionsColumn">
               <div class="action-buttons">
                 <button
+                  v-if="permissions.canUpdate.value"
                   @click="editCompany(company)"
                   class="btn btn-outline btn-sm"
                   title="Edit"
@@ -62,12 +67,17 @@
                   ✏️
                 </button>
                 <button
+                  v-if="permissions.canDelete.value"
                   @click="deleteCompanyConfirm(company)"
                   class="btn btn-danger btn-sm"
                   title="Delete"
                 >
                   🗑️
                 </button>
+                <!-- Mostrar mensaje si no tiene permisos -->
+                <span v-if="!permissions.hasAnyAction.value" class="text-muted text-sm">
+                  No actions available
+                </span>
               </div>
             </td>
           </tr>
@@ -180,6 +190,7 @@
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useCompanies } from '@/composables/useCompanies'
+import { useViewPermissions, shouldShowActionsColumn } from '@/composables/useViewPermissions'
 import { format } from 'date-fns'
 
 export default {
@@ -193,6 +204,10 @@ export default {
       updateCompany,
       deleteCompany
     } = useCompanies()
+
+    // Permisos usando el composable reutilizable
+    const permissions = useViewPermissions('companies')
+    const showActionsColumn = computed(() => shouldShowActionsColumn(permissions))
 
     const searchTerm = ref('')
     const showCreateModal = ref(false)
@@ -356,7 +371,10 @@ export default {
       confirmDelete,
       saveCompany,
       closeModals,
-      formatDate
+      formatDate,
+      // Permisos
+      permissions,
+      showActionsColumn
     }
   }
 }

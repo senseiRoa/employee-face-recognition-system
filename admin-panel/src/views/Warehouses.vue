@@ -2,7 +2,11 @@
   <div class="warehouses">
     <div class="page-header">
       <h2>Warehouse Management</h2>
-      <button @click="showCreateModal = true" class="btn btn-primary">
+      <button 
+        v-if="permissions.canCreate.value"
+        @click="showCreateModal = true" 
+        class="btn btn-primary"
+      >
         <span>➕</span>
         New Warehouse
       </button>
@@ -29,15 +33,15 @@
             <th>Location</th>
             <th>Status</th>
             <th>Employees</th>
-            <th>Actions</th>
+            <th v-if="showActionsColumn">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="7" class="text-center">Loading...</td>
+            <td :colspan="showActionsColumn ? 7 : 6" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredWarehouses.length === 0">
-            <td colspan="7" class="text-center">No warehouses registered</td>
+            <td :colspan="showActionsColumn ? 7 : 6" class="text-center">No warehouses registered</td>
           </tr>
           <tr v-else v-for="warehouse in filteredWarehouses" :key="warehouse.id">
             <td>{{ warehouse.id }}</td>
@@ -50,10 +54,27 @@
               </span>
             </td>
             <td>{{ warehouse.employees_count || 0 }}</td>
-            <td>
+            <td v-if="showActionsColumn">
               <div class="action-buttons">
-                <button @click="editWarehouse(warehouse)" class="btn btn-outline btn-sm">✏️</button>
-                <button @click="deleteWarehouseConfirm(warehouse)" class="btn btn-danger btn-sm">🗑️</button>
+                <button 
+                  v-if="permissions.canUpdate.value"
+                  @click="editWarehouse(warehouse)" 
+                  class="btn btn-outline btn-sm"
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button 
+                  v-if="permissions.canDelete.value"
+                  @click="deleteWarehouseConfirm(warehouse)" 
+                  class="btn btn-danger btn-sm"
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+                <span v-if="!permissions.hasAnyAction.value" class="text-muted text-sm">
+                  No actions available
+                </span>
               </div>
             </td>
           </tr>
@@ -165,6 +186,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useWarehouses } from '@/composables/useWarehouses'
 import { useCompanies } from '@/composables/useCompanies'
+import { useViewPermissions, shouldShowActionsColumn } from '@/composables/useViewPermissions'
 import { format } from 'date-fns'
 
 export default {
@@ -172,6 +194,10 @@ export default {
   setup() {
     const { warehouses, loading, fetchWarehouses, createWarehouse, updateWarehouse, deleteWarehouse } = useWarehouses()
     const { companies, fetchCompanies } = useCompanies()
+    
+    // Permisos usando el composable reutilizable
+    const permissions = useViewPermissions('warehouses')
+    const showActionsColumn = computed(() => shouldShowActionsColumn(permissions))
     
     const searchTerm = ref('')
     const selectedCompany = ref('')
@@ -343,7 +369,10 @@ export default {
       editWarehouse,
       saveWarehouse,
       deleteWarehouseConfirm,
-      confirmDeleteWarehouse
+      confirmDeleteWarehouse,
+      // Permisos
+      permissions,
+      showActionsColumn
     }
   }
 }

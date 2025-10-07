@@ -2,7 +2,11 @@
   <div class="users">
     <div class="page-header">
       <h2>User Management</h2>
-      <button @click="showCreateModal = true" class="btn btn-primary">
+      <button 
+        v-if="permissions.canCreate.value"
+        @click="showCreateModal = true" 
+        class="btn btn-primary"
+      >
         <span>➕</span>
         New User
       </button>
@@ -40,15 +44,15 @@
             <th>Warehouse</th>
             <th>Status</th>
             <th>Last Login</th>
-            <th>Actions</th>
+            <th v-if="showActionsColumn">Actions</th>
           </tr>
         </thead>
         <tbody>
           <tr v-if="loading">
-            <td colspan="9" class="text-center">Loading...</td>
+            <td :colspan="showActionsColumn ? 9 : 8" class="text-center">Loading...</td>
           </tr>
           <tr v-else-if="filteredUsers.length === 0">
-            <td colspan="9" class="text-center">No users found</td>
+            <td :colspan="showActionsColumn ? 9 : 8" class="text-center">No users found</td>
           </tr>
           <tr v-else v-for="user in filteredUsers" :key="user.id">
             <td>{{ user.id }}</td>
@@ -63,10 +67,27 @@
               </span>
             </td>
             <td>{{ formatDate(user.last_login) }}</td>
-            <td>
+            <td v-if="showActionsColumn">
               <div class="action-buttons">
-                <button @click="editUser(user)" class="btn btn-outline btn-sm" title="Edit">✏️</button>
-                <button @click="deleteUserConfirm(user)" class="btn btn-danger btn-sm" title="Delete">🗑️</button>
+                <button 
+                  v-if="permissions.canUpdate.value"
+                  @click="editUser(user)" 
+                  class="btn btn-outline btn-sm" 
+                  title="Edit"
+                >
+                  ✏️
+                </button>
+                <button 
+                  v-if="permissions.canDelete.value"
+                  @click="deleteUserConfirm(user)" 
+                  class="btn btn-danger btn-sm" 
+                  title="Delete"
+                >
+                  🗑️
+                </button>
+                <span v-if="!permissions.hasAnyAction.value" class="text-muted text-sm">
+                  No actions available
+                </span>
               </div>
             </td>
           </tr>
@@ -230,6 +251,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useUsers } from '@/composables/useUsers'
 import { useRoles } from '@/composables/useRoles'
 import { useWarehouses } from '@/composables/useWarehouses'
+import { useViewPermissions, shouldShowActionsColumn } from '@/composables/useViewPermissions'
 import { format } from 'date-fns'
 
 export default {
@@ -238,6 +260,10 @@ export default {
     const { users, loading, fetchUsers, createUser, updateUser, deleteUser } = useUsers()
     const { roles, fetchRoles } = useRoles()
     const { warehouses, fetchWarehouses } = useWarehouses()
+    
+    // Permisos usando el composable reutilizable
+    const permissions = useViewPermissions('users')
+    const showActionsColumn = computed(() => shouldShowActionsColumn(permissions))
     
     const searchTerm = ref('')
     const selectedWarehouse = ref('')
@@ -472,7 +498,10 @@ export default {
       editUser,
       saveUser,
       deleteUserConfirm,
-      confirmDeleteUser
+      confirmDeleteUser,
+      // Permisos
+      permissions,
+      showActionsColumn
     }
   }
 }

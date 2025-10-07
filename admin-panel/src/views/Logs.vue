@@ -6,7 +6,11 @@
         <button @click="refreshLogs" class="btn btn-outline" :disabled="loading">
           🔄 Refresh
         </button>
-        <button @click="exportLogs" class="btn btn-primary">
+        <button 
+          v-if="permissions.canExport.value"
+          @click="exportLogs" 
+          class="btn btn-primary"
+        >
           📊 Export
         </button>
       </div>
@@ -140,6 +144,7 @@
 
 <script>
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useViewPermissions } from '@/composables/useViewPermissions'
 import api from '@/composables/api'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
@@ -147,6 +152,9 @@ import { es } from 'date-fns/locale'
 export default {
   name: 'Logs',
   setup() {
+    // Permisos usando el composable reutilizable
+    const permissions = useViewPermissions('logs')
+    
     const logs = ref([])
     const loading = ref(false)
     const selectedLog = ref(null)
@@ -297,7 +305,9 @@ export default {
       prevPage,
       nextPage,
       formatDateTime,
-      getActionLabel
+      getActionLabel,
+      // Permisos
+      permissions
     }
   }
 }

@@ -3,7 +3,12 @@
     <div class="page-header">
       <h2>Reports & Statistics</h2>
       <div class="header-actions">
-        <button @click="generateReport" class="btn btn-primary" :disabled="loading">
+        <button 
+          v-if="permissions.canView.value"
+          @click="generateReport" 
+          class="btn btn-primary" 
+          :disabled="loading"
+        >
           📊 Generate Report
         </button>
       </div>
@@ -147,6 +152,7 @@
 <script>
 import { ref, reactive, onMounted, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
+import { useViewPermissions } from '@/composables/useViewPermissions'
 import api from '@/composables/api'
 import { format } from 'date-fns'
 
@@ -155,6 +161,9 @@ Chart.register(...registerables)
 export default {
   name: 'Reports',
   setup() {
+    // Permisos usando el composable reutilizable
+    const permissions = useViewPermissions('reports')
+    
     const loading = ref(false)
     const attendanceChart = ref(null)
     const warehouseChart = ref(null)
@@ -368,7 +377,9 @@ export default {
       generateReport,
       downloadReport,
       viewReport,
-      formatDate
+      formatDate,
+      // Permisos
+      permissions
     }
   }
 }

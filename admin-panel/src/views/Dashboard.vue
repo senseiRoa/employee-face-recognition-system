@@ -171,8 +171,8 @@ export default {
         const activities = response.data.activities || response.data || []
         recentActivities.value = activities.map(activity => ({
           id: activity.id,
-          type: activity.action || activity.event || 'check',
-          description: `${activity.employee_name || activity.employee?.name || 'Unknown Employee'} - ${activity.action === 'in' ? 'Check-in' : 'Check-out'} at ${activity.warehouse_name || activity.warehouse?.name || 'Unknown Location'}`,
+          type: activity.action  || '',
+          description: `${activity.employee_name || activity.employee?.name || 'Unknown Employee'} - ${activity.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${activity.warehouse_name || activity.warehouse?.name || 'Unknown Location'}`,
           timestamp: activity.timestamp || activity.created_at
         }))
       } catch (error) {
@@ -189,22 +189,8 @@ export default {
           return
         }
         
-        // Fallback: intentar cargar desde logs
-        try {
-          const response = await api.get('/logs/?limit=10')
-          const logs = response.data.logs || response.data || []
-          recentActivities.value = logs.map(log => ({
-            id: log.id,
-            type: log.action_type || log.event || 'check',
-            description: `${log.employee_name || log.employee?.name || 'Unknown Employee'} - ${log.action_type || 'Activity'}`,
-            timestamp: log.timestamp || log.created_at
-          }))
-        } catch (fallbackError) {
-          console.error('Error loading recent activities fallback:', fallbackError)
-          // Empty array if no data available
-          recentActivities.value = []
-          toast.error('Failed to load recent activities. Please check your connection and try again.')
-        }
+ 
+        
       }
     }
 

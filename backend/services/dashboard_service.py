@@ -103,11 +103,13 @@ class DashboardService:
                     "employee_id": log.employee_id,
                     "employee_name": f"{log.employee.first_name} {log.employee.last_name}",
                     "warehouse_name": log.employee.warehouse.name,
-                    "action": "check_in" if log.event == "in" else "check_out",
-                    "timestamp": log.ts,
-                    "recognition_confidence": log.distance if log.distance else 0.85,
+                    "action": "check_in" if log.event_type == "in" else "check_out",
+                    "timestamp": log.timestamp,
+                    "recognition_confidence": log.confidence_score
+                    if log.confidence_score
+                    else 0.85,
                     "photo_url": f"/uploads/faces/check_{log.id}.jpg"
-                    if log.distance
+                    if log.confidence_score
                     else None,
                 }
             )

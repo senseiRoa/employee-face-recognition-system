@@ -153,31 +153,80 @@
           }}
         </h3>
         <canvas ref="attendanceChart"></canvas>
+        
+        <!-- Attendance Summary Information -->
+        <div v-if="attendanceSummary.total_checkins > 0 || attendanceSummary.total_checkouts > 0" class="chart-summary">
+          <h4>Attendance Analysis Summary</h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Total Check-ins:</span>
+              <span class="summary-value">{{ attendanceSummary.total_checkins }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Total Check-outs:</span>
+              <span class="summary-value">{{ attendanceSummary.total_checkouts }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Avg {{ getPeriodLabel() }} Check-ins:</span>
+              <span class="summary-value">{{ getAvgCheckins() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Avg {{ getPeriodLabel() }} Check-outs:</span>
+              <span class="summary-value">{{ getAvgCheckouts() }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Analysis Period:</span>
+              <span class="summary-value">{{ attendanceSummary.period }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Balance:</span>
+              <span class="summary-value" :class="{
+                'highlight': attendanceSummary.total_checkins === attendanceSummary.total_checkouts,
+                'text-warning': attendanceSummary.total_checkins > attendanceSummary.total_checkouts,
+                'text-danger': attendanceSummary.total_checkins < attendanceSummary.total_checkouts
+              }">
+                {{ attendanceSummary.total_checkins === attendanceSummary.total_checkouts ? 'Balanced' :
+                   attendanceSummary.total_checkins > attendanceSummary.total_checkouts ? 'More Check-ins' : 'More Check-outs' }}
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div class="chart-container">
         <h3>Employees per Warehouse</h3>
         <canvas ref="warehouseChart"></canvas>
-        
+
         <!-- Warehouse Summary Information -->
         <div v-if="warehouseSummary.total_warehouses > 0" class="chart-summary">
           <h4>Warehouse Analysis Summary</h4>
           <div class="summary-grid">
             <div class="summary-item">
               <span class="summary-label">Total Warehouses:</span>
-              <span class="summary-value">{{ warehouseSummary.total_warehouses }}</span>
+              <span class="summary-value">{{
+                warehouseSummary.total_warehouses
+              }}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Total Employees:</span>
-              <span class="summary-value">{{ warehouseSummary.total_employees }}</span>
+              <span class="summary-value">{{
+                warehouseSummary.total_employees
+              }}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Avg per Warehouse:</span>
-              <span class="summary-value">{{ warehouseSummary.avg_employees_per_warehouse }} employees</span>
+              <span class="summary-value"
+                >{{
+                  warehouseSummary.avg_employees_per_warehouse
+                }}
+                employees</span
+              >
             </div>
             <div class="summary-item">
               <span class="summary-label">Access Logs (Period):</span>
-              <span class="summary-value">{{ warehouseSummary.total_access_logs_period }}</span>
+              <span class="summary-value">{{
+                warehouseSummary.total_access_logs_period
+              }}</span>
             </div>
             <div class="summary-item">
               <span class="summary-label">Analysis Period:</span>
@@ -185,7 +234,9 @@
             </div>
             <div class="summary-item">
               <span class="summary-label">Most Active:</span>
-              <span class="summary-value highlight">{{ warehouseSummary.most_active_warehouse }}</span>
+              <span class="summary-value highlight">{{
+                warehouseSummary.most_active_warehouse
+              }}</span>
             </div>
           </div>
         </div>
@@ -317,8 +368,21 @@ export default {
       total_employees: 0,
       total_access_logs_period: 0,
       avg_employees_per_warehouse: 0,
-      period: '',
-      most_active_warehouse: ''
+      period: "",
+      most_active_warehouse: ""
+    });
+
+    // Summary information from attendance chart
+    const attendanceSummary = ref({
+      total_checkins: 0,
+      total_checkouts: 0,
+      avg_daily_checkins: 0,
+      avg_daily_checkouts: 0,
+      avg_weekly_checkins: 0,
+      avg_weekly_checkouts: 0,
+      avg_monthly_checkins: 0,
+      avg_monthly_checkouts: 0,
+      period: ""
     });
 
     // Filtros específicos para el chart de attendance
@@ -342,7 +406,6 @@ export default {
       } catch (error) {
         console.error("Error loading reports stats:", error);
         toast.error("Error loading reports statistics. Showing fallback data.");
-        // Fallback: cargar estadísticas básicas
       }
     };
 
@@ -422,6 +485,18 @@ export default {
             }
           }
         });
+
+        // Mostrar información del summary si está disponible
+        if (chartResponse.data.summary) {
+          attendanceSummary.value = chartResponse.data.summary;
+          console.log('Attendance Chart Summary:', chartResponse.data.summary);
+          
+          // Mensaje dinámico según el período
+          const periodLabel = attendanceFilters.groupBy === 'day' ? 'daily' : 
+                             attendanceFilters.groupBy === 'week' ? 'weekly' : 'monthly';
+          toast.success(`Loaded ${periodLabel} attendance data: ${chartResponse.data.summary.total_checkins} check-ins, ${chartResponse.data.summary.total_checkouts} check-outs`);
+        }
+
       } catch (error) {
         console.error("Error loading attendance chart data:", error);
         toast.error(
@@ -433,6 +508,47 @@ export default {
     // Función para actualizar el chart de attendance cuando cambien los filtros
     const updateAttendanceChart = async () => {
       await createAttendanceChart();
+      await createWarehouseChart();
+    };
+
+    // Funciones helper para obtener valores dinámicos del summary
+    const getAvgCheckins = () => {
+      switch (attendanceFilters.groupBy) {
+        case 'day':
+          return attendanceSummary.value.avg_daily_checkins || 0;
+        case 'week':
+          return attendanceSummary.value.avg_weekly_checkins || 0;
+        case 'month':
+          return attendanceSummary.value.avg_monthly_checkins || 0;
+        default:
+          return 0;
+      }
+    };
+
+    const getAvgCheckouts = () => {
+      switch (attendanceFilters.groupBy) {
+        case 'day':
+          return attendanceSummary.value.avg_daily_checkouts || 0;
+        case 'week':
+          return attendanceSummary.value.avg_weekly_checkouts || 0;
+        case 'month':
+          return attendanceSummary.value.avg_monthly_checkouts || 0;
+        default:
+          return 0;
+      }
+    };
+
+    const getPeriodLabel = () => {
+      switch (attendanceFilters.groupBy) {
+        case 'day':
+          return 'Daily';
+        case 'week':
+          return 'Weekly';
+        case 'month':
+          return 'Monthly';
+        default:
+          return 'Weekly';
+      }
     };
 
     // Función para cargar warehouses para el filtro
@@ -447,43 +563,54 @@ export default {
     };
 
     const createWarehouseChart = async () => {
+      if (!attendanceChart.value) return;
       if (!warehouseChart.value) return;
 
       try {
         // Intentar obtener datos reales del endpoint de charts de warehouses
-        const chartResponse = await api.get("/reports/charts/warehouses");
-        
+        const chartResponse = await api.get(`/reports/charts/warehouses?days=${attendanceFilters.days}`);
+
         // Extraer datos de la respuesta
         const responseData = chartResponse.data;
         const labels = responseData.labels || [];
         const datasets = responseData.datasets || [];
-        
+
         // Usar el primer dataset que contiene la información de empleados
         const employeeData = datasets.length > 0 ? datasets[0] : {};
         const data = employeeData.data || [];
         const backgroundColor = employeeData.backgroundColor || [
-          "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", 
-          "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
+          "#3B82F6",
+          "#10B981",
+          "#F59E0B",
+          "#EF4444",
+          "#8B5CF6",
+          "#EC4899",
+          "#06B6D4",
+          "#84CC16",
+          "#F97316",
+          "#6366F1"
         ];
 
         const ctx = warehouseChart.value.getContext("2d");
-        
+
         // Limpiar chart anterior si existe
         if (window.warehouseChartInstance) {
           window.warehouseChartInstance.destroy();
         }
-        
+
         window.warehouseChartInstance = new Chart(ctx, {
           type: "doughnut",
           data: {
             labels: labels,
-            datasets: [{
-              label: employeeData.label || 'Employees',
-              data: data,
-              backgroundColor: backgroundColor,
-              borderWidth: 2,
-              borderColor: '#ffffff'
-            }]
+            datasets: [
+              {
+                label: employeeData.label || "Employees",
+                data: data,
+                backgroundColor: backgroundColor,
+                borderWidth: 2,
+                borderColor: "#ffffff"
+              }
+            ]
           },
           options: {
             responsive: true,
@@ -501,11 +628,15 @@ export default {
               },
               tooltip: {
                 callbacks: {
-                  label: function(context) {
-                    const label = context.label || '';
+                  label: function (context) {
+                    const label = context.label || "";
                     const value = context.parsed || 0;
-                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    const total = context.dataset.data.reduce(
+                      (a, b) => a + b,
+                      0
+                    );
+                    const percentage =
+                      total > 0 ? ((value / total) * 100).toFixed(1) : 0;
                     return `${label}: ${value} employees (${percentage}%)`;
                   }
                 }
@@ -517,45 +648,18 @@ export default {
         // Mostrar información del summary si está disponible
         if (responseData.summary) {
           warehouseSummary.value = responseData.summary;
-          console.log('Warehouse Chart Summary:', responseData.summary);
-          toast.success(`Loaded data for ${responseData.summary.total_warehouses} warehouses with ${responseData.summary.total_employees} total employees`);
+          console.log("Warehouse Chart Summary:", responseData.summary);
+          toast.success(
+            `Loaded data for ${responseData.summary.total_warehouses} warehouses with ${responseData.summary.total_employees} total employees`
+          );
         }
-
       } catch (error) {
         console.error("Error loading warehouse chart data:", error);
-        toast.error("Error loading warehouse chart data. Showing fallback data.");
-        
-        // Fallback: crear chart con datos de ejemplo
-        if (warehouseChart.value) {
-          const ctx = warehouseChart.value.getContext("2d");
-          
-          if (window.warehouseChartInstance) {
-            window.warehouseChartInstance.destroy();
-          }
-          
-          window.warehouseChartInstance = new Chart(ctx, {
-            type: "doughnut",
-            data: {
-              labels: ['No Data Available'],
-              datasets: [{
-                label: 'Employees',
-                data: [1],
-                backgroundColor: ['#E5E7EB'],
-                borderWidth: 2,
-                borderColor: '#ffffff'
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              plugins: {
-                legend: {
-                  position: "bottom"
-                }
-              }
-            }
-          });
-        }
+        toast.error(
+          "Error loading warehouse chart data. Showing fallback data."
+        );
+
+       
       }
     };
 
@@ -669,12 +773,16 @@ export default {
       recentReports,
       availableWarehouses,
       warehouseSummary,
+      attendanceSummary,
       attendanceFilters,
       generateReport,
       downloadReport,
       viewReport,
       formatDate,
       updateAttendanceChart,
+      getAvgCheckins,
+      getAvgCheckouts,
+      getPeriodLabel,
       // Permisos
       permissions
     };
@@ -849,6 +957,22 @@ export default {
 .summary-value.highlight {
   color: var(--primary-color, #3b82f6);
   background: var(--primary-light, rgba(59, 130, 246, 0.1));
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.summary-value.text-warning {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
+}
+
+.summary-value.text-danger {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
   padding: 2px 8px;
   border-radius: 4px;
   font-weight: 700;

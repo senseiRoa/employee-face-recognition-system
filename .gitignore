@@ -8,3 +8,7 @@ backend/ENDPOINTS_DASHBOARD_REPORTS.md
 admin-panel/openapireport.json
 backend/downloaded_report.pdf
 backend/test_report.csv
+TEST_ENDPOINTS.md
+TEST_DASHBOARD_INTEGRATION.md
+test_dashboard_integration.bat
+test_dashboard_integration.sh

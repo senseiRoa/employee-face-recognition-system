@@ -88,7 +88,7 @@ else:
 # Configurar archivos estáticos para el panel de administración
 admin_static_path = os.path.join(os.path.dirname(__file__), "www", "admin")
 if os.path.exists(admin_static_path):
-    # Montar archivos estáticos 
+    # Montar archivos estáticos
     app.mount(
         "/admin/assets",
         StaticFiles(directory=os.path.join(admin_static_path, "assets")),

@@ -13,6 +13,7 @@ class DashboardStatsResponse(BaseModel):
     total_employees: int
     active_employees: int
     total_warehouses: int
+    total_companies: int
     active_warehouses: int
     todays_checkins: int
     todays_checkouts: int

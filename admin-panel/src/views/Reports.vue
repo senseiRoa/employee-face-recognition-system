@@ -155,6 +155,7 @@ import { Chart, registerables } from 'chart.js'
 import { useViewPermissions } from '@/composables/useViewPermissions'
 import api from '@/composables/api'
 import { format } from 'date-fns'
+import { useToast } from 'vue-toastification'
 
 Chart.register(...registerables)
 
@@ -163,6 +164,7 @@ export default {
   setup() {
     // Permisos usando el composable reutilizable
     const permissions = useViewPermissions('reports')
+    const toast = useToast()
     
     const loading = ref(false)
     const attendanceChart = ref(null)
@@ -187,144 +189,279 @@ export default {
 
     const loadStats = async () => {
       try {
-        // Cargar estadísticas básicas
-        const [employeesRes, warehousesRes] = await Promise.all([
-          api.get('/employees/'),
-          api.get('/warehouses/')
-        ])
-
-        stats.totalEmployees = employeesRes.data.length
-        stats.activeWarehouses = warehousesRes.data.filter(w => w.is_active).length
-        stats.totalCheckIns = Math.floor(Math.random() * 50) + 10 // Simulado
-        stats.avgWorkingHours = '8.2h' // Simulado
-      } catch (error) {
-        console.error('Error loading stats:', error)
-        // Valores por defecto
+        // Cargar estadísticas específicas de reportes desde el endpoint real
+        const statsResponse = await api.get('/reports/stats')
+        
         Object.assign(stats, {
-          totalEmployees: 25,
-          totalCheckIns: 18,
-          activeWarehouses: 3,
-          avgWorkingHours: '8.2h'
+          totalEmployees: statsResponse.data.total_employees || 0,
+          totalCheckIns: statsResponse.data.total_checkins_today || 0,
+          activeWarehouses: statsResponse.data.active_warehouses || 0,
+          avgWorkingHours: statsResponse.data.avg_working_hours || '8.2h'
+        })
+      } catch (error) {
+        console.error('Error loading reports stats:', error)
+        // Fallback: cargar estadísticas básicas
+        try {
+          const [employeesRes, warehousesRes] = await Promise.all([
+            api.get('/employees/'),
+            api.get('/warehouses/')
+          ])
+
+          stats.totalEmployees = employeesRes.data.length
+          stats.activeWarehouses = warehousesRes.data.filter(w => w.is_active).length
+          stats.totalCheckIns = Math.floor(Math.random() * 50) + 10 // Simulado
+          stats.avgWorkingHours = '8.2h' // Simulado
+        } catch (fallbackError) {
+          console.error('Error loading fallback stats:', fallbackError)
+          // Valores por defecto
+          Object.assign(stats, {
+            totalEmployees: 25,
+            totalCheckIns: 18,
+            activeWarehouses: 3,
+            avgWorkingHours: '8.2h'
+          })
+        }
+      }
+    }
+
+    const loadRecentReports = async () => {
+      try {
+        // Cargar reportes recientes desde el endpoint real
+        const response = await api.get('/reports/recent?limit=10')
+        recentReports.value = response.data.reports.map(report => ({
+          id: report.id,
+          name: report.name,
+          description: report.description,
+          created_at: report.created_at,
+          format: report.format,
+          url: report.download_url,
+          created_by: report.created_by_name,
+          file_size: report.file_size
+        }))
+      } catch (error) {
+        console.error('Error loading recent reports:', error)
+        // Datos simulados de reportes recientes si el endpoint no existe
+        recentReports.value = [
+          {
+            id: 1,
+            name: 'Weekly Attendance Report',
+            description: 'Employee attendance from October 1-7',
+            created_at: new Date().toISOString(),
+            format: 'pdf',
+            url: '/reports/1/download',
+            created_by: 'Admin User',
+            file_size: '2.5MB'
+          },
+          {
+            id: 2,
+            name: 'Warehouse Statistics',
+            description: 'Activity summary by warehouse',
+            created_at: new Date(Date.now() - 86400000).toISOString(),
+            format: 'excel',
+            url: '/reports/2/download',
+            created_by: 'Manager User',
+            file_size: '1.8MB'
+          }
+        ]
+      }
+    }
+
+    const createAttendanceChart = async () => {
+      if (!attendanceChart.value) return
+
+      try {
+        // Intentar obtener datos reales del endpoint de charts de reports
+        const chartResponse = await api.get('/reports/charts/attendance?days=30')
+        
+        const ctx = attendanceChart.value.getContext('2d')
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: chartResponse.data.labels,
+            datasets: chartResponse.data.datasets.map(dataset => ({
+              ...dataset,
+              borderWidth: 1
+            }))
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: chartResponse.data.datasets.length > 1
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: '#e2e8f0'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
+        })
+      } catch (error) {
+        console.error('Error loading attendance chart data:', error)
+        // Fallback: datos estáticos
+        const ctx = attendanceChart.value.getContext('2d')
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            datasets: [{
+              label: 'Check-ins',
+              data: [22, 25, 18, 28, 24, 12, 8],
+              backgroundColor: 'rgba(59, 130, 246, 0.8)',
+              borderColor: '#3b82f6',
+              borderWidth: 1
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                display: false
+              }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                grid: {
+                  color: '#e2e8f0'
+                }
+              },
+              x: {
+                grid: {
+                  display: false
+                }
+              }
+            }
+          }
         })
       }
     }
 
-    const loadRecentReports = () => {
-      // Datos simulados de reportes recientes
-      recentReports.value = [
-        {
-          id: 1,
-          name: 'Weekly Attendance Report',
-          description: 'Employee attendance from October 1-7',
-          created_at: new Date().toISOString(),
-          format: 'pdf',
-          url: '/api/reports/1/download'
-        },
-        {
-          id: 2,
-          name: 'Warehouse Statistics',
-          description: 'Activity summary by warehouse',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          format: 'excel',
-          url: '/api/reports/2/download'
-        }
-      ]
-    }
-
-    const createAttendanceChart = () => {
-      if (!attendanceChart.value) return
-
-      const ctx = attendanceChart.value.getContext('2d')
-      new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-          datasets: [{
-            label: 'Check-ins',
-            data: [22, 25, 18, 28, 24, 12, 8],
-            backgroundColor: 'rgba(59, 130, 246, 0.8)',
-            borderColor: '#3b82f6',
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              display: false
-            }
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              grid: {
-                color: '#e2e8f0'
-              }
-            },
-            x: {
-              grid: {
-                display: false
-              }
-            }
-          }
-        }
-      })
-    }
-
-    const createWarehouseChart = () => {
+    const createWarehouseChart = async () => {
       if (!warehouseChart.value) return
 
-      const ctx = warehouseChart.value.getContext('2d')
-      new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Warehouse Central', 'Warehouse Norte', 'Warehouse Sur'],
-          datasets: [{
-            data: [45, 30, 25],
-            backgroundColor: [
-              '#10b981',
-              '#3b82f6',
-              '#f59e0b'
-            ],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: 'bottom'
+      try {
+        // Intentar obtener datos reales del endpoint de charts de warehouses
+        const chartResponse = await api.get('/reports/charts/warehouses')
+        
+        const ctx = warehouseChart.value.getContext('2d')
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: chartResponse.data.labels,
+            datasets: chartResponse.data.datasets || [{
+              data: chartResponse.data.data,
+              backgroundColor: chartResponse.data.colors || [
+                '#10b981',
+                '#3b82f6',
+                '#f59e0b',
+                '#ef4444',
+                '#8b5cf6'
+              ],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
             }
           }
-        }
-      })
+        })
+      } catch (error) {
+        console.error('Error loading warehouse chart data:', error)
+        // Fallback: datos estáticos
+        const ctx = warehouseChart.value.getContext('2d')
+        new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['Warehouse Central', 'Warehouse Norte', 'Warehouse Sur'],
+            datasets: [{
+              data: [45, 30, 25],
+              backgroundColor: [
+                '#10b981',
+                '#3b82f6',
+                '#f59e0b'
+              ],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'bottom'
+              }
+            }
+          }
+        })
+      }
     }
 
     const generateReport = async () => {
       loading.value = true
       try {
-        const response = await api.post('/reports/generate', reportConfig, {
+        // Crear el payload con los datos del formulario
+        const payload = {
+          type: reportConfig.type,
+          date_from: reportConfig.dateFrom,
+          date_to: reportConfig.dateTo,
+          format: reportConfig.format
+        }
+
+        const response = await api.post('/reports/generate', payload, {
           responseType: 'blob'
         })
+        
+        // Obtener el nombre del archivo desde el header Content-Disposition
+        const contentDisposition = response.headers['content-disposition']
+        let filename = `reporte_${reportConfig.type}_${format(new Date(), 'yyyy-MM-dd')}.${reportConfig.format}`
+        
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, '')
+          }
+        }
         
         const url = window.URL.createObjectURL(new Blob([response.data]))
         const link = document.createElement('a')
         link.href = url
-        
-        const filename = `reporte_${reportConfig.type}_${format(new Date(), 'yyyy-MM-dd')}.${reportConfig.format}`
         link.setAttribute('download', filename)
         
         document.body.appendChild(link)
         link.click()
         link.remove()
         
+        // Show success message
+        toast.success(`Report generated and downloaded successfully: ${filename}`)
+        
         // Recargar reportes recientes
-        loadRecentReports()
+        await loadRecentReports()
       } catch (error) {
         console.error('Error generating report:', error)
-        alert('Error al generar el reporte. Intenta nuevamente.')
+        if (error.response?.status === 403) {
+          toast.error('No tienes permisos para generar reportes.')
+        } else if (error.response?.status === 422) {
+          toast.error('Datos de reporte inválidos. Verifica las fechas y parámetros.')
+        } else {
+          toast.error('Error al generar el reporte. Intenta nuevamente.')
+        }
       } finally {
         loading.value = false
       }

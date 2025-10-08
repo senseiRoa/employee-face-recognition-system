@@ -32,7 +32,7 @@ class ReportService:
 
         # Check-ins de hoy
         today_checkins_query = self.db.query(AccessLog).filter(
-            and_(func.date(AccessLog.ts) == today, AccessLog.event == "in")
+            and_(func.date(AccessLog.timestamp) == today, AccessLog.event_type == "in")
         )
         if warehouse_filter is not None:
             today_checkins_query = today_checkins_query.join(Employee).filter(
@@ -240,8 +240,8 @@ class ReportService:
             .join(Employee)
             .filter(
                 and_(
-                    func.date(AccessLog.ts) >= request.date_from,
-                    func.date(AccessLog.ts) <= request.date_to,
+                    func.date(AccessLog.timestamp) >= request.date_from,
+                    func.date(AccessLog.timestamp) <= request.date_to,
                 )
             )
         )
@@ -255,7 +255,7 @@ class ReportService:
         if request.employee_id:
             query = query.filter(Employee.id == request.employee_id)
 
-        logs = query.order_by(AccessLog.ts).all()
+        logs = query.order_by(AccessLog.timestamp).all()
 
         # Convertir a formato para reporte
         data = []

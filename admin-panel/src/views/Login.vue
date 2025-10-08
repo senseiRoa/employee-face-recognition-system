@@ -3,7 +3,7 @@
     <div class="login-card">
       <div class="login-header">
         <h1>Admin Panel</h1>
-        <p>Employee Tracker System</p>
+        <p>Time Tracker System</p>
       </div>
       
       <form @submit.prevent="handleLogin" class="login-form">

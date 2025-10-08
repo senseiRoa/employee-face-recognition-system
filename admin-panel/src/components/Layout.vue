@@ -3,7 +3,7 @@
     <!-- Sidebar -->
     <aside class="sidebar" :class="{ open: sidebarOpen }">
       <div class="sidebar-header">
-        <h2>Employee Tracker</h2>
+        <h2>Time Tracker</h2>
         <button @click="toggleSidebar" class="sidebar-toggle">
           <span>☰</span>
         </button>

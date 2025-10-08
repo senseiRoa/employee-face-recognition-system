@@ -9,6 +9,7 @@ from datetime import datetime
 
 class DashboardStatsResponse(BaseModel):
     """Respuesta con estadísticas del dashboard"""
+
     total_employees: int
     active_employees: int
     total_warehouses: int
@@ -21,6 +22,7 @@ class DashboardStatsResponse(BaseModel):
 
 class ActivityItem(BaseModel):
     """Item de actividad reciente"""
+
     id: int
     employee_id: int
     employee_name: str
@@ -33,12 +35,14 @@ class ActivityItem(BaseModel):
 
 class RecentActivitiesResponse(BaseModel):
     """Respuesta con actividades recientes"""
+
     activities: List[ActivityItem]
     total: int
 
 
 class ChartDataset(BaseModel):
     """Dataset para gráficos"""
+
     label: str
     data: List[int]
     backgroundColor: str
@@ -46,12 +50,14 @@ class ChartDataset(BaseModel):
 
 class AttendanceChartResponse(BaseModel):
     """Respuesta para gráfico de asistencia"""
+
     labels: List[str]
     datasets: List[ChartDataset]
 
 
 class WarehouseChartResponse(BaseModel):
     """Respuesta para gráfico de almacenes"""
+
     labels: List[str]
     data: List[int]
     colors: List[str]

@@ -88,9 +88,13 @@ else:
 # Configurar archivos estáticos para el panel de administración
 admin_static_path = os.path.join(os.path.dirname(__file__), "www", "admin")
 if os.path.exists(admin_static_path):
-    # Montar archivos estáticos primero
-    app.mount("/admin/assets", StaticFiles(directory=os.path.join(admin_static_path, "assets")), name="admin-assets")
-    
+    # Montar archivos estáticos 
+    app.mount(
+        "/admin/assets",
+        StaticFiles(directory=os.path.join(admin_static_path, "assets")),
+        name="admin-assets",
+    )
+
     # Manejar rutas SPA - servir index.html para rutas que no sean archivos
     @app.get("/admin/{full_path:path}")
     async def serve_spa(request: Request, full_path: str):
@@ -103,14 +107,14 @@ if os.path.exists(admin_static_path):
             file_path = os.path.join(admin_static_path, full_path)
             if os.path.exists(file_path):
                 return FileResponse(file_path)
-        
+
         # Para todas las demás rutas, servir index.html
         index_path = os.path.join(admin_static_path, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        
+
         return {"detail": "Admin panel not found"}
-    
+
     # Ruta raíz del admin
     @app.get("/admin")
     @app.get("/admin/")
@@ -120,11 +124,14 @@ if os.path.exists(admin_static_path):
         if os.path.exists(index_path):
             return FileResponse(index_path)
         return {"detail": "Admin panel not found"}
-    
+
     print(f"✅ Admin panel mounted at /admin from {admin_static_path}")
 else:
     print(f"⚠️ Admin panel directory not found: {admin_static_path}")
-    print("💡 Build the frontend first: cd frontend && npm run build && npm run copy-to-www")
+    print(
+        "💡 Build the frontend first: cd frontend && npm run build && npm run copy-to-www"
+    )
+
 
 @app.get("/health")
 def health():

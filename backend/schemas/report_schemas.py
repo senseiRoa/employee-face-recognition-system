@@ -10,6 +10,7 @@ from enum import Enum
 
 class ReportType(str, Enum):
     """Tipos de reportes disponibles"""
+
     ATTENDANCE = "attendance"
     EMPLOYEES = "employees"
     WAREHOUSES = "warehouses"
@@ -18,6 +19,7 @@ class ReportType(str, Enum):
 
 class ReportFormat(str, Enum):
     """Formatos de reporte disponibles"""
+
     PDF = "pdf"
     CSV = "csv"
     EXCEL = "excel"
@@ -25,6 +27,7 @@ class ReportFormat(str, Enum):
 
 class GroupBy(str, Enum):
     """Opciones de agrupación"""
+
     DAY = "day"
     WEEK = "week"
     MONTH = "month"
@@ -32,6 +35,7 @@ class GroupBy(str, Enum):
 
 class ReportGenerateRequest(BaseModel):
     """Request para generar reporte"""
+
     type: ReportType
     date_from: date
     date_to: date
@@ -44,6 +48,7 @@ class ReportGenerateRequest(BaseModel):
 
 class ReportStatsResponse(BaseModel):
     """Estadísticas para la vista de reportes"""
+
     total_employees: int
     total_checkins_today: int
     active_warehouses: int
@@ -55,6 +60,7 @@ class ReportStatsResponse(BaseModel):
 
 class ReportItem(BaseModel):
     """Item de reporte en la lista"""
+
     id: int
     name: str
     description: str
@@ -70,12 +76,14 @@ class ReportItem(BaseModel):
 
 class RecentReportsResponse(BaseModel):
     """Respuesta con reportes recientes"""
+
     reports: List[ReportItem]
     total: int
 
 
 class ReportChartDataset(BaseModel):
     """Dataset para gráficos en reportes"""
+
     label: str
     data: List[int]
     backgroundColor: str
@@ -83,6 +91,7 @@ class ReportChartDataset(BaseModel):
 
 class ReportChartResponse(BaseModel):
     """Respuesta para gráficos en reportes"""
+
     labels: List[str]
     datasets: List[ReportChartDataset]
     summary: Optional[Dict[str, Any]] = None
@@ -90,6 +99,7 @@ class ReportChartResponse(BaseModel):
 
 class WarehouseReportDataset(BaseModel):
     """Dataset para gráfico de warehouses en reportes"""
+
     label: str
     data: List[int]
     backgroundColor: List[str]
@@ -97,5 +107,6 @@ class WarehouseReportDataset(BaseModel):
 
 class WarehouseReportChartResponse(BaseModel):
     """Respuesta para gráfico de warehouses en reportes"""
+
     labels: List[str]
     datasets: List[WarehouseReportDataset]

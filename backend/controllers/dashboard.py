@@ -12,18 +12,17 @@ from schemas.dashboard_schemas import (
     DashboardStatsResponse,
     RecentActivitiesResponse,
     AttendanceChartResponse,
-    WarehouseChartResponse
+    WarehouseChartResponse,
 )
 from utils.permission_decorators import require_dashboard_read
 from models import User
 
-router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+router = APIRouter()
 
 
 @router.get("/stats", response_model=DashboardStatsResponse)
 async def get_dashboard_stats(
-    current_user: User = Depends(require_dashboard_read),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(require_dashboard_read), db: Session = Depends(get_db)
 ):
     """
     Obtener estadísticas generales del dashboard
@@ -36,7 +35,7 @@ async def get_dashboard_stats(
 async def get_recent_activities(
     limit: int = 10,
     current_user: User = Depends(require_dashboard_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Obtener actividades recientes de check-in/out
@@ -49,7 +48,7 @@ async def get_recent_activities(
 async def get_attendance_chart(
     days: int = 7,
     current_user: User = Depends(require_dashboard_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Obtener datos para gráfico de asistencia
@@ -60,8 +59,7 @@ async def get_attendance_chart(
 
 @router.get("/charts/warehouses", response_model=WarehouseChartResponse)
 async def get_warehouse_chart(
-    current_user: User = Depends(require_dashboard_read),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(require_dashboard_read), db: Session = Depends(get_db)
 ):
     """
     Obtener datos para gráfico de distribución de almacenes

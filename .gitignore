@@ -6,3 +6,5 @@ README.md.backup
 .github/copilot-instructions.md
 backend/ENDPOINTS_DASHBOARD_REPORTS.md
 admin-panel/openapireport.json
+backend/downloaded_report.pdf
+backend/test_report.csv

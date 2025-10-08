@@ -248,7 +248,9 @@ def require_dashboard_read(current_user: User = Depends(get_current_user)) -> Us
     return current_user
 
 
-def require_reports_analytics_read(current_user: User = Depends(get_current_user)) -> User:
+def require_reports_analytics_read(
+    current_user: User = Depends(get_current_user),
+) -> User:
     """Dependencia que requiere permisos de lectura de reportes y analytics"""
     if not can_read_reports(current_user.role.name):
         raise HTTPException(

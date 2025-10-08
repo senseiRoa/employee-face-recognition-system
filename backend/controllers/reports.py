@@ -22,7 +22,7 @@ from schemas.report_schemas import (
 from utils.permission_decorators import require_reports_analytics_read
 from models import User
 
-router = APIRouter(prefix="/reports", tags=["reports"])
+router = APIRouter()
 
 
 @router.get("/stats", response_model=ReportStatsResponse)

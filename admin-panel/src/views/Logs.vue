@@ -159,7 +159,7 @@ export default {
     const loading = ref(false)
     const selectedLog = ref(null)
     const currentPage = ref(1)
-    const pageSize = ref(20)
+    const pageSize = ref(50)
     const totalLogs = ref(0)
 
     const filters = reactive({
@@ -195,14 +195,14 @@ export default {
       loading.value = true
       try {
         const params = new URLSearchParams({
-          page: currentPage.value,
+          skip: currentPage.value,
           limit: pageSize.value
         })
 
         if (filters.dateFrom) params.append('date_from', filters.dateFrom)
         if (filters.dateTo) params.append('date_to', filters.dateTo)
 
-        const response = await api.get(`/logs/?${params}`)
+        const response = await api.get(`/logs/access?${params}`)
         logs.value = response.data.items || response.data
         totalLogs.value = response.data.total || logs.value.length
       } catch (error) {

@@ -5,14 +5,14 @@ from datetime import datetime
 
 from database import get_db
 from services import log_service
-from schemas import AccessLog, LoginLog, UserLoginLog
+from schemas import AccessLogEnhanced, LoginLog, UserLoginLog
 from utils.permission_decorators import require_logs_audit
 from models import User
 
 router = APIRouter()
 
 
-@router.get("/access", response_model=List[AccessLog])
+@router.get("/access", response_model=List[AccessLogEnhanced])
 def list_access_logs(
     employee_id: Optional[int] = None,
     warehouse_id: Optional[int] = None,
@@ -24,9 +24,34 @@ def list_access_logs(
     current_user: User = Depends(require_logs_audit),
 ):
     """
-    List access logs with audit permissions
+    List access logs with enhanced information (employee name, warehouse name, etc.)
     """
-    return log_service.get_access_logs(
+    return log_service.get_enhanced_access_logs(
+        db,
+        employee_id=employee_id,
+        warehouse_id=warehouse_id,
+        start_date=start_date,
+        end_date=end_date,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@router.get("/access/enhanced", response_model=List[AccessLogEnhanced])
+def list_enhanced_access_logs(
+    employee_id: Optional[int] = None,
+    warehouse_id: Optional[int] = None,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_logs_audit),
+):
+    """
+    List enhanced access logs with detailed information including employee and warehouse names
+    """
+    return log_service.get_enhanced_access_logs(
         db,
         employee_id=employee_id,
         warehouse_id=warehouse_id,

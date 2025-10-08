@@ -273,8 +273,41 @@ class AccessLog(BaseModel):
     id: int
     employee_id: int
     warehouse_id: Optional[int] = None
-    event: str
-    ts: datetime.datetime
+
+    # Event information
+    event_type: str  # "entry", "exit", "denied", "unknown"
+    access_method: Optional[str] = None  # "face_recognition", "manual", "card"
+
+    # Additional context information
+    confidence_score: Optional[str] = None  # Face recognition confidence
+    device_info: Optional[dict] = None  # Camera/device information
+    location_details: Optional[dict] = None  # Specific location within warehouse
+    additional_data: Optional[dict] = None  # Flexible field for additional data
+
+    # Status and verification
+    is_verified: bool = False  # Manual verification flag
+    notes: Optional[str] = None  # Human-readable notes
+
+    timestamp: datetime.datetime
+
+    class Config:
+        from_attributes = True
+
+
+class AccessLogEnhanced(BaseModel):
+    """Enhanced access log response with detailed information"""
+
+    id: int
+    timestamp: datetime.datetime
+    employee_name: str
+    action_type: str  # "check_in", "check_out", "denied", "unknown"
+    warehouse_name: str
+    ip_address: Optional[str] = None
+    success: bool
+    details: str
+    confidence_score: Optional[float] = None
+    access_method: Optional[str] = None
+    device_info: Optional[dict] = None
 
     class Config:
         from_attributes = True

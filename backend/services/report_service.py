@@ -3,7 +3,7 @@ Servicio para funcionalidades de Reports
 """
 
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
+from sqlalchemy import func, and_
 from models import Employee, AccessLog, Warehouse, User
 from schemas.report_schemas import ReportGenerateRequest, ReportType
 from datetime import datetime, timedelta
@@ -337,3 +337,253 @@ class ReportService:
     ) -> List[Dict]:
         """Obtener datos de actividad general"""
         return self._get_attendance_data(request, warehouse_filter)
+
+    async def get_attendance_chart(
+        self,
+        current_user: User,
+        days: int = 7,
+        warehouse_id: int = None,
+        group_by: str = "day",
+    ) -> Dict[str, Any]:
+        """
+        Obtener datos para gráfico de asistencia
+
+        Args:
+            current_user: Usuario actual
+            days: Número de días hacia atrás a considerar (default: 7)
+            warehouse_id: ID del warehouse específico (opcional)
+            group_by: Agrupación de datos ('day', 'week', 'month')
+
+        Returns:
+            Dict con datos formateados para el gráfico
+        """
+        from datetime import datetime, timedelta
+
+        # Calcular rango de fechas
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=days - 1)
+
+        # Obtener filtro de warehouse
+        warehouse_filter = self._get_warehouse_filter(current_user)
+
+        # Construir query base
+        query = (
+            self.db.query(
+                func.date(AccessLog.timestamp).label("date"),
+                AccessLog.event_type,
+                func.count(AccessLog.id).label("count"),
+            )
+            .join(Employee)
+            .filter(
+                and_(
+                    func.date(AccessLog.timestamp) >= start_date,
+                    func.date(AccessLog.timestamp) <= end_date,
+                )
+            )
+        )
+
+        # Aplicar filtros de warehouse
+        if warehouse_filter is not None:
+            query = query.filter(warehouse_filter)
+
+        if warehouse_id:
+            query = query.filter(Employee.warehouse_id == warehouse_id)
+
+        # Agrupar por fecha y tipo de evento
+        query = query.group_by(
+            func.date(AccessLog.timestamp), AccessLog.event_type
+        ).order_by(func.date(AccessLog.timestamp))
+
+        results = query.all()
+
+        # Procesar datos según el tipo de agrupación
+        if group_by == "day":
+            return self._process_daily_attendance(results, start_date, end_date)
+        elif group_by == "week":
+            return self._process_weekly_attendance(results, start_date, end_date)
+        elif group_by == "month":
+            return self._process_monthly_attendance(results, start_date, end_date)
+        else:
+            return self._process_daily_attendance(results, start_date, end_date)
+
+    def _process_daily_attendance(
+        self, results, start_date, end_date
+    ) -> Dict[str, Any]:
+        """Procesar datos de asistencia por día"""
+        from datetime import timedelta
+
+        # Crear diccionario con todas las fechas inicializadas en 0
+        date_range = []
+        current_date = start_date
+        while current_date <= end_date:
+            date_range.append(current_date)
+            current_date += timedelta(days=1)
+
+        # Inicializar contadores
+        checkins_data = {date: 0 for date in date_range}
+        checkouts_data = {date: 0 for date in date_range}
+
+        # Procesar resultados
+        for result in results:
+            date = result.date
+            if date in checkins_data:
+                if result.event_type == "in":
+                    checkins_data[date] = result.count
+                elif result.event_type == "out":
+                    checkouts_data[date] = result.count
+
+        # Formatear labels y datos
+        labels = [date.strftime("%m/%d") for date in date_range]
+        checkins_values = [checkins_data[date] for date in date_range]
+        checkouts_values = [checkouts_data[date] for date in date_range]
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Check-ins",
+                    "data": checkins_values,
+                    "backgroundColor": "#10B981",
+                },
+                {
+                    "label": "Check-outs",
+                    "data": checkouts_values,
+                    "backgroundColor": "#F59E0B",
+                },
+            ],
+            "summary": {
+                "total_checkins": sum(checkins_values),
+                "total_checkouts": sum(checkouts_values),
+                "avg_daily_checkins": round(
+                    sum(checkins_values) / len(checkins_values), 1
+                )
+                if checkins_values
+                else 0,
+                "avg_daily_checkouts": round(
+                    sum(checkouts_values) / len(checkouts_values), 1
+                )
+                if checkouts_values
+                else 0,
+                "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+            },
+        }
+
+    def _process_weekly_attendance(
+        self, results, start_date, end_date
+    ) -> Dict[str, Any]:
+        """Procesar datos de asistencia por semana"""
+        import math
+
+        # Agrupar por semanas
+        weeks_data = {}
+
+        for result in results:
+            # Calcular número de semana
+            days_from_start = (result.date - start_date).days
+            week_number = math.floor(days_from_start / 7)
+            week_label = f"Week {week_number + 1}"
+
+            if week_label not in weeks_data:
+                weeks_data[week_label] = {"checkins": 0, "checkouts": 0}
+
+            if result.event_type == "in":
+                weeks_data[week_label]["checkins"] += result.count
+            elif result.event_type == "out":
+                weeks_data[week_label]["checkouts"] += result.count
+
+        # Ordenar semanas
+        sorted_weeks = sorted(weeks_data.keys(), key=lambda x: int(x.split()[1]))
+
+        labels = sorted_weeks
+        checkins_values = [weeks_data[week]["checkins"] for week in sorted_weeks]
+        checkouts_values = [weeks_data[week]["checkouts"] for week in sorted_weeks]
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Check-ins",
+                    "data": checkins_values,
+                    "backgroundColor": "#10B981",
+                },
+                {
+                    "label": "Check-outs",
+                    "data": checkouts_values,
+                    "backgroundColor": "#F59E0B",
+                },
+            ],
+            "summary": {
+                "total_checkins": sum(checkins_values),
+                "total_checkouts": sum(checkouts_values),
+                "avg_weekly_checkins": round(
+                    sum(checkins_values) / len(checkins_values), 1
+                )
+                if checkins_values
+                else 0,
+                "avg_weekly_checkouts": round(
+                    sum(checkouts_values) / len(checkouts_values), 1
+                )
+                if checkouts_values
+                else 0,
+                "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+            },
+        }
+
+    def _process_monthly_attendance(
+        self, results, start_date, end_date
+    ) -> Dict[str, Any]:
+        """Procesar datos de asistencia por mes"""
+
+        # Agrupar por meses
+        months_data = {}
+
+        for result in results:
+            month_label = result.date.strftime("%b %Y")
+
+            if month_label not in months_data:
+                months_data[month_label] = {"checkins": 0, "checkouts": 0}
+
+            if result.event_type == "in":
+                months_data[month_label]["checkins"] += result.count
+            elif result.event_type == "out":
+                months_data[month_label]["checkouts"] += result.count
+
+        # Ordenar meses
+        sorted_months = sorted(
+            months_data.keys(), key=lambda x: datetime.strptime(x, "%b %Y")
+        )
+
+        labels = sorted_months
+        checkins_values = [months_data[month]["checkins"] for month in sorted_months]
+        checkouts_values = [months_data[month]["checkouts"] for month in sorted_months]
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Check-ins",
+                    "data": checkins_values,
+                    "backgroundColor": "#10B981",
+                },
+                {
+                    "label": "Check-outs",
+                    "data": checkouts_values,
+                    "backgroundColor": "#F59E0B",
+                },
+            ],
+            "summary": {
+                "total_checkins": sum(checkins_values),
+                "total_checkouts": sum(checkouts_values),
+                "avg_monthly_checkins": round(
+                    sum(checkins_values) / len(checkins_values), 1
+                )
+                if checkins_values
+                else 0,
+                "avg_monthly_checkouts": round(
+                    sum(checkouts_values) / len(checkouts_values), 1
+                )
+                if checkouts_values
+                else 0,
+                "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+            },
+        }

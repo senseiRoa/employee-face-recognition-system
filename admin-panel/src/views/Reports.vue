@@ -2,16 +2,6 @@
   <div class="reports">
     <div class="page-header">
       <h2>Reports & Statistics</h2>
-      <div class="header-actions">
-        <button 
-          v-if="permissions.canView.value"
-          @click="generateReport" 
-          class="btn btn-primary" 
-          :disabled="loading"
-        >
-          📊 Generate Report
-        </button>
-      </div>
     </div>
 
     <!-- Report Filters -->
@@ -27,11 +17,21 @@
       </div>
       <div class="filter-group">
         <label class="form-label">Start Date</label>
-        <input v-model="reportConfig.dateFrom" type="date" class="form-control" lang="en" />
+        <input
+          v-model="reportConfig.dateFrom"
+          type="date"
+          class="form-control"
+          lang="en"
+        />
       </div>
       <div class="filter-group">
         <label class="form-label">End Date</label>
-        <input v-model="reportConfig.dateTo" type="date" class="form-control" lang="en" />
+        <input
+          v-model="reportConfig.dateTo"
+          type="date"
+          class="form-control"
+          lang="en"
+        />
       </div>
       <div class="filter-group">
         <label class="form-label">Format</label>
@@ -40,6 +40,17 @@
           <option value="csv">CSV</option>
           <option value="excel">Excel</option>
         </select>
+      </div>
+      <div class="filter-group">
+        <label class="form-label">Actions</label>
+        <button
+          v-if="permissions.canView.value"
+          @click="generateReport"
+          class="btn btn-primary"
+          :disabled="loading"
+        >
+          📊 Generate Report
+        </button>
       </div>
     </div>
 
@@ -52,7 +63,7 @@
           <p>Total Employees</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">📍</div>
         <div class="stat-content">
@@ -60,7 +71,7 @@
           <p>Check-ins Today</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">🏭</div>
         <div class="stat-content">
@@ -68,7 +79,7 @@
           <p>Active Warehouses</p>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">⏰</div>
         <div class="stat-content">
@@ -78,13 +89,72 @@
       </div>
     </div>
 
+    <!-- Attendance Chart Filters -->
+    <div class="chart-filters">
+      <h3>Attendance Analysis</h3>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="form-label">Time Period</label>
+          <select
+            v-model="attendanceFilters.groupBy"
+            @change="updateAttendanceChart"
+            class="form-control"
+          >
+            <option value="day">Daily</option>
+            <option value="week">Weekly</option>
+            <option value="month">Monthly</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="form-label">Days to Show</label>
+          <select
+            v-model="attendanceFilters.days"
+            @change="updateAttendanceChart"
+            class="form-control"
+          >
+            <option value="7">Last 7 days</option>
+            <option value="14">Last 14 days</option>
+            <option value="30">Last 30 days</option>
+            <option value="60">Last 60 days</option>
+            <option value="90">Last 90 days</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="form-label">Warehouse</label>
+          <select
+            v-model="attendanceFilters.warehouseId"
+            @change="updateAttendanceChart"
+            class="form-control"
+          >
+            <option value="">All Warehouses</option>
+            <option
+              v-for="warehouse in availableWarehouses"
+              :key="warehouse.id"
+              :value="warehouse.id"
+            >
+              {{ warehouse.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <!-- Charts -->
     <div class="charts-section">
       <div class="chart-container">
-        <h3>Attendance by Day</h3>
+        <h3>
+          Attendance by
+          {{
+            attendanceFilters.groupBy === "day"
+              ? "Day"
+              : attendanceFilters.groupBy === "week"
+              ? "Week"
+              : "Month"
+          }}
+        </h3>
         <canvas ref="attendanceChart"></canvas>
       </div>
-      
+
       <div class="chart-container">
         <h3>Employees per Warehouse</h3>
         <canvas ref="warehouseChart"></canvas>
@@ -95,14 +165,21 @@
     <div class="recent-reports">
       <h3>Recent Reports</h3>
       <div class="reports-list">
-        <div v-for="report in recentReports" :key="report.id" class="report-item">
+        <div
+          v-for="report in recentReports"
+          :key="report.id"
+          class="report-item"
+        >
           <div class="report-info">
             <h4>{{ report.name }}</h4>
             <p>{{ report.description }}</p>
             <span class="report-date">{{ formatDate(report.created_at) }}</span>
           </div>
           <div class="report-actions">
-            <button @click="downloadReport(report)" class="btn btn-outline btn-sm">
+            <button
+              @click="downloadReport(report)"
+              class="btn btn-outline btn-sm"
+            >
               📥 Download
             </button>
             <button @click="viewReport(report)" class="btn btn-primary btn-sm">
@@ -114,30 +191,42 @@
     </div>
 
     <!-- Report Preview Modal -->
-    <div v-if="previewReport" class="modal-overlay" @click.self="previewReport = null">
+    <div
+      v-if="previewReport"
+      class="modal-overlay"
+      @click.self="previewReport = null"
+    >
       <div class="modal modal-lg">
         <div class="modal-header">
           <h3>Preview: {{ previewReport.name }}</h3>
-          <button @click="previewReport = null" class="btn btn-outline">✕</button>
+          <button @click="previewReport = null" class="btn btn-outline">
+            ✕
+          </button>
         </div>
         <div class="modal-body">
           <div class="report-preview">
-            <iframe 
-              v-if="previewReport.url" 
-              :src="previewReport.url" 
-              width="100%" 
+            <iframe
+              v-if="previewReport.url"
+              :src="previewReport.url"
+              width="100%"
               height="500"
             ></iframe>
             <div v-else class="no-preview">
               <p>Preview not available for this file type.</p>
-              <button @click="downloadReport(previewReport)" class="btn btn-primary">
+              <button
+                @click="downloadReport(previewReport)"
+                class="btn btn-primary"
+              >
                 Download File
               </button>
             </div>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="downloadReport(previewReport)" class="btn btn-primary">
+          <button
+            @click="downloadReport(previewReport)"
+            class="btn btn-primary"
+          >
             Download
           </button>
           <button @click="previewReport = null" class="btn btn-outline">
@@ -150,85 +239,77 @@
 </template>
 
 <script>
-import { ref, reactive, onMounted, nextTick } from 'vue'
-import { Chart, registerables } from 'chart.js'
-import { useViewPermissions } from '@/composables/useViewPermissions'
-import api from '@/composables/api'
-import { format } from 'date-fns'
-import { useToast } from 'vue-toastification'
+import { ref, reactive, onMounted, nextTick } from "vue";
+import { Chart, registerables } from "chart.js";
+import { useViewPermissions } from "@/composables/useViewPermissions";
+import api from "@/composables/api";
+import { format } from "date-fns";
+import { useToast } from "vue-toastification";
 
-Chart.register(...registerables)
+Chart.register(...registerables);
 
 export default {
-  name: 'Reports',
+  name: "Reports",
   setup() {
     // Permisos usando el composable reutilizable
-    const permissions = useViewPermissions('reports')
-    const toast = useToast()
-    
-    const loading = ref(false)
-    const attendanceChart = ref(null)
-    const warehouseChart = ref(null)
-    const previewReport = ref(null)
+    const permissions = useViewPermissions("reports");
+    const toast = useToast();
+
+    const loading = ref(false);
+    const attendanceChart = ref(null);
+    const warehouseChart = ref(null);
+    const previewReport = ref(null);
 
     const reportConfig = reactive({
-      type: 'attendance',
-      dateFrom: format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
-      dateTo: format(new Date(), 'yyyy-MM-dd'),
-      format: 'pdf'
-    })
+      type: "attendance",
+      dateFrom: format(
+        new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+        "yyyy-MM-dd"
+      ),
+      dateTo: format(new Date(), "yyyy-MM-dd"),
+      format: "pdf"
+    });
 
     const stats = reactive({
       totalEmployees: 0,
       totalCheckIns: 0,
       activeWarehouses: 0,
       avgWorkingHours: 0
-    })
+    });
 
-    const recentReports = ref([])
+    const recentReports = ref([]);
+    const availableWarehouses = ref([]);
+
+    // Filtros específicos para el chart de attendance
+    const attendanceFilters = reactive({
+      groupBy: "week",
+      days: 30,
+      warehouseId: ""
+    });
 
     const loadStats = async () => {
       try {
         // Cargar estadísticas específicas de reportes desde el endpoint real
-        const statsResponse = await api.get('/reports/stats')
-        
+        const statsResponse = await api.get("/reports/stats");
+
         Object.assign(stats, {
           totalEmployees: statsResponse.data.total_employees || 0,
           totalCheckIns: statsResponse.data.total_checkins_today || 0,
           activeWarehouses: statsResponse.data.active_warehouses || 0,
-          avgWorkingHours: statsResponse.data.avg_working_hours || '8.2h'
-        })
+          avgWorkingHours: statsResponse.data.avg_working_hours || "8.2h"
+        });
       } catch (error) {
-        console.error('Error loading reports stats:', error)
+        console.error("Error loading reports stats:", error);
+        toast.error("Error loading reports statistics. Showing fallback data.");
         // Fallback: cargar estadísticas básicas
-        try {
-          const [employeesRes, warehousesRes] = await Promise.all([
-            api.get('/employees/'),
-            api.get('/warehouses/')
-          ])
-
-          stats.totalEmployees = employeesRes.data.length
-          stats.activeWarehouses = warehousesRes.data.filter(w => w.is_active).length
-          stats.totalCheckIns = Math.floor(Math.random() * 50) + 10 // Simulado
-          stats.avgWorkingHours = '8.2h' // Simulado
-        } catch (fallbackError) {
-          console.error('Error loading fallback stats:', fallbackError)
-          // Valores por defecto
-          Object.assign(stats, {
-            totalEmployees: 25,
-            totalCheckIns: 18,
-            activeWarehouses: 3,
-            avgWorkingHours: '8.2h'
-          })
-        }
       }
-    }
+    };
 
     const loadRecentReports = async () => {
       try {
         // Cargar reportes recientes desde el endpoint real
-        const response = await api.get('/reports/recent?limit=10')
-        recentReports.value = response.data.reports.map(report => ({
+        const response = await api.get("/reports/recent?limit=10");
+        recentReports.value = response.data.reports.map((report) => ({
           id: report.id,
           name: report.name,
           description: report.description,
@@ -237,50 +318,44 @@ export default {
           url: report.download_url,
           created_by: report.created_by_name,
           file_size: report.file_size
-        }))
+        }));
       } catch (error) {
-        console.error('Error loading recent reports:', error)
+        console.error("Error loading recent reports:", error);
         // Datos simulados de reportes recientes si el endpoint no existe
-        recentReports.value = [
-          {
-            id: 1,
-            name: 'Weekly Attendance Report',
-            description: 'Employee attendance from October 1-7',
-            created_at: new Date().toISOString(),
-            format: 'pdf',
-            url: '/reports/1/download',
-            created_by: 'Admin User',
-            file_size: '2.5MB'
-          },
-          {
-            id: 2,
-            name: 'Warehouse Statistics',
-            description: 'Activity summary by warehouse',
-            created_at: new Date(Date.now() - 86400000).toISOString(),
-            format: 'excel',
-            url: '/reports/2/download',
-            created_by: 'Manager User',
-            file_size: '1.8MB'
-          }
-        ]
+        toast.error("Error loading recent reports. Showing fallback data.");
       }
-    }
+    };
 
     const createAttendanceChart = async () => {
-      if (!attendanceChart.value) return
+      if (!attendanceChart.value) return;
 
       try {
+        // Construir URL con parámetros de filtro
+        let url = `/reports/charts/attendance?days=${attendanceFilters.days}&group_by=${attendanceFilters.groupBy}`;
+        if (attendanceFilters.warehouseId) {
+          url += `&warehouse_id=${attendanceFilters.warehouseId}`;
+        }
+
         // Intentar obtener datos reales del endpoint de charts de reports
-        const chartResponse = await api.get('/reports/charts/attendance?days=30')
-        
-        const ctx = attendanceChart.value.getContext('2d')
-        new Chart(ctx, {
-          type: 'bar',
+        const chartResponse = await api.get(url);
+
+        const ctx = attendanceChart.value.getContext("2d");
+
+        // Limpiar chart anterior si existe
+        if (window.attendanceChartInstance) {
+          window.attendanceChartInstance.destroy();
+        }
+
+        window.attendanceChartInstance = new Chart(ctx, {
+          type: "bar",
           data: {
-            labels: chartResponse.data.labels,
-            datasets: chartResponse.data.datasets.map(dataset => ({
+            labels: chartResponse.data.labels || [],
+            datasets: (chartResponse.data.datasets || []).map((dataset) => ({
               ...dataset,
-              borderWidth: 1
+              borderWidth: 1,
+              backgroundColor:
+                dataset.backgroundColor || "rgba(59, 130, 246, 0.8)",
+              borderColor: dataset.borderColor || "rgba(59, 130, 246, 1)"
             }))
           },
           options: {
@@ -295,7 +370,7 @@ export default {
               y: {
                 beginAtZero: true,
                 grid: {
-                  color: '#e2e8f0'
+                  color: "#e2e8f0"
                 }
               },
               x: {
@@ -305,116 +380,77 @@ export default {
               }
             }
           }
-        })
+        });
       } catch (error) {
-        console.error('Error loading attendance chart data:', error)
-        // Fallback: datos estáticos
-        const ctx = attendanceChart.value.getContext('2d')
-        new Chart(ctx, {
-          type: 'bar',
-          data: {
-            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            datasets: [{
-              label: 'Check-ins',
-              data: [22, 25, 18, 28, 24, 12, 8],
-              backgroundColor: 'rgba(59, 130, 246, 0.8)',
-              borderColor: '#3b82f6',
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: false
-              }
-            },
-            scales: {
-              y: {
-                beginAtZero: true,
-                grid: {
-                  color: '#e2e8f0'
-                }
-              },
-              x: {
-                grid: {
-                  display: false
-                }
-              }
-            }
-          }
-        })
+        console.error("Error loading attendance chart data:", error);
+        toast.error(
+          "Error loading attendance chart data. Showing fallback data."
+        );
       }
-    }
+    };
+
+    // Función para actualizar el chart de attendance cuando cambien los filtros
+    const updateAttendanceChart = async () => {
+      await createAttendanceChart();
+    };
+
+    // Función para cargar warehouses para el filtro
+    const loadWarehouses = async () => {
+      try {
+        const response = await api.get("/warehouses/");
+        availableWarehouses.value = response.data || [];
+      } catch (error) {
+        console.error("Error loading warehouses:", error);
+        availableWarehouses.value = [];
+      }
+    };
 
     const createWarehouseChart = async () => {
-      if (!warehouseChart.value) return
+      if (!warehouseChart.value) return;
 
       try {
         // Intentar obtener datos reales del endpoint de charts de warehouses
-        const chartResponse = await api.get('/reports/charts/warehouses')
-        
-        const ctx = warehouseChart.value.getContext('2d')
+        const chartResponse = await api.get("/reports/charts/warehouses");
+
+        const ctx = warehouseChart.value.getContext("2d");
         new Chart(ctx, {
-          type: 'doughnut',
+          type: "doughnut",
           data: {
             labels: chartResponse.data.labels,
-            datasets: chartResponse.data.datasets || [{
-              data: chartResponse.data.data,
-              backgroundColor: chartResponse.data.colors || [
-                '#10b981',
-                '#3b82f6',
-                '#f59e0b',
-                '#ef4444',
-                '#8b5cf6'
-              ],
-              borderWidth: 0
-            }]
+            datasets: chartResponse.data.datasets || [
+              {
+                data: chartResponse.data.data,
+                backgroundColor: chartResponse.data.colors || [
+                  "#10b981",
+                  "#3b82f6",
+                  "#f59e0b",
+                  "#ef4444",
+                  "#8b5cf6"
+                ],
+                borderWidth: 0
+              }
+            ]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                position: 'bottom'
+                position: "bottom"
               }
             }
           }
-        })
+        });
       } catch (error) {
-        console.error('Error loading warehouse chart data:', error)
-        // Fallback: datos estáticos
-        const ctx = warehouseChart.value.getContext('2d')
-        new Chart(ctx, {
-          type: 'doughnut',
-          data: {
-            labels: ['Warehouse Central', 'Warehouse Norte', 'Warehouse Sur'],
-            datasets: [{
-              data: [45, 30, 25],
-              backgroundColor: [
-                '#10b981',
-                '#3b82f6',
-                '#f59e0b'
-              ],
-              borderWidth: 0
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'bottom'
-              }
-            }
-          }
-        })
+        console.error("Error loading warehouse chart data:", error);
+        toast.error(
+          "Error loading warehouse chart data. Showing fallback data."
+        );
       }
-    }
+    };
 
     const generateReport = async () => {
-      loading.value = true
+      loading.value = true;
       try {
         // Crear el payload con los datos del formulario
         const payload = {
@@ -422,86 +458,96 @@ export default {
           date_from: reportConfig.dateFrom,
           date_to: reportConfig.dateTo,
           format: reportConfig.format
-        }
+        };
 
-        const response = await api.post('/reports/generate', payload, {
-          responseType: 'blob'
-        })
-        
+        const response = await api.post("/reports/generate", payload, {
+          responseType: "blob"
+        });
+
         // Obtener el nombre del archivo desde el header Content-Disposition
-        const contentDisposition = response.headers['content-disposition']
-        let filename = `reporte_${reportConfig.type}_${format(new Date(), 'yyyy-MM-dd')}.${reportConfig.format}`
-        
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = `reporte_${reportConfig.type}_${format(
+          new Date(),
+          "yyyy-MM-dd"
+        )}.${reportConfig.format}`;
+
         if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+          );
           if (filenameMatch && filenameMatch[1]) {
-            filename = filenameMatch[1].replace(/['"]/g, '')
+            filename = filenameMatch[1].replace(/['"]/g, "");
           }
         }
-        
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', filename)
-        
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
-        
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", filename);
+
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
         // Show success message
-        toast.success(`Report generated and downloaded successfully: ${filename}`)
-        
+        toast.success(
+          `Report generated and downloaded successfully: ${filename}`
+        );
+
         // Recargar reportes recientes
-        await loadRecentReports()
+        await loadRecentReports();
       } catch (error) {
-        console.error('Error generating report:', error)
+        console.error("Error generating report:", error);
         if (error.response?.status === 403) {
-          toast.error('No tienes permisos para generar reportes.')
+          toast.error("No tienes permisos para generar reportes.");
         } else if (error.response?.status === 422) {
-          toast.error('Datos de reporte inválidos. Verifica las fechas y parámetros.')
+          toast.error(
+            "Datos de reporte inválidos. Verifica las fechas y parámetros."
+          );
         } else {
-          toast.error('Error al generar el reporte. Intenta nuevamente.')
+          toast.error("Error al generar el reporte. Intenta nuevamente.");
         }
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    }
+    };
 
     const downloadReport = async (report) => {
       try {
-        const response = await api.get(report.url, { responseType: 'blob' })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `${report.name}.${report.format}`)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
+        const response = await api.get(report.url, { responseType: "blob" });
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `${report.name}.${report.format}`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
       } catch (error) {
-        console.error('Error downloading report:', error)
+        console.error("Error downloading report:", error);
       }
-    }
+    };
 
     const viewReport = (report) => {
-      if (report.format === 'pdf') {
-        previewReport.value = report
+      if (report.format === "pdf") {
+        previewReport.value = report;
       } else {
-        downloadReport(report)
+        downloadReport(report);
       }
-    }
+    };
 
     const formatDate = (dateString) => {
-      return format(new Date(dateString), 'MM/dd/yyyy HH:mm')
-    }
+      return format(new Date(dateString), "MM/dd/yyyy HH:mm");
+    };
 
     onMounted(async () => {
-      await loadStats()
-      loadRecentReports()
-      
-      await nextTick()
-      createAttendanceChart()
-      createWarehouseChart()
-    })
+      await loadStats();
+      loadRecentReports();
+      loadWarehouses(); // Cargar warehouses para el filtro
+
+      await nextTick();
+      createAttendanceChart();
+      createWarehouseChart();
+    });
 
     return {
       loading,
@@ -511,15 +557,18 @@ export default {
       reportConfig,
       stats,
       recentReports,
+      availableWarehouses,
+      attendanceFilters,
       generateReport,
       downloadReport,
       viewReport,
       formatDate,
+      updateAttendanceChart,
       // Permisos
       permissions
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
@@ -556,6 +605,27 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.chart-filters {
+  background: var(--card-background);
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  margin-bottom: 20px;
+}
+
+.chart-filters h3 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
 }
 
 .stats-grid {
@@ -702,21 +772,21 @@ export default {
   .report-filters {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .charts-section {
     grid-template-columns: 1fr;
   }
-  
+
   .report-item {
     flex-direction: column;
     align-items: stretch;
     gap: 12px;
   }
-  
+
   .report-actions {
     justify-content: center;
   }

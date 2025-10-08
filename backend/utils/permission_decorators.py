@@ -238,6 +238,26 @@ def require_logs_audit(current_user: User = Depends(get_current_user)) -> User:
     return current_user
 
 
+def require_dashboard_read(current_user: User = Depends(get_current_user)) -> User:
+    """Dependencia que requiere permisos de lectura de dashboard"""
+    if not can_read_reports(current_user.role.name):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Read access to Dashboard Analytics",
+        )
+    return current_user
+
+
+def require_reports_analytics_read(current_user: User = Depends(get_current_user)) -> User:
+    """Dependencia que requiere permisos de lectura de reportes y analytics"""
+    if not can_read_reports(current_user.role.name):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Read access to Reports Analytics",
+        )
+    return current_user
+
+
 # Funciones helper para validaciones contextuales
 def validate_warehouse_scope(current_user: User, target_warehouse_id: int) -> bool:
     """

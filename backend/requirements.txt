@@ -15,6 +15,12 @@ bcrypt==4.0.1
 passlib[bcrypt]
 pydantic[email]
 
+# Dashboard & Reports dependencies
+reportlab
+openpyxl
+pandas
+matplotlib
+
 # Testing dependencies
 pytest
 pytest-asyncio

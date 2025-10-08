@@ -4,3 +4,5 @@ backend/reto2.md
 backend/www/admin/**
 README.md.backup
 .github/copilot-instructions.md
+backend/ENDPOINTS_DASHBOARD_REPORTS.md
+admin-panel/openapireport.json

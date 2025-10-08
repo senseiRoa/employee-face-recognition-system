@@ -78,5 +78,9 @@ def get_openapi_tags() -> list:
             "name": "logs",
             "description": "Operations to query and manage activity logs.",
         },
+        {
+            "name": "dashboard", 
+            "description": "Dashboard statistics and data visualization endpoints."
+        },
         {"name": "reports", "description": "System report generation and queries."},
     ]

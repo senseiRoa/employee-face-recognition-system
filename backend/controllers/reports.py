@@ -1,93 +1,119 @@
+"""
+Controlador para endpoints de Reports
+"""
+
 from fastapi import APIRouter, Depends, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import Optional
 from datetime import datetime
+import io
 
 from database import get_db
-from services import report_service
-from utils.permission_decorators import require_reports_read
+from dependencies import get_current_user
+from services.report_service import ReportService
+from schemas.report_schemas import (
+    ReportStatsResponse,
+    ReportGenerateRequest,
+    RecentReportsResponse,
+    ReportChartResponse,
+    WarehouseReportChartResponse
+)
+from utils.permission_decorators import require_reports_analytics_read
 from models import User
 
-router = APIRouter()
+router = APIRouter(prefix="/reports", tags=["reports"])
 
 
-@router.get("/checkins")
-def get_checkin_report(
-    employee_id: Optional[int] = None,
-    warehouse_id: Optional[int] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_reports_read),
+@router.get("/stats", response_model=ReportStatsResponse)
+async def get_report_stats(
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
 ):
     """
-    Get employee checkin report with analytics permissions
+    Obtener estadísticas para la vista de reportes
     """
-    results = report_service.get_employee_checkin_report(
-        db,
-        employee_id=employee_id,
-        warehouse_id=warehouse_id,
-        start_date=start_date,
-        end_date=end_date,
-    )
-
-    return [
-        {
-            "employee_id": r.employee_id,
-            "employee_name": r.employee_name,
-            "total_check_ins": r.total_check_ins,
-            "total_check_outs": r.total_check_outs,
-            "last_event": r.last_event,
-            "last_event_time": r.last_event_time.isoformat()
-            if r.last_event_time
-            else None,
-        }
-        for r in results
-    ]
+    service = ReportService(db)
+    return await service.get_stats(current_user)
 
 
-@router.get("/warehouse-activity")
-def get_warehouse_activity(
-    warehouse_id: Optional[int] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_reports_read),
+@router.post("/generate")
+async def generate_report(
+    request: ReportGenerateRequest,
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
 ):
     """
-    Get warehouse activity report with analytics permissions
+    Generar reporte personalizado
     """
-    results = report_service.get_warehouse_activity_report(
-        db, warehouse_id=warehouse_id, start_date=start_date, end_date=end_date
+    service = ReportService(db)
+    file_content, filename, content_type = await service.generate_report(
+        request, current_user
+    )
+    
+    return StreamingResponse(
+        io.BytesIO(file_content),
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
-    return [
-        {
-            "warehouse_id": r.warehouse_id,
-            "warehouse_name": r.warehouse_name,
-            "total_events": r.total_events,
-            "unique_employees": r.unique_employees,
-        }
-        for r in results
-    ]
 
-
-@router.get("/frequent-employees")
-def get_frequent_employees(
-    warehouse_id: Optional[int] = None,
-    days: int = Query(7, ge=1, le=365),
-    limit: int = Query(10, ge=1, le=100),
-    db: Session = Depends(get_db),
-    current_user: User = Depends(require_reports_read),
+@router.get("/recent", response_model=RecentReportsResponse)
+async def get_recent_reports(
+    limit: int = 10,
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
 ):
     """
-    Get frequent employees report with analytics permissions
+    Obtener reportes recientes generados
     """
-    results = report_service.get_frequent_employees(
-        db, warehouse_id=warehouse_id, days=days, limit=limit
+    service = ReportService(db)
+    return await service.get_recent_reports(current_user, limit)
+
+
+@router.get("/{report_id}/download")
+async def download_report(
+    report_id: int,
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
+):
+    """
+    Descargar reporte específico
+    """
+    service = ReportService(db)
+    file_content, filename, content_type = await service.download_report(
+        report_id, current_user
+    )
+    
+    return StreamingResponse(
+        io.BytesIO(file_content),
+        media_type=content_type,
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
-    return [
-        {"employee_id": r.id, "employee_name": r.name, "total_events": r.total_events}
-        for r in results
-    ]
+
+@router.get("/charts/attendance", response_model=ReportChartResponse)
+async def get_attendance_chart(
+    days: int = 30,
+    warehouse_id: Optional[int] = None,
+    group_by: str = "week",
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener datos para gráficos de asistencia en reportes
+    """
+    service = ReportService(db)
+    return await service.get_attendance_chart(current_user, days, warehouse_id, group_by)
+
+
+@router.get("/charts/warehouses", response_model=WarehouseReportChartResponse)
+async def get_warehouse_chart(
+    current_user: User = Depends(require_reports_analytics_read),
+    db: Session = Depends(get_db)
+):
+    """
+    Obtener datos para gráfico de distribución de almacenes en reportes
+    """
+    service = ReportService(db)
+    return await service.get_warehouse_chart(current_user)

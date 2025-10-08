@@ -18,7 +18,7 @@ from utils.permissions import can_read_companies
 router = APIRouter()
 
 
-# Esquemas de entrada
+# Input Schemas
 class CompanyCreate(BaseModel):
     name: str
     email: Optional[EmailStr] = None
@@ -59,7 +59,7 @@ class CompanyUpdate(BaseModel):
         return v.strip() if v else None
 
 
-# Esquemas de respuesta
+# Response Schemas
 class CompanyResponse(BaseModel):
     id: int
     name: str
@@ -347,7 +347,7 @@ def toggle_company_status(
     """
     Toggle company status (active/inactive) - requires company write permissions
     """
-    # Solo admin puede cambiar status de empresas
+    # Only admin can change company status
     if current_user.role.name != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

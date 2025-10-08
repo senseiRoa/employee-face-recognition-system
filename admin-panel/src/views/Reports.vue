@@ -158,6 +158,37 @@
       <div class="chart-container">
         <h3>Employees per Warehouse</h3>
         <canvas ref="warehouseChart"></canvas>
+        
+        <!-- Warehouse Summary Information -->
+        <div v-if="warehouseSummary.total_warehouses > 0" class="chart-summary">
+          <h4>Warehouse Analysis Summary</h4>
+          <div class="summary-grid">
+            <div class="summary-item">
+              <span class="summary-label">Total Warehouses:</span>
+              <span class="summary-value">{{ warehouseSummary.total_warehouses }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Total Employees:</span>
+              <span class="summary-value">{{ warehouseSummary.total_employees }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Avg per Warehouse:</span>
+              <span class="summary-value">{{ warehouseSummary.avg_employees_per_warehouse }} employees</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Access Logs (Period):</span>
+              <span class="summary-value">{{ warehouseSummary.total_access_logs_period }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Analysis Period:</span>
+              <span class="summary-value">{{ warehouseSummary.period }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="summary-label">Most Active:</span>
+              <span class="summary-value highlight">{{ warehouseSummary.most_active_warehouse }}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -279,6 +310,16 @@ export default {
 
     const recentReports = ref([]);
     const availableWarehouses = ref([]);
+
+    // Summary information from warehouse chart
+    const warehouseSummary = ref({
+      total_warehouses: 0,
+      total_employees: 0,
+      total_access_logs_period: 0,
+      avg_employees_per_warehouse: 0,
+      period: '',
+      most_active_warehouse: ''
+    });
 
     // Filtros específicos para el chart de attendance
     const attendanceFilters = reactive({
@@ -411,41 +452,110 @@ export default {
       try {
         // Intentar obtener datos reales del endpoint de charts de warehouses
         const chartResponse = await api.get("/reports/charts/warehouses");
+        
+        // Extraer datos de la respuesta
+        const responseData = chartResponse.data;
+        const labels = responseData.labels || [];
+        const datasets = responseData.datasets || [];
+        
+        // Usar el primer dataset que contiene la información de empleados
+        const employeeData = datasets.length > 0 ? datasets[0] : {};
+        const data = employeeData.data || [];
+        const backgroundColor = employeeData.backgroundColor || [
+          "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", 
+          "#EC4899", "#06B6D4", "#84CC16", "#F97316", "#6366F1"
+        ];
 
         const ctx = warehouseChart.value.getContext("2d");
-        new Chart(ctx, {
+        
+        // Limpiar chart anterior si existe
+        if (window.warehouseChartInstance) {
+          window.warehouseChartInstance.destroy();
+        }
+        
+        window.warehouseChartInstance = new Chart(ctx, {
           type: "doughnut",
           data: {
-            labels: chartResponse.data.labels,
-            datasets: chartResponse.data.datasets || [
-              {
-                data: chartResponse.data.data,
-                backgroundColor: chartResponse.data.colors || [
-                  "#10b981",
-                  "#3b82f6",
-                  "#f59e0b",
-                  "#ef4444",
-                  "#8b5cf6"
-                ],
-                borderWidth: 0
-              }
-            ]
+            labels: labels,
+            datasets: [{
+              label: employeeData.label || 'Employees',
+              data: data,
+              backgroundColor: backgroundColor,
+              borderWidth: 2,
+              borderColor: '#ffffff'
+            }]
           },
           options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                position: "bottom"
+                position: "bottom",
+                labels: {
+                  padding: 20,
+                  usePointStyle: true,
+                  font: {
+                    size: 12
+                  }
+                }
+              },
+              tooltip: {
+                callbacks: {
+                  label: function(context) {
+                    const label = context.label || '';
+                    const value = context.parsed || 0;
+                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return `${label}: ${value} employees (${percentage}%)`;
+                  }
+                }
               }
             }
           }
         });
+
+        // Mostrar información del summary si está disponible
+        if (responseData.summary) {
+          warehouseSummary.value = responseData.summary;
+          console.log('Warehouse Chart Summary:', responseData.summary);
+          toast.success(`Loaded data for ${responseData.summary.total_warehouses} warehouses with ${responseData.summary.total_employees} total employees`);
+        }
+
       } catch (error) {
         console.error("Error loading warehouse chart data:", error);
-        toast.error(
-          "Error loading warehouse chart data. Showing fallback data."
-        );
+        toast.error("Error loading warehouse chart data. Showing fallback data.");
+        
+        // Fallback: crear chart con datos de ejemplo
+        if (warehouseChart.value) {
+          const ctx = warehouseChart.value.getContext("2d");
+          
+          if (window.warehouseChartInstance) {
+            window.warehouseChartInstance.destroy();
+          }
+          
+          window.warehouseChartInstance = new Chart(ctx, {
+            type: "doughnut",
+            data: {
+              labels: ['No Data Available'],
+              datasets: [{
+                label: 'Employees',
+                data: [1],
+                backgroundColor: ['#E5E7EB'],
+                borderWidth: 2,
+                borderColor: '#ffffff'
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: {
+                  position: "bottom"
+                }
+              }
+            }
+          });
+        }
       }
     };
 
@@ -558,6 +668,7 @@ export default {
       stats,
       recentReports,
       availableWarehouses,
+      warehouseSummary,
       attendanceFilters,
       generateReport,
       downloadReport,
@@ -692,6 +803,55 @@ export default {
 
 .chart-container canvas {
   max-height: 300px;
+}
+
+.chart-summary {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-color);
+}
+
+.chart-summary h4 {
+  margin: 0 0 16px 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--background-secondary, #f8fafc);
+  border-radius: 6px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.summary-label {
+  font-size: 13px;
+  color: var(--text-secondary, #64748b);
+  font-weight: 500;
+}
+
+.summary-value {
+  font-size: 14px;
+  color: var(--text-primary, #1e293b);
+  font-weight: 600;
+}
+
+.summary-value.highlight {
+  color: var(--primary-color, #3b82f6);
+  background: var(--primary-light, rgba(59, 130, 246, 0.1));
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-weight: 700;
 }
 
 .recent-reports {

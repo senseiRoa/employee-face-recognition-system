@@ -110,3 +110,4 @@ class WarehouseReportChartResponse(BaseModel):
 
     labels: List[str]
     datasets: List[WarehouseReportDataset]
+    summary: Optional[Dict[str, Any]] = None

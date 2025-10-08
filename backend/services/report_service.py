@@ -587,3 +587,164 @@ class ReportService:
                 "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
             },
         }
+
+    async def get_warehouse_chart(
+        self, current_user: User, days: int
+    ) -> Dict[str, Any]:
+        """
+        Obtener datos para gráfico de distribución de warehouses
+
+        Args:
+            current_user: Usuario actual
+
+        Returns:
+            Dict con datos formateados para el gráfico de warehouses
+        """
+        from datetime import datetime, timedelta
+
+        # Calcular fechas para el período actual (último mes)
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=days)
+
+        # Query base para obtener datos de cada warehouse
+        if current_user.role.name == "admin":
+            # Admin puede ver todos los warehouses
+            query = (
+                self.db.query(
+                    Warehouse.id,
+                    Warehouse.name,
+                    func.count(Employee.id).label("total_employees"),
+                    func.count(AccessLog.id).label("total_access_logs"),
+                )
+                .outerjoin(Employee, Employee.warehouse_id == Warehouse.id)
+                .outerjoin(
+                    AccessLog,
+                    and_(
+                        AccessLog.employee_id == Employee.id,
+                        func.date(AccessLog.timestamp) >= start_date,
+                        func.date(AccessLog.timestamp) <= end_date,
+                    ),
+                )
+                .filter(Warehouse.is_active)
+                .group_by(Warehouse.id, Warehouse.name)
+                .order_by(Warehouse.name)
+            )
+        else:
+            # Usuario regular solo ve su warehouse
+            query = (
+                self.db.query(
+                    Warehouse.id,
+                    Warehouse.name,
+                    func.count(Employee.id).label("total_employees"),
+                    func.count(AccessLog.id).label("total_access_logs"),
+                )
+                .outerjoin(Employee, Employee.warehouse_id == Warehouse.id)
+                .outerjoin(
+                    AccessLog,
+                    and_(
+                        AccessLog.employee_id == Employee.id,
+                        func.date(AccessLog.timestamp) >= start_date,
+                        func.date(AccessLog.timestamp) <= end_date,
+                    ),
+                )
+                .filter(
+                    and_(Warehouse.is_active, Warehouse.id == current_user.warehouse_id)
+                )
+                .group_by(Warehouse.id, Warehouse.name)
+                .order_by(Warehouse.name)
+            )
+
+        results = query.all()
+
+        # Procesar datos para el gráfico
+        if not results:
+            return {
+                "labels": ["No Data"],
+                "datasets": [
+                    {"label": "Employees", "data": [0], "backgroundColor": ["#E5E7EB"]}
+                ],
+            }
+
+        # Extraer datos
+        labels = [result.name for result in results]
+        employee_counts = [result.total_employees for result in results]
+        access_log_counts = [result.total_access_logs for result in results]
+
+        # Generar colores dinámicamente
+        colors = self._generate_chart_colors(len(labels))
+
+        return {
+            "labels": labels,
+            "datasets": [
+                {
+                    "label": "Employees",
+                    "data": employee_counts,
+                    "backgroundColor": colors,
+                }
+            ],
+            "summary": {
+                "total_warehouses": len(labels),
+                "total_employees": sum(employee_counts),
+                "total_access_logs_period": sum(access_log_counts),
+                "avg_employees_per_warehouse": round(
+                    sum(employee_counts) / len(employee_counts), 1
+                )
+                if employee_counts
+                else 0,
+                "period": f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                "most_active_warehouse": labels[
+                    employee_counts.index(max(employee_counts))
+                ]
+                if employee_counts
+                else "N/A",
+            },
+        }
+
+    def _generate_chart_colors(self, count: int) -> List[str]:
+        """
+        Generar colores para gráficos de forma dinámica
+
+        Args:
+            count: Número de colores necesarios
+
+        Returns:
+            Lista de colores en formato hexadecimal
+        """
+        # Paleta de colores predefinida
+        base_colors = [
+            "#3B82F6",  # Blue
+            "#10B981",  # Green
+            "#F59E0B",  # Yellow
+            "#EF4444",  # Red
+            "#8B5CF6",  # Purple
+            "#F97316",  # Orange
+            "#06B6D4",  # Cyan
+            "#84CC16",  # Lime
+            "#EC4899",  # Pink
+            "#6B7280",  # Gray
+        ]
+
+        # Si necesitamos más colores que los predefinidos, generar adicionales
+        if count <= len(base_colors):
+            return base_colors[:count]
+
+        # Para más colores, usar la paleta base y generar variaciones
+        colors = base_colors.copy()
+
+        # Generar colores adicionales basados en HSL
+        import colorsys
+
+        for i in range(count - len(base_colors)):
+            # Generar hue distribuido uniformemente
+            hue = (i * 360 / (count - len(base_colors))) / 360.0
+            saturation = 0.7
+            lightness = 0.5
+
+            # Convertir HSL a RGB
+            r, g, b = colorsys.hls_to_rgb(hue, lightness, saturation)
+
+            # Convertir a hexadecimal
+            hex_color = f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+            colors.append(hex_color)
+
+        return colors[:count]

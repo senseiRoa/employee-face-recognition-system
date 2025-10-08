@@ -17,7 +17,7 @@ from schemas.report_schemas import (
     ReportGenerateRequest,
     RecentReportsResponse,
     ReportChartResponse,
-    WarehouseReportChartResponse
+    WarehouseReportChartResponse,
 )
 from utils.permission_decorators import require_reports_analytics_read
 from models import User
@@ -28,7 +28,7 @@ router = APIRouter()
 @router.get("/stats", response_model=ReportStatsResponse)
 async def get_report_stats(
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Obtener estadísticas para la vista de reportes
@@ -41,7 +41,7 @@ async def get_report_stats(
 async def generate_report(
     request: ReportGenerateRequest,
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Generar reporte personalizado
@@ -50,11 +50,11 @@ async def generate_report(
     file_content, filename, content_type = await service.generate_report(
         request, current_user
     )
-    
+
     return StreamingResponse(
         io.BytesIO(file_content),
         media_type=content_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -62,7 +62,7 @@ async def generate_report(
 async def get_recent_reports(
     limit: int = 10,
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Obtener reportes recientes generados
@@ -75,7 +75,7 @@ async def get_recent_reports(
 async def download_report(
     report_id: int,
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Descargar reporte específico
@@ -84,11 +84,11 @@ async def download_report(
     file_content, filename, content_type = await service.download_report(
         report_id, current_user
     )
-    
+
     return StreamingResponse(
         io.BytesIO(file_content),
         media_type=content_type,
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 
@@ -98,22 +98,25 @@ async def get_attendance_chart(
     warehouse_id: Optional[int] = None,
     group_by: str = "week",
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Obtener datos para gráficos de asistencia en reportes
     """
     service = ReportService(db)
-    return await service.get_attendance_chart(current_user, days, warehouse_id, group_by)
+    return await service.get_attendance_chart(
+        current_user, days, warehouse_id, group_by
+    )
 
 
 @router.get("/charts/warehouses", response_model=WarehouseReportChartResponse)
 async def get_warehouse_chart(
+    days: int = 30,
     current_user: User = Depends(require_reports_analytics_read),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
-    Obtener datos para gráfico de distribución de almacenes en reportes
+    Obtener datos para gráfico de distribución de warehouses en reportes
     """
     service = ReportService(db)
-    return await service.get_warehouse_chart(current_user)
+    return await service.get_warehouse_chart(current_user, days)

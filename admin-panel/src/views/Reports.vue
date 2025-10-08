@@ -494,7 +494,6 @@ export default {
           // Mensaje dinámico según el período
           const periodLabel = attendanceFilters.groupBy === 'day' ? 'daily' : 
                              attendanceFilters.groupBy === 'week' ? 'weekly' : 'monthly';
-          toast.success(`Loaded ${periodLabel} attendance data: ${chartResponse.data.summary.total_checkins} check-ins, ${chartResponse.data.summary.total_checkouts} check-outs`);
         }
 
       } catch (error) {
@@ -649,9 +648,7 @@ export default {
         if (responseData.summary) {
           warehouseSummary.value = responseData.summary;
           console.log("Warehouse Chart Summary:", responseData.summary);
-          toast.success(
-            `Loaded data for ${responseData.summary.total_warehouses} warehouses with ${responseData.summary.total_employees} total employees`
-          );
+         
         }
       } catch (error) {
         console.error("Error loading warehouse chart data:", error);

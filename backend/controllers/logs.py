@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
+import io
 
 from database import get_db
 from services import log_service
@@ -37,21 +39,23 @@ def list_access_logs(
     )
 
 
-@router.get("/access/enhanced", response_model=List[AccessLogEnhanced])
-def list_enhanced_access_logs(
+@router.get("/exports")
+def export_enhanced_access_logs_excel(
     employee_id: Optional[int] = None,
     warehouse_id: Optional[int] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     skip: int = 0,
-    limit: int = 100,
+    limit: int = 1000,  # Higher limit for exports
     db: Session = Depends(get_db),
     current_user: User = Depends(require_logs_audit),
 ):
     """
-    List enhanced access logs with detailed information including employee and warehouse names
+    Export access logs as Excel file with enhanced information
+    Returns a downloadable Excel file with comprehensive access log data
     """
-    return log_service.get_enhanced_access_logs(
+    # Get the Excel file content and filename from the service
+    file_content, filename = log_service.generate_excel_export(
         db,
         employee_id=employee_id,
         warehouse_id=warehouse_id,
@@ -59,6 +63,13 @@ def list_enhanced_access_logs(
         end_date=end_date,
         skip=skip,
         limit=limit,
+    )
+
+    # Return as downloadable Excel file
+    return StreamingResponse(
+        io.BytesIO(file_content),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
 

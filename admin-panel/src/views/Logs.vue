@@ -3,12 +3,9 @@
     <div class="page-header">
       <h2>Audit & Logs</h2>
       <div class="header-actions">
-        <button @click="refreshLogs" class="btn btn-outline" :disabled="loading">
-          🔄 Refresh
-        </button>
-        <button 
+        <button
           v-if="permissions.canExport.value"
-          @click="exportLogs" 
+          @click="exportLogs"
           class="btn btn-primary"
         >
           📊 Export
@@ -37,7 +34,35 @@
       </div>
       <div class="filter-group">
         <label class="form-label">Employee</label>
-        <input v-model="filters.employeeName" type="text" placeholder="Search employee..." class="form-control" />
+        <input
+          v-model="filters.employeeName"
+          type="text"
+          placeholder="Search employee..."
+          class="form-control"
+        />
+      </div>
+      <div class="filter-group">
+        <label class="form-label">Warehouse</label>
+        <select v-model="filters.warehouseId" class="form-control">
+          <option value="">All Warehouses</option>
+          <option
+            v-for="warehouse in availableWarehouses"
+            :key="warehouse.id"
+            :value="warehouse.id"
+          >
+            {{ warehouse.name }}
+          </option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <button
+          @click="refreshLogs"
+          class="btn btn-outline"
+          :disabled="loading"
+          title="Refresh logs with current filters"
+        >
+          🔄 Apply Filters
+        </button>
       </div>
     </div>
 
@@ -64,23 +89,26 @@
           </tr>
           <tr v-else v-for="log in filteredLogs" :key="log.id">
             <td>{{ formatDateTime(log.timestamp) }}</td>
-            <td>{{ log.employee_name || log.user_name || '-' }}</td>
+            <td>{{ log.employee_name || log.user_name || "-" }}</td>
             <td>
               <span class="action-badge" :class="log.action_type">
                 {{ getActionLabel(log.action_type) }}
               </span>
             </td>
-            <td>{{ log.warehouse_name || '-' }}</td>
-            <td>{{ log.ip_address || '-' }}</td>
+            <td>{{ log.warehouse_name || "-" }}</td>
+            <td>{{ log.ip_address || "-" }}</td>
             <td>
-              <span class="status-badge" :class="log.success ? 'success' : 'error'">
-                {{ log.success ? 'Success' : 'Error' }}
+              <span
+                class="status-badge"
+                :class="log.success ? 'success' : 'error'"
+              >
+                {{ log.success ? "Success" : "Error" }}
               </span>
             </td>
             <td>
-              <button 
-                v-if="log.details" 
-                @click="showLogDetails(log)" 
+              <button
+                v-if="log.details"
+                @click="showLogDetails(log)"
                 class="btn btn-outline btn-sm"
               >
                 View
@@ -93,9 +121,9 @@
 
     <!-- Simple pagination -->
     <div class="pagination">
-      <button 
-        @click="prevPage" 
-        :disabled="currentPage === 1" 
+      <button
+        @click="prevPage"
+        :disabled="currentPage === 1"
         class="btn btn-outline"
       >
         Previous
@@ -103,9 +131,9 @@
       <span class="page-info">
         Page {{ currentPage }} of {{ totalPages }}
       </span>
-      <button 
-        @click="nextPage" 
-        :disabled="currentPage === totalPages" 
+      <button
+        @click="nextPage"
+        :disabled="currentPage === totalPages"
         class="btn btn-outline"
       >
         Next
@@ -113,7 +141,11 @@
     </div>
 
     <!-- Details modal -->
-    <div v-if="selectedLog" class="modal-overlay" @click.self="selectedLog = null">
+    <div
+      v-if="selectedLog"
+      class="modal-overlay"
+      @click.self="selectedLog = null"
+    >
       <div class="modal">
         <div class="modal-header">
           <h3>Log Details</h3>
@@ -121,21 +153,25 @@
         </div>
         <div class="modal-body">
           <div class="log-detail">
-            <strong>Date/Time:</strong> {{ formatDateTime(selectedLog.timestamp) }}
+            <strong>Date/Time:</strong>
+            {{ formatDateTime(selectedLog.timestamp) }}
           </div>
           <div class="log-detail">
-            <strong>Employee:</strong> {{ selectedLog.employee_name || '-' }}
+            <strong>Employee:</strong> {{ selectedLog.employee_name || "-" }}
           </div>
           <div class="log-detail">
-            <strong>Action:</strong> {{ getActionLabel(selectedLog.action_type) }}
+            <strong>Action:</strong>
+            {{ getActionLabel(selectedLog.action_type) }}
           </div>
           <div class="log-detail">
             <strong>Details:</strong>
-            <pre>{{ selectedLog.details || 'No additional details' }}</pre>
+            <pre>{{ selectedLog.details || "No additional details" }}</pre>
           </div>
         </div>
         <div class="modal-footer">
-          <button @click="selectedLog = null" class="btn btn-primary">Close</button>
+          <button @click="selectedLog = null" class="btn btn-primary">
+            Close
+          </button>
         </div>
       </div>
     </div>
@@ -143,153 +179,191 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useViewPermissions } from '@/composables/useViewPermissions'
-import api from '@/composables/api'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
+import { ref, reactive, computed, onMounted } from "vue";
+import { useViewPermissions } from "@/composables/useViewPermissions";
+import { useToast } from "vue-toastification";
+import api from "@/composables/api";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 export default {
-  name: 'Logs',
+  name: "Logs",
   setup() {
     // Permisos usando el composable reutilizable
-    const permissions = useViewPermissions('logs')
-    
-    const logs = ref([])
-    const loading = ref(false)
-    const selectedLog = ref(null)
-    const currentPage = ref(1)
-    const pageSize = ref(50)
-    const totalLogs = ref(0)
+    const permissions = useViewPermissions("logs");
+    const { showSuccess, showError } = useToast();
+
+    const logs = ref([]);
+    const loading = ref(false);
+    const selectedLog = ref(null);
+    const currentPage = ref(1);
+    const pageSize = ref(50);
+    const totalLogs = ref(0);
+    const availableWarehouses = ref([]);
 
     const filters = reactive({
-      dateFrom: '',
-      dateTo: '',
-      actionType: '',
-      employeeName: ''
-    })
+      dateFrom: "",
+      dateTo: "",
+      actionType: "",
+      employeeName: "",
+      warehouseId: "",
+      employeeId: ""
+    });
+
+    const loadWarehouses = async () => {
+      try {
+        const response = await api.get("/warehouses/");
+        availableWarehouses.value = response.data;
+      } catch (error) {
+        console.error("Error loading warehouses:", error);
+        availableWarehouses.value = [];
+      }
+    };
 
     const filteredLogs = computed(() => {
-      let result = logs.value
+      let result = logs.value;
 
       if (filters.actionType) {
-        result = result.filter(log => log.action_type === filters.actionType)
+        result = result.filter((log) => log.action_type === filters.actionType);
       }
 
       if (filters.employeeName) {
-        const term = filters.employeeName.toLowerCase()
-        result = result.filter(log => 
-          (log.employee_name && log.employee_name.toLowerCase().includes(term)) ||
-          (log.user_name && log.user_name.toLowerCase().includes(term))
-        )
+        const term = filters.employeeName.toLowerCase();
+        result = result.filter(
+          (log) =>
+            (log.employee_name &&
+              log.employee_name.toLowerCase().includes(term)) ||
+            (log.user_name && log.user_name.toLowerCase().includes(term))
+        );
       }
 
-      return result
-    })
+      return result;
+    });
 
     const totalPages = computed(() => {
-      return Math.ceil(totalLogs.value / pageSize.value)
-    })
+      return Math.ceil(totalLogs.value / pageSize.value);
+    });
 
     const fetchLogs = async () => {
-      loading.value = true
+      loading.value = true;
       try {
         const params = new URLSearchParams({
           skip: currentPage.value,
           limit: pageSize.value
-        })
+        });
+        if (filters.employeeId)
+          params.append("employee_id", filters.employeeId);
+        if (filters.warehouseId)
+          params.append("warehouse_id", filters.warehouseId);
+        if (filters.dateFrom) params.append("start_date", filters.dateFrom);
+        if (filters.dateTo) params.append("end_date", filters.dateTo);
 
-        if (filters.dateFrom) params.append('date_from', filters.dateFrom)
-        if (filters.dateTo) params.append('date_to', filters.dateTo)
-
-        const response = await api.get(`/logs/access?${params}`)
-        logs.value = response.data.items || response.data
-        totalLogs.value = response.data.total || logs.value.length
+        const response = await api.get(`/logs/access?${params}`);
+        logs.value = response.data.items || response.data;
+        totalLogs.value = response.data.total || logs.value.length;
       } catch (error) {
-        console.error('Error fetching logs:', error)
+        console.error("Error fetching logs:", error);
         // Datos de ejemplo para desarrollo
-        logs.value = [
-            {
-            id: 1,
-            timestamp: new Date().toISOString(),
-            employee_name: 'Juan Perez',
-            action_type: 'check_in',
-            warehouse_name: 'Central Warehouse',
-            ip_address: '192.168.1.100',
-            success: true,
-            details: 'Successful check-in via facial recognition'
-            },
-            {
-            id: 2,
-            timestamp: new Date(Date.now() - 300000).toISOString(),
-            employee_name: 'Maria Garcia',
-            action_type: 'check_out',
-            warehouse_name: 'North Warehouse',
-            ip_address: '192.168.1.101',
-            success: true,
-            details: 'Successful check-out'
-            }
-        ]
+        logs.value = [];
       } finally {
-        loading.value = false
+        loading.value = false;
       }
-    }
+    };
 
     const refreshLogs = () => {
-      fetchLogs()
-    }
+      fetchLogs();
+    };
 
     const exportLogs = async () => {
       try {
-        const response = await api.get('/logs/export', { responseType: 'blob' })
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', `logs_${format(new Date(), 'yyyy-MM-dd')}.csv`)
-        document.body.appendChild(link)
-        link.click()
-        link.remove()
+        // Construir parámetros de consulta basados en los filtros
+        const params = new URLSearchParams();
+
+        if (filters.employeeId)
+          params.append("employee_id", filters.employeeId);
+        if (filters.warehouseId)
+          params.append("warehouse_id", filters.warehouseId);
+        if (filters.dateFrom) params.append("start_date", filters.dateFrom);
+        if (filters.dateTo) params.append("end_date", filters.dateTo);
+
+        // Configurar límite alto para exportación
+        params.append("limit", "1000");
+        params.append("skip", "0");
+
+        const url = `/logs/exports${
+          params.toString() ? "?" + params.toString() : ""
+        }`;
+
+        const response = await api.get(url, { responseType: "blob" });
+
+        // Obtener el nombre del archivo desde el header Content-Disposition o usar uno por defecto
+        const contentDisposition = response.headers["content-disposition"];
+        let filename = `access_logs_${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+
+        if (contentDisposition) {
+          const filenameMatch = contentDisposition.match(
+            /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+          );
+          if (filenameMatch && filenameMatch[1]) {
+            filename = filenameMatch[1].replace(/['"]/g, "");
+          }
+        }
+
+        const url_blob = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement("a");
+        link.href = url_blob;
+        link.setAttribute("download", filename);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+
+        // Mostrar mensaje de éxito
+        showSuccess(`Exported logs successfully: ${filename}`);
       } catch (error) {
-        console.error('Error exporting logs:', error)
+        console.error("Error exporting logs:", error);
+        showError("Error exporting logs. Please try again.");
       }
-    }
+    };
 
     const showLogDetails = (log) => {
-      selectedLog.value = log
-    }
+      selectedLog.value = log;
+    };
 
     const prevPage = () => {
       if (currentPage.value > 1) {
-        currentPage.value--
-        fetchLogs()
+        currentPage.value--;
+        fetchLogs();
       }
-    }
+    };
 
     const nextPage = () => {
       if (currentPage.value < totalPages.value) {
-        currentPage.value++
-        fetchLogs()
+        currentPage.value++;
+        fetchLogs();
       }
-    }
+    };
 
     const formatDateTime = (dateString) => {
-      return format(new Date(dateString), 'dd/MM/yyyy HH:mm:ss', { locale: es })
-    }
+      return format(new Date(dateString), "dd/MM/yyyy HH:mm:ss", {
+        locale: es
+      });
+    };
 
     const getActionLabel = (actionType) => {
       const labels = {
-        check_in: 'Check-in',
-        check_out: 'Check-out',
-        login: 'Login',
-        logout: 'Logout',
-        error: 'Error'
-      }
-      return labels[actionType] || actionType
-    }
+        check_in: "Check-in",
+        check_out: "Check-out",
+        login: "Login",
+        logout: "Logout",
+        error: "Error"
+      };
+      return labels[actionType] || actionType;
+    };
 
     onMounted(() => {
-      fetchLogs()
-    })
+      loadWarehouses();
+      fetchLogs();
+    });
 
     return {
       logs,
@@ -299,6 +373,7 @@ export default {
       totalPages,
       filters,
       filteredLogs,
+      availableWarehouses,
       refreshLogs,
       exportLogs,
       showLogDetails,
@@ -308,9 +383,9 @@ export default {
       getActionLabel,
       // Permisos
       permissions
-    }
+    };
   }
-}
+};
 </script>
 
 <style scoped>
@@ -435,7 +510,7 @@ export default {
   .filters {
     grid-template-columns: 1fr;
   }
-  
+
   .header-actions {
     flex-direction: column;
   }

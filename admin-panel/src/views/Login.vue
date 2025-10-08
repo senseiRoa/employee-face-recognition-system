@@ -94,10 +94,10 @@ export default {
       }
 
       if (!form.password.trim()) {
-        errors.password = 'La contraseña es requerida'
+        errors.password = 'Password is required'
         isValid = false
       } else if (form.password.length < 6) {
-        errors.password = 'La contraseña debe tener al menos 6 caracteres'
+        errors.password = 'Password must be at least 6 characters'
         isValid = false
       }
 
@@ -123,7 +123,7 @@ export default {
           errors.general = result.error
         }
       } catch (error) {
-        errors.general = 'Error de conexión. Intenta nuevamente.'
+        errors.general = 'Connection error. Please try again.'
       } finally {
         loading.value = false
       }

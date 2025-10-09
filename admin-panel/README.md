@@ -140,7 +140,7 @@ El archivo `vite.config.js` ya está configurado para hacer proxy de las peticio
 ### 📊 Dashboard
 - Métricas en tiempo real
 - Gráficos de actividad
-- Estadísticas de check-ins
+- Estadísticas de clock-ins
 - Actividad reciente
 
 ### 📋 Auditoría y Logs

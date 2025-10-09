@@ -300,7 +300,7 @@ class AccessLogEnhanced(BaseModel):
     id: int
     timestamp: datetime.datetime
     employee_name: str
-    action_type: str  # "check_in", "check_out", "denied", "unknown"
+    action_type: str  # "clock_in", "clock_out", "denied", "unknown"
     warehouse_name: str
     ip_address: Optional[str] = None
     success: bool
@@ -319,8 +319,8 @@ class AccessLogEnhanced(BaseModel):
 class EmployeeCheckInReport(BaseModel):
     employee_id: int
     employee_name: str
-    total_check_ins: int
-    total_check_outs: int
+    total_clock_ins: int
+    total_clock_outs: int
     last_event: str
     last_event_time: datetime.datetime
 

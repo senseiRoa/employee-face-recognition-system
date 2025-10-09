@@ -23,7 +23,7 @@ This is a complete **Employee Time Tracking System using Facial Recognition** bu
 │    (Vue.js 3)   │◄──►│   (FastAPI)     │◄──►│  (Ionic/Angular)│
 │                 │    │                 │    │                 │
 │ • Dashboard     │    │ • Face Recognition │ │ • Photo Capture │
-│ • User Mgmt     │    │ • JWT Auth      │    │ • Check-in/out  │
+│ • User Mgmt     │    │ • JWT Auth      │    │ • Clock-in/out  │
 │ • Reports       │    │ • MySQL DB      │    │ • Real-time     │
 │ • Analytics     │    │ • API Endpoints │    │ • Offline Mode  │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
@@ -259,7 +259,7 @@ employee-face-recognition-system/
 ### Employee Mobile App (Ionic/Angular)
 - **Photo Capture**: Native camera integration
 - **Face Registration**: Register employee faces
-- **Check-in/Check-out**: Automatic time tracking
+- **Clock-in/Clock-out**: Automatic time tracking
 - **Offline Support**: Works without internet connection
 - **Cross-platform**: Android, iOS, and web
 - **Real-time Sync**: Syncs with backend when online

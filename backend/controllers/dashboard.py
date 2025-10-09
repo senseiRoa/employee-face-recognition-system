@@ -38,7 +38,7 @@ async def get_recent_activities(
     db: Session = Depends(get_db),
 ):
     """
-    Obtener actividades recientes de check-in/out
+    Obtener actividades recientes de clock-in/out
     """
     service = DashboardService(db)
     return await service.get_recent_activities(current_user, limit)

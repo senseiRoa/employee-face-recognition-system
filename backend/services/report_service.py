@@ -30,7 +30,7 @@ class ReportService:
             total_employees_query = total_employees_query.filter(warehouse_filter)
         total_employees = total_employees_query.count()
 
-        # Check-ins de hoy
+        # Clock-ins de hoy
         today_checkins_query = self.db.query(AccessLog).filter(
             and_(func.date(AccessLog.timestamp) == today, AccessLog.event_type == "in")
         )
@@ -48,7 +48,7 @@ class ReportService:
         else:
             active_warehouses = 1 if current_user.warehouse.is_active else 0
 
-        # Top warehouse (el que más check-ins tiene este mes)
+        # Top warehouse (el que más clock-ins tiene este mes)
         top_warehouse = self._get_top_warehouse(month_start, warehouse_filter)
 
         return {
@@ -134,7 +134,7 @@ class ReportService:
         return Employee.warehouse_id == current_user.warehouse_id
 
     def _get_top_warehouse(self, month_start, warehouse_filter) -> str:
-        """Obtener el warehouse con más check-ins este mes"""
+        """Obtener el warehouse con más clock-ins este mes"""
         # Simplificado
         return "Central Warehouse"
 
@@ -441,12 +441,12 @@ class ReportService:
             "labels": labels,
             "datasets": [
                 {
-                    "label": "Check-ins",
+                    "label": "Clock-ins",
                     "data": checkins_values,
                     "backgroundColor": "#10B981",
                 },
                 {
-                    "label": "Check-outs",
+                    "label": "Clock-outs",
                     "data": checkouts_values,
                     "backgroundColor": "#F59E0B",
                 },
@@ -502,12 +502,12 @@ class ReportService:
             "labels": labels,
             "datasets": [
                 {
-                    "label": "Check-ins",
+                    "label": "Clock-ins",
                     "data": checkins_values,
                     "backgroundColor": "#10B981",
                 },
                 {
-                    "label": "Check-outs",
+                    "label": "Clock-outs",
                     "data": checkouts_values,
                     "backgroundColor": "#F59E0B",
                 },
@@ -561,12 +561,12 @@ class ReportService:
             "labels": labels,
             "datasets": [
                 {
-                    "label": "Check-ins",
+                    "label": "Clock-ins",
                     "data": checkins_values,
                     "backgroundColor": "#10B981",
                 },
                 {
-                    "label": "Check-outs",
+                    "label": "Clock-outs",
                     "data": checkouts_values,
                     "backgroundColor": "#F59E0B",
                 },

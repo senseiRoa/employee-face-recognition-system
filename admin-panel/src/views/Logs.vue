@@ -27,8 +27,8 @@
         <label class="form-label">Type</label>
         <select v-model="filters.actionType" class="form-control">
           <option value="">All</option>
-          <option value="check_in">Check-in</option>
-          <option value="check_out">Check-out</option>
+          <option value="clock_in">Clock-in</option>
+          <option value="clock_out">Clock-out</option>
           <option value="login">Login</option>
         </select>
       </div>
@@ -351,8 +351,8 @@ export default {
 
     const getActionLabel = (actionType) => {
       const labels = {
-        check_in: "Check-in",
-        check_out: "Check-out",
+        clock_in: "Clock-in",
+        clock_out: "Clock-out",
         login: "Login",
         logout: "Logout",
         error: "Error"
@@ -443,12 +443,12 @@ export default {
   font-weight: 500;
 }
 
-.action-badge.check_in {
+.action-badge.clock_in {
   background: rgba(16, 185, 129, 0.1);
   color: var(--success-color);
 }
 
-.action-badge.check_out {
+.action-badge.clock_out {
   background: rgba(239, 68, 68, 0.1);
   color: var(--error-color);
 }

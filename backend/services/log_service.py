@@ -100,10 +100,10 @@ def get_enhanced_access_logs(
 def _map_event_type_to_action(event_type: str) -> str:
     """Map database event_type to user-friendly action_type"""
     mapping = {
-        "in": "check_in",
-        "entry": "check_in",
-        "out": "check_out",
-        "exit": "check_out",
+        "in": "clock_in",
+        "entry": "clock_in",
+        "out": "clock_out",
+        "exit": "clock_out",
         "denied": "denied",
         "unknown": "unknown",
         "failed": "denied",
@@ -125,22 +125,22 @@ def _generate_details(log: AccessLog) -> str:
     if log.notes:
         return log.notes
 
-    if action == "check_in":
+    if action == "clock_in":
         if method == "face_recognition":
             confidence = (
                 f" (confidence: {log.confidence_score})" if log.confidence_score else ""
             )
-            return f"Successful check-in via facial recognition{confidence}"
+            return f"Successful clock-in via facial recognition{confidence}"
         else:
-            return f"Check-in via {method}"
-    elif action == "check_out":
+            return f"Clock-in via {method}"
+    elif action == "clock_out":
         if method == "face_recognition":
             confidence = (
                 f" (confidence: {log.confidence_score})" if log.confidence_score else ""
             )
-            return f"Successful check-out via facial recognition{confidence}"
+            return f"Successful clock-out via facial recognition{confidence}"
         else:
-            return f"Check-out via {method}"
+            return f"Clock-out via {method}"
     elif action == "denied":
         reason = (
             "Low confidence facial recognition"
@@ -214,11 +214,11 @@ def get_export_excel_enhanced_access_logs(
         id: 1,
         timestamp: '2025-10-08T10:30:00.000Z',
         employee_name: 'Juan Perez',
-        action_type: 'check_in',
+        action_type: 'clock_in',
         warehouse_name: 'Central Warehouse',
         ip_address: '192.168.1.100',
         success: true,
-        details: 'Successful check-in via facial recognition',
+        details: 'Successful clock-in via facial recognition',
         confidence_score: 0.95,
         access_method: 'face_recognition',
         device_info: {...}
@@ -295,32 +295,32 @@ def _generate_export_details(log: AccessLog) -> str:
     # Generate detailed descriptions for export
     base_description = ""
 
-    if action == "check_in":
+    if action == "clock_in":
         if method == "face_recognition":
             confidence = (
                 f" (confidence: {log.confidence_score})" if log.confidence_score else ""
             )
-            base_description = f"Successful check-in via facial recognition{confidence}"
+            base_description = f"Successful clock-in via facial recognition{confidence}"
         elif method == "manual":
-            base_description = "Manual check-in by administrator"
+            base_description = "Manual clock-in by administrator"
         elif method == "card":
-            base_description = "Check-in via access card"
+            base_description = "Clock-in via access card"
         else:
-            base_description = f"Check-in via {method}"
-    elif action == "check_out":
+            base_description = f"Clock-in via {method}"
+    elif action == "clock_out":
         if method == "face_recognition":
             confidence = (
                 f" (confidence: {log.confidence_score})" if log.confidence_score else ""
             )
             base_description = (
-                f"Successful check-out via facial recognition{confidence}"
+                f"Successful clock-out via facial recognition{confidence}"
             )
         elif method == "manual":
-            base_description = "Manual check-out by administrator"
+            base_description = "Manual clock-out by administrator"
         elif method == "card":
-            base_description = "Check-out via access card"
+            base_description = "Clock-out via access card"
         else:
-            base_description = f"Check-out via {method}"
+            base_description = f"Clock-out via {method}"
     elif action == "denied":
         if method == "face_recognition":
             confidence = (

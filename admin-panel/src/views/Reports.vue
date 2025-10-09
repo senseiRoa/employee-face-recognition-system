@@ -68,7 +68,7 @@
         <div class="stat-icon">📍</div>
         <div class="stat-content">
           <h3>{{ stats.totalCheckIns }}</h3>
-          <p>Check-ins Today</p>
+          <p>Clock-ins Today</p>
         </div>
       </div>
 
@@ -159,19 +159,19 @@
           <h4>Attendance Analysis Summary</h4>
           <div class="summary-grid">
             <div class="summary-item">
-              <span class="summary-label">Total Check-ins:</span>
+              <span class="summary-label">Total Clock-ins:</span>
               <span class="summary-value">{{ attendanceSummary.total_checkins }}</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label">Total Check-outs:</span>
+              <span class="summary-label">Total Clock-outs:</span>
               <span class="summary-value">{{ attendanceSummary.total_checkouts }}</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label">Avg {{ getPeriodLabel() }} Check-ins:</span>
+              <span class="summary-label">Avg {{ getPeriodLabel() }} Clock-ins:</span>
               <span class="summary-value">{{ getAvgCheckins() }}</span>
             </div>
             <div class="summary-item">
-              <span class="summary-label">Avg {{ getPeriodLabel() }} Check-outs:</span>
+              <span class="summary-label">Avg {{ getPeriodLabel() }} Clock-outs:</span>
               <span class="summary-value">{{ getAvgCheckouts() }}</span>
             </div>
             <div class="summary-item">
@@ -186,7 +186,7 @@
                 'text-danger': attendanceSummary.total_checkins < attendanceSummary.total_checkouts
               }">
                 {{ attendanceSummary.total_checkins === attendanceSummary.total_checkouts ? 'Balanced' :
-                   attendanceSummary.total_checkins > attendanceSummary.total_checkouts ? 'More Check-ins' : 'More Check-outs' }}
+                   attendanceSummary.total_checkins > attendanceSummary.total_checkouts ? 'More Clock-ins' : 'More Clock-outs' }}
               </span>
             </div>
           </div>

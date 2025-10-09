@@ -38,7 +38,7 @@
         <div class="metric-icon">📊</div>
         <div class="metric-content">
           <h3>{{ metrics.todayCheckIns || 0 }}</h3>
-          <p>Check-ins Today</p>
+          <p>Clock-ins Today</p>
         </div>
       </div>
     </div>
@@ -113,7 +113,7 @@ export default {
           companies: statsResponse.data.total_companies || statsResponse.data.companies || 0,
           warehouses: statsResponse.data.total_warehouses || statsResponse.data.warehouses || 0,
           employees: statsResponse.data.total_employees || statsResponse.data.employees || 0,
-          todayCheckIns: statsResponse.data.todays_checkins || statsResponse.data.todayCheckIns || statsResponse.data.today_check_ins || 0
+          todayCheckIns: statsResponse.data.todays_checkins || statsResponse.data.todayCheckIns || statsResponse.data.today_clock_ins || 0
         }
         // Show success message only if all data loaded successfully
         if (statsResponse.data.total_companies !== undefined || statsResponse.data.companies !== undefined) {
@@ -172,7 +172,7 @@ export default {
         recentActivities.value = activities.map(activity => ({
           id: activity.id,
           type: activity.action  || '',
-          description: `${activity.employee_name || activity.employee?.name || 'Unknown Employee'} - ${activity.action === 'check_in' ? 'Check-in' : 'Check-out'} at ${activity.warehouse_name || activity.warehouse?.name || 'Unknown Location'}`,
+          description: `${activity.employee_name || activity.employee?.name || 'Unknown Employee'} - ${activity.action === 'clock_in' ? 'Clock-in' : 'Clock-out'} at ${activity.warehouse_name || activity.warehouse?.name || 'Unknown Location'}`,
           timestamp: activity.timestamp || activity.created_at
         }))
       } catch (error) {
@@ -205,7 +205,7 @@ export default {
         const chartData = chartResponse.data
         const labels = chartData.labels || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
         const datasets = chartData.datasets || [{
-          label: 'Check-ins',
+          label: 'Clock-ins',
           data: chartData.data || [0, 0, 0, 0, 0, 0, 0],
           borderColor: '#3b82f6',
           backgroundColor: 'rgba(59, 130, 246, 0.1)'
@@ -264,7 +264,7 @@ export default {
           data: {
             labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
             datasets: [{
-              label: 'Check-ins',
+              label: 'Clock-ins',
               data: [0, 0, 0, 0, 0, 0, 0],
               borderColor: '#3b82f6',
               backgroundColor: 'rgba(59, 130, 246, 0.1)',
@@ -369,8 +369,8 @@ export default {
 
     const getActivityIcon = (type) => {
       const icons = {
-        check_in: '📍',
-        check_out: '🚪',
+        clock_in: '📍',
+        clock_out: '🚪',
         login: '🔑',
         error: '⚠️'
       }
@@ -517,11 +517,11 @@ export default {
   background: rgba(59, 130, 246, 0.1);
 }
 
-.activity-icon.check_in {
+.activity-icon.clock_in {
   background: rgba(16, 185, 129, 0.1);
 }
 
-.activity-icon.check_out {
+.activity-icon.clock_out {
   background: rgba(239, 68, 68, 0.1);
 }
 

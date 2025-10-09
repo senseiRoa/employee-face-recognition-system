@@ -60,8 +60,8 @@ def register_face(
     }
 
 
-@router.post("/check_in_out", response_model=CheckRes)
-def check_in_out(
+@router.post("/clock_in_out", response_model=CheckRes)
+def clock_in_out(
     req: CheckReq,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),

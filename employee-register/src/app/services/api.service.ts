@@ -22,7 +22,7 @@ export class ApiService {
 
   checkInOut(image_base64: string) {
     return this.http.post(
-      `${this.base}/employees/check_in_out`,
+      `${this.base}/employees/clock_in_out`,
       { image_base64 },
       { headers: this.headers }
     );

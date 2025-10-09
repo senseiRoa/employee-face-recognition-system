@@ -195,8 +195,8 @@ def register_face(req: RegisterFaceReq):
         session.commit()
     return {"status": "ok", "employee_id": req.employee_id}
 
-@app.post("/check_in_out", response_model=CheckRes)
-def check_in_out(req: CheckReq):
+@app.post("/clock_in_out", response_model=CheckRes)
+def clock_in_out(req: CheckReq):
     probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
 
     with Session(engine) as session:
@@ -403,7 +403,7 @@ export class ApiService {
   }
 
   checkInOut(image_base64: string) {
-    return this.http.post(`${this.base}/check_in_out`, { image_base64 });
+    return this.http.post(`${this.base}/clock_in_out`, { image_base64 });
   }
 
   getLogs() {
@@ -559,7 +559,7 @@ curl -X POST http://localhost:8081/register_face \
 * Check In/Out:
 
 ```bash
-curl -X POST http://localhost:8081/check_in_out \
+curl -X POST http://localhost:8081/clock_in_out \
   -H "Content-Type: application/json" \
   -d '{"image_base64":"<B64>"}'
 ```
@@ -597,7 +597,7 @@ sqlite3 backend/data/db.sqlite3 "SELECT * FROM access_logs ORDER BY ts DESC LIMI
 * ✅ **Backend FastAPI** con:
 
   * `POST /register_face`
-  * `POST /check_in_out`
+  * `POST /clock_in_out`
   * `GET /employees`, `GET /logs` (útiles para pruebas)
 * ✅ **SQLite** en `backend/data/db.sqlite3` con registros de **ingresos/egresos**.
 * ✅ **Dockerfile** y **docker-compose.yml** para desplegar el backend en contenedor.

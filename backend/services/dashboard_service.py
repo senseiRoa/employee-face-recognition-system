@@ -53,7 +53,7 @@ class DashboardService:
             total_warehouses = 1
             active_warehouses = 1 if current_user.warehouse.is_active else 0
 
-        # Check-ins/outs de hoy
+        # Clock-ins/outs de hoy
         today_logs_query = self.db.query(AccessLog).filter(
             func.date(AccessLog.timestamp) == today
         )
@@ -103,7 +103,7 @@ class DashboardService:
                     "employee_id": log.employee_id,
                     "employee_name": f"{log.employee.first_name} {log.employee.last_name}",
                     "warehouse_name": log.employee.warehouse.name,
-                    "action": "check_in" if log.event_type == "in" else "check_out",
+                    "action": "clock_in" if log.event_type == "in" else "clock_out",
                     "timestamp": log.timestamp,
                     "recognition_confidence": log.confidence_score
                     if log.confidence_score
@@ -133,7 +133,7 @@ class DashboardService:
         for i in range(days):
             current_date = start_date + timedelta(days=i)
 
-            # Query para check-ins del día
+            # Query para clock-ins del día
             checkins_query = self.db.query(AccessLog).filter(
                 and_(
                     func.date(AccessLog.timestamp) == current_date,
@@ -141,7 +141,7 @@ class DashboardService:
                 )
             )
 
-            # Query para check-outs del día
+            # Query para clock-outs del día
             checkouts_query = self.db.query(AccessLog).filter(
                 and_(
                     func.date(AccessLog.timestamp) == current_date,
@@ -173,12 +173,12 @@ class DashboardService:
             "labels": labels,
             "datasets": [
                 {
-                    "label": "Check-ins",
+                    "label": "Clock-ins",
                     "data": checkins_data,
                     "backgroundColor": "rgba(59, 130, 246, 0.8)",
                 },
                 {
-                    "label": "Check-outs",
+                    "label": "Clock-outs",
                     "data": checkouts_data,
                     "backgroundColor": "rgba(16, 185, 129, 0.8)",
                 },

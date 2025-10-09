@@ -1,6 +1,6 @@
 # Employee Time Tracker API
 
-This is the backend API for the Employee Time Tracker application. It provides functionalities for face recognition-based employee check-in/out, user management, and logging.
+This is the backend API for the Employee Time Tracker application. It provides functionalities for face recognition-based employee clock-in/out, user management, and logging.
 
 ## 🚀 Quick Start
 
@@ -54,7 +54,7 @@ backend/
 *   **`models/`**: Defines the SQLAlchemy models (database entities) that map to the database tables:
     *   `Employee`: Stores employee information.
     *   `FaceEncoding`: Stores face encodings for each employee.
-    *   `AccessLog`: Logs employee check-in/out events.
+    *   `AccessLog`: Logs employee clock-in/out events.
     *   `Company`: Stores company information for authentication.
     *   `LoginLog`: Logs company login events.
 
@@ -85,7 +85,7 @@ All endpoints (except for `/health`, `/auth/login`, and `/auth/register`) requir
 
 *   **Employees (`/employees`)**
     *   `POST /register_face`: Register a new face for an employee.
-    *   `POST /check_in_out`: Perform a check-in or check-out for an employee using face recognition.
+    *   `POST /clock_in_out`: Perform a clock-in or clock-out for an employee using face recognition.
     *   `GET /employees`: List all employees.
 
 *   **Logs (`/logs`)**

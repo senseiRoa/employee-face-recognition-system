@@ -257,7 +257,7 @@ En orden de prioridad:
 7. ✅ `POST /tablets` - Registrar tablet
 8. ✅ `POST /users` - Crear usuario
 9. ✅ `POST /employees/register_face` - Registrar empleado
-10. ✅ `POST /employees/check_in_out` - Probar facial
+10. ✅ `POST /employees/clock_in_out` - Probar facial
 11. ✅ `GET /logs/access` - Ver logs
 12. ✅ `GET /reports/checkins` - Ver reportes
 

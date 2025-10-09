@@ -2,13 +2,14 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from services.user_service import get_user_by_username, get_user_by_email
+from services.log_service import create_user_login_log  # NEW: Import login logging
 from utils.security import verify_password
 from utils.jwt_handler import create_access_token
 
 
-def login(db: Session, username_or_email: str, password: str) -> dict:
+def login(db: Session, username_or_email: str, password: str, client_timezone: str = "UTC") -> dict:
     """
-    Authenticate user by username or email
+    Authenticate user by username or email with timezone tracking
     """
     # Intentar por username primero
     user = get_user_by_username(db, username_or_email)
@@ -35,6 +36,16 @@ def login(db: Session, username_or_email: str, password: str) -> dict:
     user.last_login = datetime.utcnow()
     db.commit()
     db.refresh(user)
+    
+    # Log successful login with timezone information
+    create_user_login_log(
+        db=db,
+        user_id=user.id,
+        location=None,  # Can be extracted from request headers if needed
+        browser=None,   # Can be extracted from user agent if needed
+        client_timezone=client_timezone  # NEW: Store client timezone
+    )
+    
     # Create token with user information
     access_token = create_access_token(
         data={

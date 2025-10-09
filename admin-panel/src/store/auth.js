@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '@/composables/api'
+import { useTimezone } from '@/composables/useTimezone'
 import { useRolesStore } from './roles'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -13,9 +14,14 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (credentials) => {
     loading.value = true
     try {
+      // Get client timezone for login tracking
+      const { getTimezoneWithFallback } = useTimezone()
+      const clientTimezone = getTimezoneWithFallback()
+      
       const loginData = {
         username_or_email: credentials.username,
-        password: credentials.password
+        password: credentials.password,
+        client_timezone: clientTimezone  // NEW: Include client timezone
       }
 
       const response = await api.post('/auth/login', loginData)

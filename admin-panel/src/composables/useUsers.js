@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import api from './api'
 import { useToast } from 'vue-toastification'
+import { useTimezone } from './useTimezone'
 
 export function useUsers() {
   const users = ref([])
@@ -27,7 +28,16 @@ export function useUsers() {
   const createUser = async (userData) => {
     loading.value = true
     try {
-      const response = await api.post('/users/', userData)
+      // Get record timezone for user creation
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const userDataWithTimezone = {
+        ...userData,
+        record_timezone: recordTimezone  // NEW: Include record timezone
+      }
+      
+      const response = await api.post('/users/', userDataWithTimezone)
       // Refresh the full user list to get complete relationship data
       await fetchUsers()
       toast.success('User created successfully')

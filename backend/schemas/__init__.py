@@ -23,6 +23,7 @@ class RegisterFaceRes(BaseModel):
 class CheckReq(BaseModel):
     image_base64: str
     warehouse_id: Optional[int] = None
+    device_timezone: Optional[str] = "UTC"  # NEW: Device timezone for clock events
 
 
 class CheckRes(BaseModel):
@@ -41,6 +42,7 @@ class CompanyCreate(BaseModel):
     name: str
     username: str
     password: str
+    record_timezone: Optional[str] = "UTC"  # NEW: Timezone when record was created
 
 
 class CompanyUpdate(BaseModel):
@@ -114,6 +116,7 @@ class UserCreate(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     is_active: bool = True
+    record_timezone: Optional[str] = "UTC"  # NEW: Timezone when user was created
 
 
 class UserUpdate(BaseModel):
@@ -203,6 +206,7 @@ class EmployeeCreate(BaseModel):
     last_name: str
     email: Optional[str] = None
     is_active: bool = True
+    record_timezone: Optional[str] = "UTC"  # NEW: Timezone when employee was created
 
 
 class EmployeeUpdate(BaseModel):

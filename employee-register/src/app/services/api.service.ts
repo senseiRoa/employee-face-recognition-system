@@ -13,17 +13,30 @@ export class ApiService {
   }
 
   registerFace(name: string, image_base64: string) {
+    // Get device timezone
+    const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    
     return this.http.post(
       `${this.base}/employees/register_face`,
-      { name, image_base64 },
+      { 
+        name, 
+        image_data: image_base64,  // Updated field name
+        device_timezone: deviceTimezone  // NEW: Include device timezone
+      },
       { headers: this.headers }
     );
   }
 
   checkInOut(image_base64: string) {
+    // Get device timezone
+    const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    
     return this.http.post(
-      `${this.base}/employees/clock_in_out`,
-      { image_base64 },
+      `${this.base}/employees/check`,  // Updated endpoint name
+      { 
+        image_data: image_base64,  // Updated field name
+        device_timezone: deviceTimezone  // NEW: Include device timezone
+      },
       { headers: this.headers }
     );
   }

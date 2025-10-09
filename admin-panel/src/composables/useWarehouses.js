@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import api from './api'
 import { useToast } from 'vue-toastification'
+import { useTimezone } from './useTimezone'
 
 export function useWarehouses() {
   const warehouses = ref([])
@@ -27,7 +28,16 @@ export function useWarehouses() {
   const createWarehouse = async (warehouseData) => {
     loading.value = true
     try {
-      const response = await api.post('/warehouses/', warehouseData)
+      // Get record timezone for warehouse creation
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const warehouseDataWithTimezone = {
+        ...warehouseData,
+        record_timezone: recordTimezone  // NEW: Include record timezone
+      }
+      
+      const response = await api.post('/warehouses/', warehouseDataWithTimezone)
       warehouses.value.push(response.data)
       toast.success('Warehouse created successfully')
       return { success: true, data: response.data }
@@ -43,7 +53,16 @@ export function useWarehouses() {
   const updateWarehouse = async (id, warehouseData) => {
     loading.value = true
     try {
-      const response = await api.put(`/warehouses/${id}`, warehouseData)
+      // Get record timezone for warehouse update
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const warehouseDataWithTimezone = {
+        ...warehouseData,
+        record_timezone: recordTimezone  // NEW: Include record timezone
+      }
+      
+      const response = await api.put(`/warehouses/${id}`, warehouseDataWithTimezone)
       const index = warehouses.value.findIndex(w => w.id === id)
       if (index !== -1) {
         warehouses.value[index] = response.data

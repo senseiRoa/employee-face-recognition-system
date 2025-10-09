@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import api from './api'
 import { useToast } from 'vue-toastification'
+import { useTimezone } from './useTimezone'
 
 export function useCompanies() {
   const companies = ref([])
@@ -23,7 +24,16 @@ export function useCompanies() {
   const createCompany = async (companyData) => {
     loading.value = true
     try {
-      const response = await api.post('/companies/', companyData)
+      // Get record timezone for company creation
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const companyDataWithTimezone = {
+        ...companyData,
+        record_timezone: recordTimezone  // NEW: Include record timezone
+      }
+      
+      const response = await api.post('/companies/', companyDataWithTimezone)
       companies.value.push(response.data)
       toast.success('Company created successfully')
       return { success: true, data: response.data }
@@ -39,7 +49,16 @@ export function useCompanies() {
   const updateCompany = async (id, companyData) => {
     loading.value = true
     try {
-      const response = await api.put(`/companies/${id}`, companyData)
+      // Get record timezone for company update
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const companyDataWithTimezone = {
+        ...companyData,
+        record_timezone: recordTimezone  // NEW: Include record timezone
+      }
+      
+      const response = await api.put(`/companies/${id}`, companyDataWithTimezone)
       const index = companies.value.findIndex(c => c.id === id)
       if (index !== -1) {
         companies.value[index] = response.data

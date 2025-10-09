@@ -437,9 +437,18 @@ def get_login_logs(
 
 
 def create_user_login_log(
-    db: Session, user_id: int, location: str = None, browser: str = None
+    db: Session, 
+    user_id: int, 
+    location: str = None, 
+    browser: str = None,
+    client_timezone: str = "UTC"  # NEW: Add timezone parameter
 ):
-    log = UserLoginLog(user_id=user_id, location=location, browser=browser)
+    log = UserLoginLog(
+        user_id=user_id, 
+        location=location, 
+        browser=browser,
+        client_timezone=client_timezone  # NEW: Store client timezone
+    )
     db.add(log)
     db.commit()
     return log

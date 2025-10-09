@@ -16,6 +16,7 @@ class Company(Base):
     status = Column(Boolean, default=True, nullable=False)  # True = Active, False = Inactive
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
+    record_timezone = Column(String(50), nullable=True, default="UTC")  # Timezone when record was created
 
     # Relationships
     warehouses = relationship(
@@ -77,6 +78,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     last_login = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    record_timezone = Column(String(50), nullable=True, default="UTC")  # Timezone when user record was created
     
     # Password management fields
     password_changed_at = Column(DateTime, nullable=True)
@@ -106,6 +108,7 @@ class Employee(Base):
     is_active = Column(Boolean, default=True)                     # New field
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    record_timezone = Column(String(50), nullable=True, default="UTC")  # Timezone when employee record was created
 
     # Relationships
     warehouse = relationship("Warehouse", back_populates="employees")
@@ -125,6 +128,7 @@ class FaceEncoding(Base):
     confidence_score = Column(String(10), nullable=True)   # New field for encoding quality
     
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    record_timezone = Column(String(50), nullable=True, default="UTC")  # Timezone when face encoding was registered
 
     # Relationships
     employee = relationship("Employee", back_populates="encodings")
@@ -152,6 +156,7 @@ class AccessLog(Base):
     notes = Column(Text, nullable=True)                  # Human-readable notes
     
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    device_timezone = Column(String(50), nullable=True, default="UTC")  # Device timezone when clock-in/out occurred
 
     # Relationships
     employee = relationship("Employee", back_populates="access_logs")
@@ -180,6 +185,7 @@ class UserLoginLog(Base):
     security_flags = Column(JSON, nullable=True)         # Suspicious activity flags
     
     timestamp = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    client_timezone = Column(String(50), nullable=True, default="UTC")  # Client timezone when login occurred
 
     # Relationships
     user = relationship("User", back_populates="user_login_logs")
@@ -193,6 +199,7 @@ class PasswordHistory(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.datetime.utcnow, nullable=False)
+    record_timezone = Column(String(50), nullable=True, default="UTC")  # Timezone when password change occurred
 
     # Relationships
     user = relationship("User", back_populates="password_history")

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import api from './api'
 import { useToast } from 'vue-toastification'
+import { useTimezone } from './useTimezone'
 
 export function useEmployees() {
   const employees = ref([])
@@ -27,7 +28,16 @@ export function useEmployees() {
   const createEmployee = async (employeeData) => {
     loading.value = true
     try {
-      const response = await api.post('/employees/', employeeData)
+      // Get record timezone for employee creation
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const employeeDataWithTimezone = {
+        ...employeeData,
+        record_timezone: recordTimezone
+      }
+      
+      const response = await api.post('/employees/', employeeDataWithTimezone)
       employees.value.push(response.data)
       toast.success('Employee created successfully')
       return { success: true, data: response.data }
@@ -43,8 +53,17 @@ export function useEmployees() {
   const updateEmployee = async (id, employeeData) => {
     loading.value = true
     try {
-      const response = await api.put(`/employees/${id}`, employeeData)
-      const index = employees.value.findIndex(e => e.id === id)
+      // Get record timezone for employee update
+      const { getTimezoneWithFallback } = useTimezone()
+      const recordTimezone = getTimezoneWithFallback()
+      
+      const employeeDataWithTimezone = {
+        ...employeeData,
+        record_timezone: recordTimezone
+      }
+      
+      const response = await api.put(`/employees/${id}`, employeeDataWithTimezone)
+      const index = employees.value.findIndex(emp => emp.id === id)
       if (index !== -1) {
         employees.value[index] = response.data
       }
@@ -63,7 +82,7 @@ export function useEmployees() {
     loading.value = true
     try {
       await api.delete(`/employees/${id}`)
-      employees.value = employees.value.filter(e => e.id !== id)
+      employees.value = employees.value.filter(emp => emp.id !== id)
       toast.success('Employee deleted successfully')
       return { success: true }
     } catch (error) {
@@ -75,36 +94,50 @@ export function useEmployees() {
     }
   }
 
-  const getEmployee = async (id) => {
+  const registerFace = async (employeeId, imageData) => {
     loading.value = true
     try {
-      const response = await api.get(`/employees/${id}`)
+      // Get device timezone for face registration
+      const { getTimezoneWithFallback } = useTimezone()
+      const deviceTimezone = getTimezoneWithFallback()
+      
+      const requestData = {
+        employee_id: employeeId,
+        image_data: imageData,
+        device_timezone: deviceTimezone
+      }
+      
+      const response = await api.post('/employees/register_face', requestData)
+      toast.success('Face registered successfully')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error getting employee')
-      return { success: false, error: error.response?.data?.detail || 'Unknown error' }
+      const errorMessage = error.response?.data?.detail || 'Error registering face'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
   }
 
-  const uploadEmployeePhoto = async (id, photoFile) => {
+  const clockInOut = async (imageData) => {
     loading.value = true
     try {
-      const formData = new FormData()
-      formData.append('file', photoFile)
+      // Get device timezone for clock in/out
+      const { getTimezoneWithFallback } = useTimezone()
+      const deviceTimezone = getTimezoneWithFallback()
       
-      const response = await api.post(`/employees/${id}/upload-photo`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      })
+      const requestData = {
+        image_data: imageData,
+        device_timezone: deviceTimezone
+      }
       
-      toast.success('Foto de empleado cargada exitosamente')
+      const response = await api.post('/employees/check', requestData)
+      toast.success('Clock in/out successful')
       return { success: true, data: response.data }
     } catch (error) {
-      toast.error('Error al cargar foto de empleado')
-      return { success: false, error: error.response?.data?.detail || 'Error desconocido' }
+      const errorMessage = error.response?.data?.detail || 'Error with clock in/out'
+      toast.error(errorMessage)
+      return { success: false, error: errorMessage }
     } finally {
       loading.value = false
     }
@@ -117,7 +150,7 @@ export function useEmployees() {
     createEmployee,
     updateEmployee,
     deleteEmployee,
-    getEmployee,
-    uploadEmployeePhoto
+    registerFace,
+    clockInOut
   }
 }

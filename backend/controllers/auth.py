@@ -21,6 +21,7 @@ class UserRegisterRequest(BaseModel):
     last_name: Optional[str] = None
     warehouse_id: Optional[int] = None
     role_id: Optional[int] = 3  # Default role 'employee'
+    record_timezone: Optional[str] = "UTC"  # NEW: Timezone when user is created
 
     @validator("password")
     def validate_password(cls, v, values):
@@ -37,6 +38,7 @@ class UserRegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     username_or_email: str
     password: str
+    client_timezone: Optional[str] = "UTC"  # NEW: Client timezone for login tracking
 
 
 class LoginResponse(BaseModel):
@@ -103,6 +105,7 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
             db=db,
             username_or_email=login_data.username_or_email,
             password=login_data.password,
+            client_timezone=login_data.client_timezone,  # NEW: Pass client timezone
         )
         return result
     except HTTPException as e:

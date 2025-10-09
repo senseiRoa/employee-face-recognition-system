@@ -101,11 +101,20 @@ def clock_in_out(
     recognized_employee = next((e for e in employees if e.id == best_id), None)
     if recognized_employee:
         enc_s = serialize_encoding(probe.tolist())
-        new_encoding = FaceEncoding(employee_id=best_id, encoding=enc_s)
+        new_encoding = FaceEncoding(
+            employee_id=best_id, 
+            encoding=enc_s,
+            record_timezone=req.device_timezone  # NEW: Store timezone when encoding was created
+        )
         db.add(new_encoding)
 
     event = decide_event(db, best_id)
-    log = AccessLog(employee_id=best_id, warehouse_id=req.warehouse_id, event=event)
+    log = AccessLog(
+        employee_id=best_id, 
+        warehouse_id=req.warehouse_id, 
+        event=event,
+        device_timezone=req.device_timezone  # NEW: Store device timezone for clock event
+    )
     db.add(log)
     db.commit()
 
@@ -115,7 +124,7 @@ def clock_in_out(
         "name": best_name,
         "distance": float(best_dist),
         "event": event,
-        "ts": log.ts.isoformat(),
+        "ts": log.timestamp.isoformat(),  # Changed from log.ts to log.timestamp
     }
 
 

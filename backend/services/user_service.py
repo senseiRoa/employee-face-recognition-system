@@ -22,9 +22,10 @@ class UserService:
         last_name: str = None,
         warehouse_id: int = 1,
         role_id: int = 3,
+        record_timezone: str = "UTC",  # NEW: Add timezone parameter
     ) -> User:
         """
-        Create a new user
+        Create a new user with timezone tracking
         """
         hashed_password = hash_password(password)
 
@@ -39,6 +40,7 @@ class UserService:
             is_active=True,
             created_at=datetime.datetime.utcnow(),
             password_changed_at=datetime.datetime.utcnow(),
+            record_timezone=record_timezone,  # NEW: Store timezone when user was created
         )
 
         self.db.add(db_user)

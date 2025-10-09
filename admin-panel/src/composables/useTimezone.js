@@ -58,7 +58,8 @@ export function useTimezone() {
 
     const validPatterns = [
       /^UTC$/,                                    // UTC
-      /^GMT[+-]\d{2}(:\d{2})?$/,                 // GMT±HH:MM or GMT±HH
+      /^GMT[+-]\d{1,2}(:\d{2})?$/,               // GMT±H, GMT±HH, GMT±HH:MM
+      /^GMT$/,                                    // GMT (equivalent to UTC)
       /^[A-Z]{3,4}$/,                            // EST, PST, etc.
       /^[A-Za-z_]+\/[A-Za-z_]+$/,               // America/New_York
       /^[A-Za-z_]+\/[A-Za-z_]+\/[A-Za-z_]+$/    // America/Argentina/Buenos_Aires
@@ -89,12 +90,12 @@ export function useTimezone() {
 
   /**
    * Get timezone with automatic fallback handling
-   * @returns {string} Valid timezone string
+   * @returns {string} GMT format timezone string (e.g., "GMT-05")
    */
   const getTimezoneWithFallback = () => {
     try {
-      const detected = getDeviceTimezone()
-      return sanitizeTimezone(detected)
+      // Return GMT offset format instead of IANA timezone name
+      return getGMTOffset()
     } catch (error) {
       console.warn('Could not detect timezone:', error)
       return 'UTC'

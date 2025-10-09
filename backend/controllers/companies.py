@@ -25,6 +25,7 @@ class CompanyCreate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     status: Optional[bool] = True
+    record_timezone: str = "UTC"
 
     @validator("name")
     def validate_name(cls, v):
@@ -45,6 +46,7 @@ class CompanyUpdate(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     status: Optional[bool] = None
+    record_timezone: str = "UTC"
 
     @validator("name")
     def validate_name(cls, v):
@@ -108,6 +110,7 @@ def create_company(
             phone=company_data.phone,
             address=company_data.address,
             status=company_data.status,
+            user_timezone=company_data.record_timezone,
         )
 
         # Add warehouses count

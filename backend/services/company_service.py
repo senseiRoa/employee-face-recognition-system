@@ -12,6 +12,7 @@ def create_company(
     phone: str = None,
     address: str = None,
     status: bool = True,
+    user_timezone: str = "UTC",
 ) -> Company:
     """
     Create a new company
@@ -24,6 +25,7 @@ def create_company(
         status=status,
         created_at=datetime.datetime.utcnow(),
         updated_at=datetime.datetime.utcnow(),
+        record_timezone=user_timezone,
     )
     db.add(db_company)
     db.commit()

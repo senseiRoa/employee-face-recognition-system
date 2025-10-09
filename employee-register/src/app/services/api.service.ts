@@ -12,30 +12,47 @@ export class ApiService {
     this.headers = { Authorization: `Bearer ${this.token}` };
   }
 
+  /**
+   * Get GMT offset format (e.g., "GMT-05", "GMT+03")
+   * @returns {string} GMT offset string
+   */
+  private getGMTOffset(): string {
+    try {
+      const offset = new Date().getTimezoneOffset();
+      const hours = Math.abs(Math.floor(offset / 60));
+      const sign = offset > 0 ? '-' : '+';
+      
+      return `GMT${sign}${hours.toString().padStart(2, '0')}`;
+    } catch (error) {
+      console.warn('Could not calculate GMT offset, using UTC:', error);
+      return 'UTC';
+    }
+  }
+
   registerFace(name: string, image_base64: string) {
-    // Get device timezone
-    const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    // Get device timezone in GMT format
+    const deviceTimezone = this.getGMTOffset();
     
     return this.http.post(
       `${this.base}/employees/register_face`,
       { 
         name, 
         image_data: image_base64,  // Updated field name
-        device_timezone: deviceTimezone  // NEW: Include device timezone
+        device_timezone: deviceTimezone  // NEW: Include device timezone in GMT format
       },
       { headers: this.headers }
     );
   }
 
   checkInOut(image_base64: string) {
-    // Get device timezone
-    const deviceTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+    // Get device timezone in GMT format
+    const deviceTimezone = this.getGMTOffset();
     
     return this.http.post(
       `${this.base}/employees/check`,  // Updated endpoint name
       { 
         image_data: image_base64,  // Updated field name
-        device_timezone: deviceTimezone  // NEW: Include device timezone
+        device_timezone: deviceTimezone  // NEW: Include device timezone in GMT format
       },
       { headers: this.headers }
     );

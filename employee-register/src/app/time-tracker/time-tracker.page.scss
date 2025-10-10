@@ -1,0 +1,176 @@
+/* Time Tracker Page Styles */
+
+.section-title {
+  margin: 1.5rem 0 1rem 0;
+}
+
+.section-title h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+  padding-left: 0.5rem;
+  border-left: 4px solid var(--ion-color-primary);
+}
+
+/* User Info Card */
+.user-info-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.user-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-details h2 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 0.25rem 0;
+}
+
+.user-details p {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin: 0.125rem 0;
+}
+
+/* Status Card */
+.status-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-info ion-icon {
+  font-size: 2rem;
+}
+
+.status-info h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0 0 0.25rem 0;
+}
+
+.status-info p {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* Action Card */
+.action-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.action-card ion-button {
+  margin-top: 1rem;
+}
+
+.action-card ion-button:first-of-type {
+  margin-top: 1.5rem;
+}
+
+/* Register Card */
+.register-card {
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+}
+
+.register-card ion-item {
+  --border-width: 0 0 1px 0;
+  --border-color: rgba(0, 0, 0, 0.05);
+  margin-bottom: 0.5rem;
+}
+
+.register-card ion-item:last-of-type {
+  --border-width: 0;
+}
+
+.register-button {
+  margin-top: 2rem;
+}
+
+/* Segment */
+ion-segment {
+  margin-bottom: 2rem;
+}
+
+/* Loading Overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.loading-content ion-spinner {
+  margin-bottom: 1rem;
+}
+
+.loading-content p {
+  margin: 0;
+  color: var(--ion-color-dark);
+  font-weight: 500;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .user-info-card,
+  .status-card,
+  .action-card,
+  .register-card {
+    background-color: var(--ion-color-step-50);
+  }
+
+  .loading-content {
+    background: var(--ion-color-step-100);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .section-title h2 {
+    font-size: 1.2rem;
+  }
+
+  .user-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .status-info {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+}

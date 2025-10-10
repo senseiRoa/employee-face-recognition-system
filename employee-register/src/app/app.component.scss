@@ -1,0 +1,39 @@
+// Menu styling
+ion-menu {
+  ion-content {
+    --padding-start: 0;
+    --padding-end: 0;
+  }
+
+  ion-list {
+    padding: 0;
+  }
+
+  ion-item {
+    --padding-start: 16px;
+    --padding-end: 16px;
+    --min-height: 48px;
+  }
+
+  // Submenu items styling
+  .submenu-item {
+    --padding-start: 32px;
+    --background: rgba(var(--ion-color-primary-rgb), 0.05);
+    font-size: 0.9em;
+
+    ion-icon {
+      font-size: 1.2em;
+      margin-right: 8px;
+    }
+  }
+
+  // Accordion styling
+  ion-accordion-group {
+    ion-accordion {
+      ion-item[slot="header"] {
+        --padding-start: 16px;
+        --padding-end: 16px;
+      }
+    }
+  }
+}

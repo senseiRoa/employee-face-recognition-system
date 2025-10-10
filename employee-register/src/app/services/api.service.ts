@@ -123,6 +123,12 @@ export class ApiService {
    * Register face for an employee
    */
   registerFace(request: RegisterFaceRequest, token: string): Observable<RegisterFaceResponse> {
+    // Log the request for debugging (hide the actual base64 content)
+    console.log('API Service - registerFace request:', {
+      ...request,
+      image_base64: `[base64 string length: ${request.image_base64?.length || 0}]`
+    });
+    
     return this.http.post<RegisterFaceResponse>(`${this.baseUrl}/employees/register_face`, request, {
       headers: this.getAuthHeaders(token)
     });

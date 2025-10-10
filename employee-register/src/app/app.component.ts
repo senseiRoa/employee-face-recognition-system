@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { IonApp, IonRouterOutlet, IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel } from '@ionic/angular/standalone';
+import { IonApp, IonRouterOutlet, IonMenu, IonHeader, IonToolbar, IonTitle, IonContent, IonList, IonItem, IonIcon, IonLabel, IonAccordion, IonAccordionGroup, MenuController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
-import { homeOutline, settingsOutline, phonePortraitOutline, timeOutline, barChartOutline, logOutOutline } from 'ionicons/icons';
+import { homeOutline, settingsOutline, phonePortraitOutline, timeOutline, barChartOutline, logOutOutline, chevronDownOutline, chevronUpOutline, personAddOutline, fingerPrintOutline, documentTextOutline, analyticsOutline } from 'ionicons/icons';
 import { Router } from '@angular/router';
 import { AuthService } from './services/auth.service';
 
@@ -13,9 +13,28 @@ import { AuthService } from './services/auth.service';
 export class AppComponent {
   constructor(
     private router: Router,
-    private authService: AuthService
+    private authService: AuthService,
+    private menuController: MenuController
   ) {
-    addIcons({ homeOutline, settingsOutline, phonePortraitOutline, timeOutline, barChartOutline, logOutOutline });
+    addIcons({ 
+      homeOutline, 
+      settingsOutline, 
+      phonePortraitOutline, 
+      timeOutline, 
+      barChartOutline, 
+      logOutOutline,
+      chevronDownOutline,
+      chevronUpOutline,
+      personAddOutline,
+      fingerPrintOutline,
+      documentTextOutline,
+      analyticsOutline
+    });
+  }
+
+  async navigateAndCloseMenu(path: string) {
+    await this.menuController.close();
+    this.router.navigate([path]);
   }
 
   async logout() {

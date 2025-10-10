@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import { Camera, CameraResultType, CameraSource, Photo, CameraOptions } from '@capacitor/camera';
 import { Platform } from '@ionic/angular';
 
 @Injectable({
@@ -89,6 +89,99 @@ export class CameraService {
       array.push(binary.charCodeAt(i));
     }
     return new Blob([new Uint8Array(array)], { type: 'image/jpeg' });
+  }
+
+  /**
+   * Get a test image for development/testing purposes
+   * @returns Promise<string> - Test base64 image
+   */
+  async getTestImage(): Promise<string> {
+    // This is a simple 1x1 pixel JPEG in base64 - useful for testing
+    return '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwA/AAAB//2Q==';
+  }
+
+  /**
+   * Take a photo using the device camera
+   * @param options - Camera options
+   * @returns Promise<string> - Base64 encoded image
+   */
+  async takePhoto(options?: CameraOptions): Promise<string> {
+    const defaultOptions: CameraOptions = {
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Camera,
+      ...options
+    };
+
+    try {
+      const image = await Camera.getPhoto(defaultOptions);
+      
+      if (!image.base64String) {
+        throw new Error('Failed to capture image');
+      }
+
+      const base64Image = `data:image/jpeg;base64,${image.base64String}`;
+      
+      // Validate the captured image
+      const isValid = await this.validateImage(base64Image);
+      if (!isValid) {
+        throw new Error('Captured image does not meet minimum quality requirements');
+      }
+
+      return base64Image;
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Take a photo and return only the base64 string (without data URL prefix)
+   * @param options - Camera options
+   * @returns Promise<string> - Raw base64 string
+   */
+  async takePhotoBase64Only(options?: CameraOptions): Promise<string> {
+    const defaultOptions: CameraOptions = {
+      quality: 90,
+      allowEditing: false,
+      resultType: CameraResultType.Base64,
+      source: CameraSource.Camera,
+      ...options
+    };
+
+    try {
+      const image = await Camera.getPhoto(defaultOptions);
+      
+      if (!image.base64String) {
+        throw new Error('Failed to capture image');
+      }
+
+      const base64Image = `data:image/jpeg;base64,${image.base64String}`;
+      
+      // Validate the captured image
+      const isValid = await this.validateImage(base64Image);
+      if (!isValid) {
+        throw new Error('Captured image does not meet minimum quality requirements');
+      }
+
+      // Log for debugging
+      console.log('Camera captured image base64 length:', image.base64String.length);
+      console.log('Base64 starts with:', image.base64String.substring(0, 50) + '...');
+
+      // Return only the base64 string without the data URL prefix
+      return image.base64String;
+    } catch (error) {
+      console.error('Error taking photo:', error);
+      
+      // If we're on web and camera fails, use test image for development
+      if (this.platform.is('hybrid')) {
+        throw error;
+      } else {
+        console.warn('Camera not available, using test image for development');
+        return await this.getTestImage();
+      }
+    }
   }
 
   /**

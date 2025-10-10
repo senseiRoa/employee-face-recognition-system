@@ -1,0 +1,141 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Configuration</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="section-title">
+    <h2>System Configuration</h2>
+  </div>
+
+  <!-- API Configuration -->
+  <ion-card class="config-card">
+    <ion-card-header>
+      <ion-card-title>API Settings</ion-card-title>
+      <ion-card-subtitle>Backend API Configuration</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label position="stacked">API Base URL</ion-label>
+        <ion-input
+          [(ngModel)]="config.apiUrl"
+          placeholder="http://localhost:8081"
+          readonly>
+        </ion-input>
+      </ion-item>
+
+      <ion-item>
+        <ion-label position="stacked">Connection Status</ion-label>
+        <ion-badge [color]="connectionStatus === 'connected' ? 'success' : 'danger'">
+          {{connectionStatus}}
+        </ion-badge>
+      </ion-item>
+
+      <ion-button expand="block" fill="outline" (click)="testConnection()" [disabled]="testing">
+        <ion-icon name="wifi-outline" slot="start"></ion-icon>
+        Test Connection
+        <ion-spinner name="crescent" *ngIf="testing" slot="end"></ion-spinner>
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Camera Configuration -->
+  <ion-card class="config-card">
+    <ion-card-header>
+      <ion-card-title>Camera Settings</ion-card-title>
+      <ion-card-subtitle>Face Recognition Configuration</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Camera Quality</ion-label>
+        <ion-select [(ngModel)]="config.cameraQuality" placeholder="Select Quality">
+          <ion-select-option value="low">Low (480p)</ion-select-option>
+          <ion-select-option value="medium">Medium (720p)</ion-select-option>
+          <ion-select-option value="high">High (1080p)</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Auto Capture</ion-label>
+        <ion-toggle [(ngModel)]="config.autoCapture"></ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Capture Delay (seconds)</ion-label>
+        <ion-range
+          [(ngModel)]="config.captureDelay"
+          min="1"
+          max="10"
+          step="1"
+          [disabled]="!config.autoCapture">
+          <ion-label slot="start">1</ion-label>
+          <ion-label slot="end">10</ion-label>
+        </ion-range>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Theme Configuration -->
+  <ion-card class="config-card">
+    <ion-card-header>
+      <ion-card-title>Appearance</ion-card-title>
+      <ion-card-subtitle>App Theme Settings</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Dark Mode</ion-label>
+        <ion-toggle [(ngModel)]="config.darkMode" (ionChange)="toggleDarkMode()"></ion-toggle>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Language</ion-label>
+        <ion-select [(ngModel)]="config.language" placeholder="Select Language">
+          <ion-select-option value="en">English</ion-select-option>
+          <ion-select-option value="es">Español</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Security Configuration -->
+  <ion-card class="config-card">
+    <ion-card-header>
+      <ion-card-title>Security</ion-card-title>
+      <ion-card-subtitle>Security & Privacy Settings</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item>
+        <ion-label>Auto Logout (minutes)</ion-label>
+        <ion-select [(ngModel)]="config.autoLogoutTime" placeholder="Select Time">
+          <ion-select-option value="15">15 minutes</ion-select-option>
+          <ion-select-option value="30">30 minutes</ion-select-option>
+          <ion-select-option value="60">1 hour</ion-select-option>
+          <ion-select-option value="0">Never</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ion-item>
+        <ion-label>Biometric Login</ion-label>
+        <ion-toggle [(ngModel)]="config.biometricLogin"></ion-toggle>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Action Buttons -->
+  <div class="action-buttons">
+    <ion-button expand="block" color="primary" (click)="saveConfiguration()" [disabled]="saving">
+      <ion-icon name="save-outline" slot="start"></ion-icon>
+      Save Configuration
+      <ion-spinner name="crescent" *ngIf="saving" slot="end"></ion-spinner>
+    </ion-button>
+
+    <ion-button expand="block" fill="outline" color="medium" (click)="resetToDefaults()">
+      <ion-icon name="refresh-outline" slot="start"></ion-icon>
+      Reset to Defaults
+    </ion-button>
+  </div>
+</ion-content>

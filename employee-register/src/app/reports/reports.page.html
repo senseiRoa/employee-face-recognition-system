@@ -1,0 +1,224 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Reports</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" color="light" (click)="exportToCSV()" [disabled]="filteredLogs.length === 0">
+        <ion-icon name="download-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Summary Cards -->
+  <div class="section-title">
+    <h2>Summary Statistics</h2>
+  </div>
+
+  <ion-grid class="summary-grid">
+    <ion-row>
+      <ion-col size="6" size-md="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-item">
+              <ion-icon name="document-text-outline" color="primary"></ion-icon>
+              <div class="summary-info">
+                <h3>{{summary.totalRecords}}</h3>
+                <p>Total Records</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-item">
+              <ion-icon name="checkmark-circle-outline" color="success"></ion-icon>
+              <div class="summary-info">
+                <h3>{{summary.successfulActions}}</h3>
+                <p>Successful</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-item">
+              <ion-icon name="close-circle-outline" color="danger"></ion-icon>
+              <div class="summary-info">
+                <h3>{{summary.failedActions}}</h3>
+                <p>Failed</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="6" size-md="3">
+        <ion-card class="summary-card">
+          <ion-card-content>
+            <div class="summary-item">
+              <ion-icon name="people-outline" color="secondary"></ion-icon>
+              <div class="summary-info">
+                <h3>{{summary.uniqueEmployees}}</h3>
+                <p>Employees</p>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Filters -->
+  <div class="section-title">
+    <h2>Filters</h2>
+  </div>
+
+  <ion-card class="filter-card">
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="6">
+            <ion-item>
+              <ion-label position="stacked">Start Date</ion-label>
+              <ion-input type="date" [(ngModel)]="filters.startDate" (ionChange)="applyFilters()"></ion-input>
+            </ion-item>
+          </ion-col>
+
+          <ion-col size="12" size-md="6">
+            <ion-item>
+              <ion-label position="stacked">End Date</ion-label>
+              <ion-input type="date" [(ngModel)]="filters.endDate" (ionChange)="applyFilters()"></ion-input>
+            </ion-item>
+          </ion-col>
+
+          <ion-col size="12" size-md="6">
+            <ion-item>
+              <ion-label position="stacked">Employee ID</ion-label>
+              <ion-input
+                [(ngModel)]="filters.employeeId"
+                placeholder="Filter by Employee ID"
+                (ionInput)="applyFilters()">
+              </ion-input>
+            </ion-item>
+          </ion-col>
+
+          <ion-col size="12" size-md="6">
+            <ion-item>
+              <ion-label position="stacked">Action Type</ion-label>
+              <ion-select [(ngModel)]="filters.actionType" placeholder="All Actions" (ionChange)="applyFilters()">
+                <ion-select-option value="">All Actions</ion-select-option>
+                <ion-select-option value="clock_in">Clock In</ion-select-option>
+                <ion-select-option value="clock_out">Clock Out</ion-select-option>
+                <ion-select-option value="break_start">Break Start</ion-select-option>
+                <ion-select-option value="break_end">Break End</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+
+      <div class="filter-buttons">
+        <ion-button fill="outline" color="medium" (click)="resetFilters()">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>
+          Reset Filters
+        </ion-button>
+
+        <ion-button color="primary" (click)="loadReports()">
+          <ion-icon name="search-outline" slot="start"></ion-icon>
+          Apply Filters
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Access Logs -->
+  <div class="section-title">
+    <h2>Access Logs</h2>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="loading">
+    <ion-spinner name="crescent" color="primary"></ion-spinner>
+    <p>Loading reports...</p>
+  </div>
+
+  <!-- No Data -->
+  <ion-card class="no-data-card" *ngIf="!loading && filteredLogs.length === 0">
+    <ion-card-content>
+      <div class="no-data">
+        <ion-icon name="document-outline" size="large" color="medium"></ion-icon>
+        <h3>No Records Found</h3>
+        <p>No access logs found for the selected criteria.</p>
+        <ion-button fill="outline" color="primary" (click)="resetFilters()">
+          Reset Filters
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Logs List -->
+  <ion-card class="logs-card" *ngIf="!loading && filteredLogs.length > 0">
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let log of filteredLogs; trackBy: trackByLogId">
+          <ion-icon
+            [name]="getActionIcon(log.action_type)"
+            [color]="getActionColor(log.action_type)"
+            slot="start">
+          </ion-icon>
+
+          <ion-label>
+            <h3>{{getActionDisplayText(log.action_type)}}</h3>
+            <p>
+              <strong>Employee:</strong> {{log.employee_id || 'Unknown'}} |
+              <strong>Time:</strong> {{log.timestamp | date:'short'}}
+            </p>
+            <p *ngIf="log.confidence">
+              <strong>Confidence:</strong> {{(log.confidence * 100).toFixed(1)}}%
+            </p>
+          </ion-label>
+
+          <div slot="end" class="log-status">
+            <ion-badge [color]="log.success ? 'success' : 'danger'">
+              {{log.success ? 'Success' : 'Failed'}}
+            </ion-badge>
+            <p class="warehouse-name">{{log.warehouse_name || 'N/A'}}</p>
+          </div>
+        </ion-item>
+      </ion-list>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Pagination -->
+  <div class="pagination" *ngIf="!loading && filteredLogs.length > 0">
+    <ion-button
+      fill="outline"
+      [disabled]="currentPage === 0"
+      (click)="loadPreviousPage()">
+      <ion-icon name="chevron-back-outline" slot="start"></ion-icon>
+      Previous
+    </ion-button>
+
+    <span class="page-info">Page {{currentPage + 1}}</span>
+
+    <ion-button
+      fill="outline"
+      [disabled]="filteredLogs.length < pageSize"
+      (click)="loadNextPage()">
+      Next
+      <ion-icon name="chevron-forward-outline" slot="end"></ion-icon>
+    </ion-button>
+  </div>
+
+</ion-content>

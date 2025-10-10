@@ -3,12 +3,19 @@ import { Router } from '@angular/router';
 import { LoadingController, AlertController, ToastController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { LoginRequest } from '../models/auth.model';
-import { IonContent } from "@ionic/angular/standalone";
+import { FormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { IonicModule } from '@ionic/angular';
 
 @Component({
   selector: 'app-login',
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
+  imports: [
+    FormsModule,
+    CommonModule,
+    IonicModule,
+  ],
 })
 export class LoginPage implements OnInit {
 
@@ -84,7 +91,24 @@ export class LoginPage implements OnInit {
         },
         error: async (error: any) => {
           console.error('Login error:', error);
-          await this.showErrorAlert('Login Failed', error.message || 'Invalid credentials');
+          let errorMessage = 'Invalid credentials. Please check your username/email and password.';
+          
+          // Handle specific HTTP error responses
+          if (error.status === 401) {
+            if (error.error && error.error.detail) {
+              errorMessage = error.error.detail;
+            } else {
+              errorMessage = 'Incorrect username/email or password';
+            }
+          } else if (error.status === 400) {
+            errorMessage = 'Invalid request. Please check your input.';
+          } else if (error.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+          } else if (error.status === 0) {
+            errorMessage = 'Cannot connect to server. Please check your internet connection.';
+          }
+          
+          await this.showErrorAlert('Login Failed', errorMessage);
         },
         complete: async () => {
           this.isLoading = false;
@@ -93,7 +117,7 @@ export class LoginPage implements OnInit {
       });
     } catch (error: any) {
       console.error('Login error:', error);
-      await this.showErrorAlert('Login Failed', error.message || 'Invalid credentials');
+      await this.showErrorAlert('Login Failed', 'An unexpected error occurred. Please try again.');
       this.isLoading = false;
       await loading.dismiss();
     }

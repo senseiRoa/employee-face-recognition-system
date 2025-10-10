@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { ToastController, AlertController, ActionSheetController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { CameraService } from '../services/camera.service';
@@ -45,6 +45,7 @@ export class TimeTrackerPage implements OnInit {
     private cameraService: CameraService,
     private apiService: ApiService,
     private router: Router,
+    private route: ActivatedRoute,
     private toastController: ToastController,
     private alertController: AlertController,
     private actionSheetController: ActionSheetController
@@ -54,10 +55,26 @@ export class TimeTrackerPage implements OnInit {
     this.loadCurrentUser();
     // Update timezone in employee object
     this.newEmployee.record_timezone = this.getGMTOffset();
+    
+    // Check for view parameter from navigation
+    this.route.queryParams.subscribe(params => {
+      if (params['view']) {
+        this.currentView = params['view'];
+        console.log('Setting view to:', this.currentView);
+      }
+    });
   }
 
   ionViewWillEnter() {
     this.loadCurrentUser();
+    
+    // Check for view parameter when re-entering the page
+    this.route.queryParams.subscribe(params => {
+      if (params['view']) {
+        this.currentView = params['view'];
+        console.log('Re-entering with view:', this.currentView);
+      }
+    });
   }
 
   /**
@@ -186,20 +203,8 @@ export class TimeTrackerPage implements OnInit {
             this.performClockAction('clock_out');
           }
         },
-        {
-          text: 'Break Start',
-          icon: 'cafe-outline',
-          handler: () => {
-            this.performClockAction('break_start');
-          }
-        },
-        {
-          text: 'Break End',
-          icon: 'checkmark-circle-outline',
-          handler: () => {
-            this.performClockAction('break_end');
-          }
-        },
+        
+       
         {
           text: 'Cancel',
           icon: 'close',
@@ -285,12 +290,7 @@ export class TimeTrackerPage implements OnInit {
     return `GMT${sign}${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   }
 
-  /**
-   * Navigate to reports
-   */
-  goToReports() {
-    this.router.navigate(['/reports']);
-  }
+
 
   /**
    * Show toast message

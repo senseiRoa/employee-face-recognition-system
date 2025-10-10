@@ -1,144 +1,201 @@
+// Corporate Login - Minimal
 .login-content {
-  --background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
+  --background: #f8fafc;
+  
   .login-container {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
-    padding: 20px;
+    max-width: 440px;
+    margin: 0 auto;
   }
 
-  .logo-section {
-    text-align: center;
-    margin-bottom: 40px;
-    color: white;
+  .header-section {
+    background: linear-gradient(135deg, #1e3a8a, #3730a3);
+    padding: 3rem 2rem 4rem;
 
-    .logo-icon {
-      font-size: 4rem;
-      margin-bottom: 10px;
-    }
-
-    .app-title {
-      font-size: 2.2rem;
-      font-weight: 600;
-      margin: 0 0 5px 0;
-      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-
-    .app-subtitle {
-      font-size: 1rem;
-      margin: 0;
-      opacity: 0.9;
-      font-weight: 300;
-    }
-  }
-
-  .login-card {
-    width: 100%;
-    max-width: 400px;
-    margin: 0;
-    border-radius: 16px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-
-    ion-card-content {
-      padding: 30px 25px;
-    }
-  }
-
-  .input-item {
-    margin-bottom: 20px;
-    border-radius: 8px;
-    border: 1px solid var(--ion-color-light-shade);
-
-    ion-label {
-      font-weight: 500;
-      color: var(--ion-color-dark);
-    }
-
-    ion-input {
-      --padding-start: 12px;
-      --padding-end: 12px;
-    }
-
-    &.item-has-focus {
-      border-color: var(--ion-color-primary);
-      box-shadow: 0 0 0 2px rgba(var(--ion-color-primary-rgb), 0.2);
-    }
-  }
-
-  .login-button {
-    margin-top: 30px;
-    height: 50px;
-    border-radius: 25px;
-    font-weight: 600;
-    font-size: 1.1rem;
-    --box-shadow: 0 4px 15px rgba(var(--ion-color-primary-rgb), 0.4);
-
-    ion-spinner {
-      margin-right: 10px;
-    }
-
-    &:disabled {
-      opacity: 0.6;
-    }
-  }
-
-  .login-footer {
-    margin-top: 40px;
-    text-align: center;
-    color: rgba(255, 255, 255, 0.8);
-
-    .version-text {
-      font-size: 0.9rem;
-      margin: 0 0 5px 0;
-    }
-
-    .copyright-text {
-      font-size: 0.8rem;
-      margin: 0;
-      opacity: 0.7;
-    }
-  }
-}
-
-// Dark mode adjustments
-@media (prefers-color-scheme: dark) {
-  .login-content {
-    .input-item {
-      border-color: var(--ion-color-dark-tint);
-
-      ion-label {
-        color: var(--ion-color-light);
-      }
-    }
-  }
-}
-
-// Responsive design
-@media (max-width: 480px) {
-  .login-content {
-    .login-container {
-      padding: 15px;
-    }
-
-    .logo-section {
-      margin-bottom: 30px;
+    .company-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
 
       .logo-icon {
-        font-size: 3rem;
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        ion-icon {
+          font-size: 2rem;
+          color: #fff;
+        }
       }
 
-      .app-title {
-        font-size: 1.8rem;
+      .company-name {
+        color: #fff;
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .company-tagline {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.875rem;
+        margin: 0;
+      }
+    }
+  }
+
+  .login-form-container {
+    flex: 1;
+    padding: 3rem 2rem;
+    background: #fff;
+    margin: -2rem 1rem 0;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+
+    .form-header {
+      text-align: center;
+      margin-bottom: 2rem;
+
+      .form-title {
+        color: #1f2937;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+      }
+
+      .form-subtitle {
+        color: #6b7280;
+        font-size: 0.875rem;
+        margin: 0;
       }
     }
 
-    .login-card {
-      ion-card-content {
-        padding: 25px 20px;
+    .input-group {
+      margin-bottom: 1.5rem;
+
+      .input-label {
+        display: block;
+        color: #374151;
+        font-size: 0.875rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
       }
+
+      .input-wrapper {
+        position: relative;
+
+        .corporate-input {
+          --background: #f9fafb;
+          --border-color: #d1d5db;
+          --border-width: 1px;
+          --border-style: solid;
+          --border-radius: 8px;
+          --padding-start: 2.5rem;
+          --padding-end: 1rem;
+          --padding-top: 0.75rem;
+          --padding-bottom: 0.75rem;
+          --color: #1f2937;
+          font-size: 0.875rem;
+          width: 100%;
+
+          &:focus {
+            --border-color: #3b82f6;
+            --background: #fff;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+
+        .input-icon {
+          position: absolute;
+          left: 0.75rem;
+          top: 50%;
+          transform: translateY(-50%);
+          color: #9ca3af;
+          pointer-events: none;
+        }
+
+        .password-toggle {
+          position: absolute;
+          right: 0.25rem;
+          top: 50%;
+          transform: translateY(-50%);
+          --color: #6b7280;
+          margin: 0;
+        }
+      }
+    }
+
+    .corporate-button {
+      --background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      --color: #fff;
+      --border-radius: 8px;
+      --padding-top: 0.875rem;
+      --padding-bottom: 0.875rem;
+      margin-top: 1rem;
+      font-weight: 500;
+
+      .button-spinner {
+        margin-right: 0.5rem;
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+  }
+
+  .footer-section {
+    background: #f8fafc;
+    padding: 1.5rem 2rem;
+    text-align: center;
+
+    .footer-text, .version {
+      color: #6b7280;
+      font-size: 0.75rem;
+      margin: 0;
+    }
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .login-content {
+    --background: #0f172a;
+
+    .login-form-container {
+      background: #1e293b;
+
+      .form-title { color: #f1f5f9; }
+      .form-subtitle { color: #94a3b8; }
+      .input-label { color: #e2e8f0; }
+      
+      .corporate-input {
+        --background: #334155;
+        --border-color: #475569;
+        --color: #f1f5f9;
+      }
+    }
+
+    .footer-section { background: #0f172a; }
+  }
+}
+
+@media (max-width: 768px) {
+  .login-content {
+    .header-section {
+      padding: 2rem 1rem 3rem;
+
+      .company-logo {
+        flex-direction: column;
+      }
+    }
+
+    .login-form-container {
+      margin: -1.5rem 0.5rem 0;
+      padding: 2rem 1rem;
     }
   }
 }

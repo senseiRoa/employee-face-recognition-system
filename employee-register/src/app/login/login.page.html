@@ -1,66 +1,88 @@
 <ion-content class="login-content">
   <div class="login-container">
-    <!-- Logo Section -->
-    <div class="logo-section">
-      <ion-icon name="business-outline" class="logo-icon"></ion-icon>
-      <h1 class="app-title">Employee Register</h1>
-      <p class="app-subtitle">Face Recognition Time Tracker</p>
+    <!-- Corporate Header -->
+    <div class="header-section">
+      <div class="company-logo">
+        <div class="logo-icon">
+          <ion-icon name="business"></ion-icon>
+        </div>
+        <div class="company-info">
+          <h1 class="company-name">Employee Portal</h1>
+          <p class="company-tagline">Secure Access System</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Login Form -->
-    <ion-card class="login-card">
-      <ion-card-content>
-        <form (ngSubmit)="onLogin()" #loginForm="ngForm">
-          <!-- Username/Email Field -->
-          <ion-item class="input-item">
-            <ion-label position="stacked">Username or Email</ion-label>
+    <!-- Login Form Card -->
+    <div class="login-form-container">
+      <div class="form-header">
+        <h2 class="form-title">Sign In</h2>
+        <p class="form-subtitle">Access your employee dashboard</p>
+      </div>
+
+      <form (ngSubmit)="onLogin()" #loginForm="ngForm" class="login-form">
+        <!-- Username/Email Field -->
+        <div class="input-group">
+          <label class="input-label">Email or Username</label>
+          <div class="input-wrapper">
             <ion-input
               type="text"
               [(ngModel)]="loginData.username_or_email"
               name="username"
               required
-              placeholder="Enter your username or email"
-              [disabled]="isLoading">
+              placeholder="Enter your email or username"
+              [disabled]="isLoading"
+              class="corporate-input">
             </ion-input>
-          </ion-item>
+            <ion-icon name="person-outline" class="input-icon"></ion-icon>
+          </div>
+        </div>
 
-          <!-- Password Field -->
-          <ion-item class="input-item">
-            <ion-label position="stacked">Password</ion-label>
+        <!-- Password Field -->
+        <div class="input-group">
+          <label class="input-label">Password</label>
+          <div class="input-wrapper">
             <ion-input
               [type]="showPassword ? 'text' : 'password'"
               [(ngModel)]="loginData.password"
               name="password"
               required
               placeholder="Enter your password"
-              [disabled]="isLoading">
+              [disabled]="isLoading"
+              class="corporate-input">
             </ion-input>
             <ion-button
               fill="clear"
-              slot="end"
+              size="small"
               (click)="togglePasswordVisibility()"
-              [disabled]="isLoading">
+              [disabled]="isLoading"
+              class="password-toggle">
               <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
             </ion-button>
-          </ion-item>
+          </div>
+        </div>
 
-          <!-- Login Button -->
-          <ion-button
-            expand="block"
-            type="submit"
-            class="login-button"
-            [disabled]="isLoading || !loginForm.form.valid">
-            <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
-            <span *ngIf="!isLoading">Sign In</span>
-          </ion-button>
-        </form>
-      </ion-card-content>
-    </ion-card>
+        <!-- Login Button -->
+        <ion-button
+          expand="block"
+          type="submit"
+          class="corporate-button"
+          [disabled]="isLoading || !loginForm.form.valid">
+          <ion-spinner name="crescent" *ngIf="isLoading" class="button-spinner"></ion-spinner>
+          <span *ngIf="!isLoading">Sign In</span>
+          <span *ngIf="isLoading">Signing In...</span>
+        </ion-button>
+      </form>
+    </div>
 
-    <!-- Footer -->
-    <div class="login-footer">
-      <p class="version-text">Version 1.0.0</p>
-      <p class="copyright-text">© 2025 Employee Register</p>
+    <!-- Corporate Footer -->
+    <div class="footer-section">
+      <div class="footer-content">
+        <p class="footer-text">© 2025 Employee Portal System</p>
+        <div class="footer-links">
+          <span class="version">v1.0.0</span>
+        </div>
+      </div>
     </div>
   </div>
 </ion-content>

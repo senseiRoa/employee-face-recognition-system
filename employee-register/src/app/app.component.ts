@@ -37,6 +37,13 @@ export class AppComponent {
     this.router.navigate([path]);
   }
 
+  async navigateWithViewAndCloseMenu(path: string, view: string) {
+    await this.menuController.close();
+    this.router.navigate([path], { 
+      queryParams: { view: view } 
+    });
+  }
+
   async logout() {
     try {
       await this.authService.logout();

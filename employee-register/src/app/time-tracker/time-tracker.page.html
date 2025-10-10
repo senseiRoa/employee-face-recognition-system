@@ -22,19 +22,7 @@
   <!-- Check In/Out View -->
   <div *ngIf="currentView === 'checkin'">
 
-    <!-- Current User Info -->
-    <ion-card class="user-info-card" *ngIf="currentUser">
-      <ion-card-content>
-        <div class="user-header">
-          <ion-icon name="person-circle-outline" size="large" color="primary"></ion-icon>
-          <div class="user-details">
-            <h2>{{currentUser.first_name}} {{currentUser.last_name}}</h2>
-            <p>{{currentUser.email}}</p>
-            <p>{{currentUser.warehouse_name}}</p>
-          </div>
-        </div>
-      </ion-card-content>
-    </ion-card>
+
 
     <!-- Last Action Info -->
     <ion-card class="status-card" *ngIf="lastAction">
@@ -60,25 +48,13 @@
         <ion-card-subtitle>Use facial recognition to track your time</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
-        <ion-button
-          expand="block"
-          color="primary"
-          size="large"
-          (click)="showClockOptions()"
-          [disabled]="isLoading">
+        <ion-button expand="block" color="primary" size="large" (click)="showClockOptions()" [disabled]="isLoading">
           <ion-icon name="camera-outline" slot="start"></ion-icon>
           Take Photo & Clock
           <ion-spinner name="crescent" *ngIf="isLoading" slot="end"></ion-spinner>
         </ion-button>
 
-        <ion-button
-          expand="block"
-          fill="outline"
-          color="secondary"
-          (click)="goToReports()">
-          <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
-          View Reports
-        </ion-button>
+
       </ion-card-content>
     </ion-card>
 
@@ -102,31 +78,19 @@
         <form>
           <ion-item>
             <ion-label position="stacked">First Name *</ion-label>
-            <ion-input
-              [(ngModel)]="newEmployee.first_name"
-              name="firstName"
-              placeholder="Enter first name"
-              required>
+            <ion-input [(ngModel)]="newEmployee.first_name" name="firstName" placeholder="Enter first name" required>
             </ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Last Name *</ion-label>
-            <ion-input
-              [(ngModel)]="newEmployee.last_name"
-              name="lastName"
-              placeholder="Enter last name"
-              required>
+            <ion-input [(ngModel)]="newEmployee.last_name" name="lastName" placeholder="Enter last name" required>
             </ion-input>
           </ion-item>
 
           <ion-item>
             <ion-label position="stacked">Email *</ion-label>
-            <ion-input
-              [(ngModel)]="newEmployee.email"
-              name="email"
-              type="email"
-              placeholder="Enter email address"
+            <ion-input [(ngModel)]="newEmployee.email" name="email" type="email" placeholder="Enter email address"
               required>
             </ion-input>
           </ion-item>
@@ -134,23 +98,14 @@
         </form>
 
         <!-- Registration Button -->
-        <ion-button
-          expand="block"
-          color="success"
-          size="large"
-          (click)="registerEmployee()"
-          [disabled]="isLoading"
+        <ion-button expand="block" color="success" size="large" (click)="registerEmployee()" [disabled]="isLoading"
           class="register-button">
           <ion-icon name="person-add-outline" slot="start"></ion-icon>
           Register with Face Photo
           <ion-spinner name="crescent" *ngIf="isLoading" slot="end"></ion-spinner>
         </ion-button>
 
-        <ion-button
-          expand="block"
-          fill="clear"
-          color="medium"
-          (click)="resetEmployeeForm()">
+        <ion-button expand="block" fill="clear" color="medium" (click)="resetEmployeeForm()">
           <ion-icon name="refresh-outline" slot="start"></ion-icon>
           Clear Form
         </ion-button>

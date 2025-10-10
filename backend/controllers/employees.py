@@ -1,6 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
+import json
+import datetime
 
 from database import get_db
 from schemas import (
@@ -63,10 +65,28 @@ def register_face(
 @router.post("/clock_in_out", response_model=CheckRes)
 def clock_in_out(
     req: CheckReq,
+    request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
+    try:
+        probe = np.array(compute_encoding(req.image_base64), dtype=np.float32)
+    except HTTPException as e:
+        # Para errores de reconocimiento facial, no podemos crear un AccessLog
+        # porque employee_id es required. Podríamos crear un log de errores separado
+        # o usar el UserLoginLog, pero por ahora retornaremos el error con información
+
+        return {
+            "recognized": False,
+            "employee_id": None,
+            "name": None,
+            "distance": None,
+            "event": None,
+            "ts": datetime.datetime.utcnow().isoformat(),
+            "confidence_score": 0.0,
+            "access_log_id": None,
+            "error": str(e.detail),
+        }
 
     query = select(EmployeeModel).options(selectinload(EmployeeModel.encodings))
     if req.warehouse_id:
@@ -96,27 +116,85 @@ def clock_in_out(
             )
 
     if best_dist > TOLERANCE:
-        return {"recognized": False}
+        # Registrar intento fallido en access_logs
+        failed_log = AccessLog(
+            employee_id=None,  # No se pudo identificar
+            warehouse_id=req.warehouse_id,
+            event_type="denied",
+            access_method="face_recognition",
+            confidence_score=f"{1.0 - (best_dist / 2.0):.3f}",  # Convertir distancia a confidence
+            device_info=req.device_info
+            or {
+                "user_agent": request.headers.get("user-agent", "Unknown"),
+                "origin": request.headers.get("origin", "Unknown"),
+            },
+            location_details=req.location_details,
+            device_timezone=req.device_timezone,
+            additional_data={
+                "best_distance": float(best_dist),
+                "tolerance": TOLERANCE,
+                "reason": "Face not recognized - distance exceeds tolerance",
+            },
+            notes=f"Recognition failed. Best match distance: {best_dist:.3f} > {TOLERANCE}",
+        )
+        db.add(failed_log)
+        db.commit()
+
+        return {
+            "recognized": False,
+            "confidence_score": 1.0 - (best_dist / 2.0),
+            "access_log_id": failed_log.id,
+        }
 
     recognized_employee = next((e for e in employees if e.id == best_id), None)
     if recognized_employee:
         enc_s = serialize_encoding(probe.tolist())
         new_encoding = FaceEncoding(
-            employee_id=best_id, 
+            employee_id=best_id,
             encoding=enc_s,
-            record_timezone=req.device_timezone  # NEW: Store timezone when encoding was created
+            record_timezone=req.device_timezone,  # NEW: Store timezone when encoding was created
         )
         db.add(new_encoding)
 
     event = decide_event(db, best_id)
+
+    # Calcular confidence score basado en la distancia
+    confidence_score = max(0.0, min(1.0, 1.0 - (best_dist / TOLERANCE)))
+
+    # Extraer información del dispositivo del request
+    device_info = getattr(req, "device_info", None) or {}
+    device_info.update(
+        {
+            "user_agent": request.headers.get("user-agent", "Unknown"),
+            "origin": request.headers.get("origin", "Unknown"),
+            "referer": request.headers.get("referer", "Unknown"),
+        }
+    )
+
+    # Crear registro completo en access_logs
     log = AccessLog(
-        employee_id=best_id, 
-        warehouse_id=req.warehouse_id, 
-        event=event,
-        device_timezone=req.device_timezone  # NEW: Store device timezone for clock event
+        employee_id=best_id,
+        event_type="entry" if event == "in" else "exit",
+        access_method="face_recognition",
+        confidence_score=f"{confidence_score:.3f}",
+        device_info=device_info,
+        location_details=getattr(req, "location_details", None),
+        device_timezone=getattr(req, "device_timezone", "UTC"),
+        additional_data={
+            "face_distance": float(best_dist),
+            "tolerance_used": TOLERANCE,
+            "recognition_success": True,
+            "user_id": current_user.id,
+            "user_role": current_user.role.name,
+            "warehouse_id": req.warehouse_id
+            or recognized_employee.warehouse_id,  # Guardamos warehouse_id en additional_data
+        },
+        is_verified=True,  # Auto-verified por face recognition
+        notes=f"Face recognition successful. Distance: {best_dist:.3f}, Confidence: {confidence_score:.3f}",
     )
     db.add(log)
     db.commit()
+    db.refresh(log)  # Para obtener el ID generado
 
     return {
         "recognized": True,
@@ -124,7 +202,9 @@ def clock_in_out(
         "name": best_name,
         "distance": float(best_dist),
         "event": event,
-        "ts": log.timestamp.isoformat(),  # Changed from log.ts to log.timestamp
+        "ts": log.timestamp.isoformat(),
+        "confidence_score": confidence_score,
+        "access_log_id": log.id,
     }
 
 

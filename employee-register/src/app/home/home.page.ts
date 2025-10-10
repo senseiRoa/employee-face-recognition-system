@@ -89,9 +89,7 @@ export class HomePage implements OnInit {
     try {
       await Promise.all([
         this.loadUserData(),
-        this.loadTimeStats(),
         this.loadRecentActivities(),
-        this.loadCurrentStatus()
       ]);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -112,19 +110,7 @@ export class HomePage implements OnInit {
     }
   }
 
-  /**
-   * Load time tracking statistics
-   */
-  async loadTimeStats() {
-    try {
-      // TODO: Replace with actual API call
-      // For now, using mock data
-      this.todayHours = '8.5h';
-      this.weekHours = '32.0h';
-    } catch (error) {
-      console.error('Error loading time stats:', error);
-    }
-  }
+
 
   /**
    * Load recent activity logs
@@ -148,7 +134,6 @@ export class HomePage implements OnInit {
       this.apiService.getAccessLogs(params, token).subscribe({
         next: (response) => {
           this.recentActivities = response || [];
-          this.loadCurrentStatus(); // Update status after loading activities
         },
         error: (error) => {
           console.error('Error loading recent activities:', error);
@@ -158,24 +143,6 @@ export class HomePage implements OnInit {
     } catch (error) {
       console.error('Error loading recent activities:', error);
       this.recentActivities = [];
-    }
-  }
-
-  /**
-   * Load current check-in status
-   */
-  async loadCurrentStatus() {
-    try {
-      // TODO: Implement actual status check from backend
-      // For now, using mock logic
-      if (this.recentActivities.length > 0) {
-        const lastActivity = this.recentActivities[0];
-        this.isCheckedIn = lastActivity.action_type === 'clock_in';
-        this.lastAction = lastActivity.action_type === 'clock_in' ? 'Checked In' : 'Checked Out';
-        this.lastActionTime = new Date(lastActivity.timestamp);
-      }
-    } catch (error) {
-      console.error('Error loading current status:', error);
     }
   }
 
@@ -207,13 +174,7 @@ export class HomePage implements OnInit {
             this.viewProfile();
           }
         },
-        {
-          text: 'Settings',
-          icon: 'settings-outline',
-          handler: () => {
-            this.router.navigate(['/configuration']);
-          }
-        },
+        
         {
           text: 'Logout',
           icon: 'log-out-outline',

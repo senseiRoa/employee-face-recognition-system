@@ -22,7 +22,7 @@ import { firstValueFrom } from 'rxjs';
 })
 export class TimeTrackerPage implements OnInit {
 
-  currentView: 'register' | 'checkin' = 'checkin';
+  currentView: 'register' | 'clockin' = 'clockin';
 
   // Employee Registration
   newEmployee: CreateEmployeeRequest = {
@@ -91,7 +91,7 @@ export class TimeTrackerPage implements OnInit {
   /**
    * Switch between register and check-in views
    */
-  switchView(view: 'register' | 'checkin') {
+  switchView(view: 'register' | 'clockin') {
     this.currentView = view;
   }
 

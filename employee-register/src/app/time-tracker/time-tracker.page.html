@@ -11,8 +11,8 @@
 
   <!-- View Toggle -->
   <ion-segment [(ngModel)]="currentView" (ionChange)="switchView(currentView)">
-    <ion-segment-button value="checkin">
-      <ion-label>Check In/Out</ion-label>
+    <ion-segment-button value="clockin">
+      <ion-label>Clock In/Out</ion-label>
     </ion-segment-button>
     <ion-segment-button value="register">
       <ion-label>Register Employee</ion-label>
@@ -20,7 +20,7 @@
   </ion-segment>
 
   <!-- Check In/Out View -->
-  <div *ngIf="currentView === 'checkin'">
+  <div *ngIf="currentView === 'clockin'">
 
 
 

@@ -12,38 +12,15 @@
           <ion-label>Home</ion-label>
         </ion-item>
 
-        <!-- Time Tracker Main Item -->
-        <ion-item button (click)="navigateAndCloseMenu('/time-tracker')">
-          <ion-icon name="time-outline" slot="start"></ion-icon>
-          <ion-label>Time Tracker</ion-label>
-        </ion-item>
-
+        
         <!-- Time Tracker Sub-items -->
-        <ion-item button (click)="navigateWithViewAndCloseMenu('/time-tracker', 'register')" class="submenu-item">
-          <ion-icon name="person-add-outline" slot="start"></ion-icon>
-          <ion-label>Register Employee</ion-label>
-        </ion-item>
-        <ion-item button (click)="navigateWithViewAndCloseMenu('/time-tracker', 'checkin')" class="submenu-item">
+        
+        <ion-item button (click)="navigateWithViewAndCloseMenu('/time-tracker', 'clockin')" class="submenu-item">
           <ion-icon name="finger-print-outline" slot="start"></ion-icon>
           <ion-label>Clock In/Out</ion-label>
         </ion-item>
 
-        <!-- Reports Main Item -->
-        <ion-item button (click)="navigateAndCloseMenu('/reports')">
-          <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
-          <ion-label>Reports</ion-label>
-        </ion-item>
-
-        <!-- Reports Sub-items -->
-        <ion-item button (click)="navigateAndCloseMenu('/reports')" class="submenu-item">
-          <ion-icon name="document-text-outline" slot="start"></ion-icon>
-          <ion-label>Time Reports</ion-label>
-        </ion-item>
-        <ion-item button (click)="navigateAndCloseMenu('/reports')" class="submenu-item">
-          <ion-icon name="analytics-outline" slot="start"></ion-icon>
-          <ion-label>Analytics</ion-label>
-        </ion-item>
-
+        
         <ion-item button (click)="navigateAndCloseMenu('/configuration')">
           <ion-icon name="settings-outline" slot="start"></ion-icon>
           <ion-label>Configuration</ion-label>

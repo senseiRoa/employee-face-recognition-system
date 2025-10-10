@@ -23,38 +23,6 @@
     <p class="date-info">{{currentDate | date:'fullDate'}}</p>
   </div>
 
-  <!-- Quick Stats -->
-  <ion-grid class="stats-grid">
-    <ion-row>
-      <ion-col size="6">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-icon">
-              <ion-icon name="time-outline" color="success"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>{{todayHours}}</h3>
-              <p>Hours Today</p>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-      <ion-col size="6">
-        <ion-card class="stat-card">
-          <ion-card-content>
-            <div class="stat-icon">
-              <ion-icon name="calendar-outline" color="warning"></ion-icon>
-            </div>
-            <div class="stat-info">
-              <h3>{{weekHours}}</h3>
-              <p>Hours This Week</p>
-            </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
-
   <!-- Quick Actions -->
   <div class="section-title">
     <h2>Quick Actions</h2>
@@ -83,23 +51,6 @@
     </ion-row>
   </ion-grid>
 
-  <!-- Status Card -->
-  <ion-card class="status-card">
-    <ion-card-header>
-      <ion-card-title>Current Status</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <div class="status-info">
-        <div class="status-indicator" [class.checked-in]="isCheckedIn" [class.checked-out]="!isCheckedIn">
-          <ion-icon [name]="isCheckedIn ? 'checkmark-circle' : 'close-circle'"></ion-icon>
-          <span>{{isCheckedIn ? 'Checked In' : 'Checked Out'}}</span>
-        </div>
-        <p class="last-action" *ngIf="lastAction">
-          Last action: {{lastAction}} at {{lastActionTime | date:'short'}}
-        </p>
-      </div>
-    </ion-card-content>
-  </ion-card>
 
   <!-- Recent Activity -->
   <div class="section-title">

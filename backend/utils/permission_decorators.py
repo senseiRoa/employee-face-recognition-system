@@ -248,7 +248,48 @@ def require_dashboard_read(current_user: User = Depends(get_current_user)) -> Us
     return current_user
 
 
+def require_tablet_or_logs_audit(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia que permite acceso a tablets y usuarios con permisos de audit"""
+    # Permitir acceso a tablets y usuarios con permisos de auditoría
+    if current_user.role.name == "tablet" or can_audit_logs(current_user.role.name):
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Insufficient permissions. Required: Tablet role or Audit access to System Logs",
+    )
+
+
+def require_company_admin_or_admin(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia que requiere ser company_admin o admin"""
+    if current_user.role.name in ["admin", "company_admin"]:
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Insufficient permissions. Required: Company Admin or Admin role",
+    )
+
+
 def require_reports_analytics_read(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia que requiere permisos de lectura de analytics - incluye tablet"""
+    # Tablets pueden leer reportes básicos
+    if current_user.role.name == "tablet" or can_read_reports(current_user.role.name):
+        return current_user
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Insufficient permissions. Required: Read access to Reports Analytics",
+    )
+
+
+def require_reports_analytics_read_old(
     current_user: User = Depends(get_current_user),
 ) -> User:
     """Dependencia que requiere permisos de lectura de reportes y analytics"""
@@ -295,7 +336,12 @@ def get_accessible_warehouse_ids(current_user: User) -> list[int]:
         # Esto debería implementarse consultando la BD
         return []  # Retornar lista vacía significa "todos"
 
-    # Manager y Employee solo su warehouse
+    if current_user.role.name == "company_admin":
+        # Company admin puede acceder a todos los warehouses de su empresa
+        # TODO: Implementar consulta a BD para obtener warehouses de la empresa
+        return []  # Por ahora, lista vacía significa "todos los de su empresa"
+
+    # Manager, Employee y Tablet solo su warehouse
     return [current_user.warehouse_id]
 
 
@@ -307,5 +353,60 @@ def get_accessible_company_ids(current_user: User) -> list[int]:
         # Admin puede acceder a todas las empresas
         return []  # Lista vacía significa "todas"
 
-    # Manager y Employee solo su empresa
+    if current_user.role.name == "company_admin":
+        # Company admin solo puede acceder a su empresa
+        return [current_user.warehouse.company_id]
+
+    # Manager, Employee y Tablet solo su empresa
     return [current_user.warehouse.company_id]
+
+
+# Nuevos decoradores para roles específicos
+def require_tablet_or_higher(current_user: User = Depends(get_current_user)) -> User:
+    """Dependencia que requiere rol tablet o superior para operaciones de time tracking"""
+    allowed_roles = ["admin", "company_admin", "manager", "tablet"]
+    if current_user.role.name not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Tablet role or higher for time tracking operations",
+        )
+    return current_user
+
+
+def require_company_admin_or_higher(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia que requiere rol company_admin o superior"""
+    allowed_roles = ["admin", "company_admin"]
+    if current_user.role.name not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Company Admin role or higher",
+        )
+    return current_user
+
+
+def require_face_recognition_access(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia para operaciones de reconocimiento facial (tablet y superiores)"""
+    allowed_roles = ["admin", "company_admin", "manager", "tablet"]
+    if current_user.role.name not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Face recognition access",
+        )
+    return current_user
+
+
+def require_time_tracking_access(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Dependencia para operaciones de time tracking (tablet y superiores)"""
+    allowed_roles = ["admin", "company_admin", "manager", "tablet"]
+    if current_user.role.name not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Insufficient permissions. Required: Time tracking access",
+        )
+    return current_user

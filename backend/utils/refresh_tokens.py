@@ -7,28 +7,8 @@ import secrets
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from sqlalchemy.orm import Session
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey
-from sqlalchemy.ext.declarative import declarative_base
-from database import Base
-from models import User
-from utils.jwt_handler import create_access_token, decode_token
-
-
-class RefreshToken(Base):
-    """
-    Modelo para almacenar refresh tokens en la base de datos
-    """
-
-    __tablename__ = "refresh_tokens"
-
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    token = Column(String(255), unique=True, nullable=False, index=True)
-    expires_at = Column(DateTime, nullable=False)
-    is_revoked = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    last_used = Column(DateTime, nullable=True)
-    device_info = Column(String(500), nullable=True)  # User agent, etc.
+from models import User, RefreshToken
+from utils.jwt_handler import create_access_token
 
 
 class RefreshTokenService:
@@ -60,7 +40,7 @@ class RefreshTokenService:
         )
 
         refresh_token = RefreshToken(
-            user_id=user_id, token=token, expires_at=expires_at, device_info=device_info
+            user_id=user_id, token=token, expires_at=expires_at, user_agent=device_info
         )
 
         db.add(refresh_token)
@@ -78,7 +58,7 @@ class RefreshTokenService:
             db.query(RefreshToken)
             .filter(
                 RefreshToken.token == token,
-                RefreshToken.is_revoked == False,
+                ~RefreshToken.is_revoked,
                 RefreshToken.expires_at > datetime.utcnow(),
             )
             .first()
@@ -116,11 +96,11 @@ class RefreshTokenService:
         Si device_info se proporciona, solo revoca tokens de ese dispositivo
         """
         query = db.query(RefreshToken).filter(
-            RefreshToken.user_id == user_id, RefreshToken.is_revoked == False
+            RefreshToken.user_id == user_id, ~RefreshToken.is_revoked
         )
 
         if device_info:
-            query = query.filter(RefreshToken.device_info == device_info)
+            query = query.filter(RefreshToken.user_agent == device_info)
 
         count = query.count()
         query.update({"is_revoked": True})
@@ -229,7 +209,7 @@ class RefreshTokenService:
             db.query(RefreshToken)
             .filter(
                 RefreshToken.user_id == user_id,
-                RefreshToken.is_revoked == False,
+                ~RefreshToken.is_revoked,
                 RefreshToken.expires_at > datetime.utcnow(),
             )
             .order_by(RefreshToken.last_used.desc())

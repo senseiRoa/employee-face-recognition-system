@@ -1,13 +1,20 @@
 from datetime import datetime
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-from services.user_service import get_user_by_username, get_user_by_email
+from services.user_service import get_user_by_username, get_user_by_email, get_user
 from services.log_service import create_user_login_log  # NEW: Import login logging
 from utils.security import verify_password
 from utils.jwt_handler import create_access_token
+from utils.refresh_tokens import RefreshTokenService
 
 
-def login(db: Session, username_or_email: str, password: str, client_timezone: str = "UTC") -> dict:
+def login(
+    db: Session,
+    username_or_email: str,
+    password: str,
+    client_timezone: str = "UTC",
+    device_info: str = None,
+) -> dict:
     """
     Authenticate user by username or email with timezone tracking
     """
@@ -36,17 +43,17 @@ def login(db: Session, username_or_email: str, password: str, client_timezone: s
     user.last_login = datetime.utcnow()
     db.commit()
     db.refresh(user)
-    
+
     # Log successful login with timezone information
     create_user_login_log(
         db=db,
         user_id=user.id,
         location=None,  # Can be extracted from request headers if needed
-        browser=None,   # Can be extracted from user agent if needed
-        client_timezone=client_timezone  # NEW: Store client timezone
+        browser=None,  # Can be extracted from user agent if needed
+        client_timezone=client_timezone,  # NEW: Store client timezone
     )
-    
-    # Create token with user information
+
+    # Create access token with user information
     access_token = create_access_token(
         data={
             "sub": user.username,
@@ -57,9 +64,16 @@ def login(db: Session, username_or_email: str, password: str, client_timezone: s
         }
     )
 
+    # Create refresh token
+    refresh_token_obj = RefreshTokenService.create_refresh_token(
+        db=db, user_id=user.id, device_info=device_info
+    )
+
     return {
         "access_token": access_token,
+        "refresh_token": refresh_token_obj.token,
         "token_type": "bearer",
+        "expires_in": 15 * 60,  # 15 minutes in seconds
         "user": {
             "id": user.id,
             "username": user.username,
@@ -72,6 +86,60 @@ def login(db: Session, username_or_email: str, password: str, client_timezone: s
             "warehouse_name": user.warehouse.name,
         },
     }
+
+
+def refresh_token(db: Session, refresh_token: str) -> dict:
+    """
+    Get new access token using refresh token
+    """
+    # Validate and get user from refresh token
+    token_obj = RefreshTokenService.validate_refresh_token(db, refresh_token)
+    if not token_obj:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired refresh token",
+        )
+
+    # Get user
+    user = get_user(db, token_obj.user_id)
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
+
+    # Create new access token
+    access_token = create_access_token(
+        data={
+            "sub": user.username,
+            "user_id": user.id,
+            "warehouse_id": user.warehouse_id,
+            "role": user.role.name,
+            "role_id": user.role.id,
+        }
+    )
+
+    # Create new refresh token (optional - could reuse existing)
+    new_refresh_token_obj = RefreshTokenService.create_refresh_token(
+        db=db, user_id=user.id, device_info=token_obj.user_agent
+    )
+
+    # Revoke old refresh token
+    RefreshTokenService.revoke_refresh_token(db, refresh_token)
+
+    return {
+        "access_token": access_token,
+        "refresh_token": new_refresh_token_obj.token,
+        "token_type": "bearer",
+        "expires_in": 15 * 60,  # 15 minutes in seconds
+    }
+
+
+def logout(db: Session, refresh_token: str) -> bool:
+    """
+    Logout user by revoking refresh token
+    """
+    return RefreshTokenService.revoke_refresh_token(db, refresh_token)
 
 
 def register_user(

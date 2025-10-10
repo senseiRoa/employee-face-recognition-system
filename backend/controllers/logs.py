@@ -8,7 +8,7 @@ import io
 from database import get_db
 from services import log_service
 from schemas import AccessLogEnhanced, LoginLog, UserLoginLog
-from utils.permission_decorators import require_logs_audit
+from utils.permission_decorators import require_logs_audit, require_tablet_or_logs_audit
 from models import User
 
 router = APIRouter()
@@ -23,7 +23,7 @@ def list_access_logs(
     skip: int = 0,
     limit: int = 100,
     db: Session = Depends(get_db),
-    current_user: User = Depends(require_logs_audit),
+    current_user: User = Depends(require_tablet_or_logs_audit),
 ):
     """
     List access logs with enhanced information (employee name, warehouse name, etc.)

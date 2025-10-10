@@ -89,6 +89,38 @@ ROLE_PERMISSIONS: Dict[str, List[PermissionSet]] = {
         ),  # Solo ver reportes básicos
         # No acceso a user management, company management, ni system logs
     ],
+    "tablet": [
+        # Tablet role for time tracking devices
+        PermissionSet(Permission.WAREHOUSE_ACCESS, {Action.READ}),
+        PermissionSet(
+            Permission.EMPLOYEE_MANAGEMENT, {Action.READ, Action.WRITE}
+        ),  # Can add/modify employees
+        PermissionSet(
+            Permission.REPORTS_ANALYTICS, {Action.READ}
+        ),  # Can view basic reports
+        PermissionSet(Permission.SYSTEM_LOGS, {Action.READ}),  # Can view access logs
+        # Can perform time tracking operations (check-in/check-out)
+    ],
+    "company_admin": [
+        # Company admin has full permissions within their company
+        PermissionSet(
+            Permission.WAREHOUSE_ACCESS, {Action.READ, Action.WRITE, Action.DELETE}
+        ),
+        PermissionSet(
+            Permission.EMPLOYEE_MANAGEMENT, {Action.READ, Action.WRITE, Action.DELETE}
+        ),
+        PermissionSet(
+            Permission.USER_MANAGEMENT, {Action.READ, Action.WRITE, Action.DELETE}
+        ),
+        PermissionSet(
+            Permission.COMPANY_MANAGEMENT, {Action.READ, Action.WRITE, Action.DELETE}
+        ),  # Full company management within their company
+        PermissionSet(
+            Permission.REPORTS_ANALYTICS,
+            {Action.READ, Action.WRITE, Action.DELETE, Action.EXPORT},
+        ),
+        PermissionSet(Permission.SYSTEM_LOGS, {Action.READ, Action.AUDIT}),
+    ],
 }
 
 

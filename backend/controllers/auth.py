@@ -39,12 +39,26 @@ class LoginRequest(BaseModel):
     username_or_email: str
     password: str
     client_timezone: Optional[str] = "UTC"  # NEW: Client timezone for login tracking
+    device_info: Optional[str] = None  # Device information for tablet tracking
 
 
 class LoginResponse(BaseModel):
     access_token: str
+    refresh_token: str  # Added refresh token
     token_type: str
+    expires_in: int  # Seconds until access token expires
     user: dict
+
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+
+class RefreshTokenResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+    expires_in: int
 
 
 @router.post("/setup-admin", status_code=status.HTTP_201_CREATED)
@@ -98,14 +112,15 @@ def setup_first_admin(user_data: UserRegisterRequest, db: Session = Depends(get_
 @router.post("/login", response_model=LoginResponse)
 def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_db)):
     """
-    Authenticate user and get access token
+    Authenticate user and get access token with refresh token
     """
     try:
         result = auth_service.login(
             db=db,
             username_or_email=login_data.username_or_email,
             password=login_data.password,
-            client_timezone=login_data.client_timezone,  # NEW: Pass client timezone
+            client_timezone=login_data.client_timezone,
+            device_info=login_data.device_info,  # Pass device info for tablet tracking
         )
         return result
     except HTTPException as e:
@@ -114,6 +129,44 @@ def login_for_access_token(login_data: LoginRequest, db: Session = Depends(get_d
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Login error: {str(e)}",
+        )
+
+
+@router.post("/refresh", response_model=RefreshTokenResponse)
+def refresh_access_token(
+    refresh_data: RefreshTokenRequest, db: Session = Depends(get_db)
+):
+    """
+    Get new access token using refresh token
+    """
+    try:
+        result = auth_service.refresh_token(
+            db=db, refresh_token=refresh_data.refresh_token
+        )
+        return result
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Token refresh error: {str(e)}",
+        )
+
+
+@router.post("/logout")
+def logout(refresh_data: RefreshTokenRequest, db: Session = Depends(get_db)):
+    """
+    Logout user by revoking refresh token
+    """
+    try:
+        auth_service.logout(db=db, refresh_token=refresh_data.refresh_token)
+        return {"message": "Successfully logged out"}
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Logout error: {str(e)}",
         )
 
 

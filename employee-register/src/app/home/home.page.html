@@ -1,60 +1,142 @@
 <ion-header>
   <ion-toolbar color="primary">
-    <ion-title>Registro de Ingreso</ion-title>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Employee Portal</ion-title>
     <ion-buttons slot="end">
-      <ion-button fill="clear" color="light">
-        <ion-icon name="log-out-outline"></ion-icon>
+      <ion-button fill="clear" color="light" (click)="showProfile()">
+        <ion-icon name="person-circle-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Enroll Section -->
-  <ion-card>
+  <!-- Welcome Section -->
+  <div class="welcome-section">
+    <div class="company-logo">
+      <ion-icon name="business-outline" size="large" color="primary"></ion-icon>
+    </div>
+    <h1 class="welcome-title">Welcome Back</h1>
+    <p class="welcome-subtitle">{{currentUser?.first_name}} {{currentUser?.last_name}}</p>
+    <p class="date-info">{{currentDate | date:'fullDate'}}</p>
+  </div>
+
+  <!-- Quick Stats -->
+  <ion-grid class="stats-grid">
+    <ion-row>
+      <ion-col size="6">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-icon">
+              <ion-icon name="time-outline" color="success"></ion-icon>
+            </div>
+            <div class="stat-info">
+              <h3>{{todayHours}}</h3>
+              <p>Hours Today</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="6">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-icon">
+              <ion-icon name="calendar-outline" color="warning"></ion-icon>
+            </div>
+            <div class="stat-info">
+              <h3>{{weekHours}}</h3>
+              <p>Hours This Week</p>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Quick Actions -->
+  <div class="section-title">
+    <h2>Quick Actions</h2>
+  </div>
+
+  <ion-grid class="actions-grid">
+    <ion-row>
+      <ion-col size="6">
+        <ion-card class="action-card" button (click)="navigateToTimeTracker()">
+          <ion-card-content>
+            <ion-icon name="time-outline" size="large" color="primary"></ion-icon>
+            <h3>Time Tracker</h3>
+            <p>Clock in/out & manage time</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="6">
+        <ion-card class="action-card" button (click)="navigateToReports()">
+          <ion-card-content>
+            <ion-icon name="bar-chart-outline" size="large" color="secondary"></ion-icon>
+            <h3>Reports</h3>
+            <p>View activity reports</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Status Card -->
+  <ion-card class="status-card">
     <ion-card-header>
-      <ion-card-title>Registrar Rostro</ion-card-title>
-      <ion-card-subtitle>Asocia un empleado con su rostro</ion-card-subtitle>
+      <ion-card-title>Current Status</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-
-
-      <ion-item>
-        <ion-label position="floating">Nombre</ion-label>
-        <ion-input [(ngModel)]="name"></ion-input>
-      </ion-item>
-
-      <ion-button expand="block" color="primary" (click)="enroll()" [disabled]="loading">
-        <ion-icon name="person-add-outline" slot="start"></ion-icon>
-        Registrar
-      </ion-button>
+      <div class="status-info">
+        <div class="status-indicator" [class.checked-in]="isCheckedIn" [class.checked-out]="!isCheckedIn">
+          <ion-icon [name]="isCheckedIn ? 'checkmark-circle' : 'close-circle'"></ion-icon>
+          <span>{{isCheckedIn ? 'Checked In' : 'Checked Out'}}</span>
+        </div>
+        <p class="last-action" *ngIf="lastAction">
+          Last action: {{lastAction}} at {{lastActionTime | date:'short'}}
+        </p>
+      </div>
     </ion-card-content>
   </ion-card>
 
-  <!-- Check In/Out Section -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Ingreso / Salida</ion-card-title>
-      <ion-card-subtitle>Valida con reconocimiento facial</ion-card-subtitle>
-    </ion-card-header>
+  <!-- Recent Activity -->
+  <div class="section-title">
+    <h2>Recent Activity</h2>
+  </div>
+
+  <ion-card class="activity-card">
     <ion-card-content>
-      <ion-button expand="block" color="success" (click)="check()" [disabled]="loading">
-        <ion-icon name="camera-outline" slot="start"></ion-icon>
-        Tomar Foto y Verificar
-      </ion-button>
+      <ion-list *ngIf="recentActivities.length > 0; else noActivity">
+        <ion-item *ngFor="let activity of recentActivities">
+          <ion-icon
+            [name]="activity.action_type === 'clock_in' ? 'log-in-outline' : 'log-out-outline'"
+            [color]="activity.action_type === 'clock_in' ? 'success' : 'danger'"
+            slot="start">
+          </ion-icon>
+          <ion-label>
+            <h3>{{activity.action_type === 'clock_in' ? 'Clocked In' : 'Clocked Out'}}</h3>
+            <p>{{activity.timestamp | date:'short'}}</p>
+          </ion-label>
+          <ion-note slot="end" [color]="activity.success ? 'success' : 'danger'">
+            {{activity.success ? 'Success' : 'Failed'}}
+          </ion-note>
+        </ion-item>
+      </ion-list>
+
+      <ng-template #noActivity>
+        <div class="no-activity">
+          <ion-icon name="document-outline" size="large" color="medium"></ion-icon>
+          <p>No recent activity</p>
+        </div>
+      </ng-template>
     </ion-card-content>
   </ion-card>
 
   <!-- Loading Indicator -->
-  <div class="ion-text-center" *ngIf="loading">
+  <div class="loading-container" *ngIf="loading">
     <ion-spinner name="crescent" color="primary"></ion-spinner>
-    <p>Procesando...</p>
+    <p>Loading dashboard data...</p>
   </div>
-
-  <!-- Message -->
-  <ion-text color="medium" *ngIf="!loading && message">
-    <p class="ion-text-center">{{ message }}</p>
-  </ion-text>
-
-
 </ion-content>

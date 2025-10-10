@@ -1,0 +1,66 @@
+<ion-content class="login-content">
+  <div class="login-container">
+    <!-- Logo Section -->
+    <div class="logo-section">
+      <ion-icon name="business-outline" class="logo-icon"></ion-icon>
+      <h1 class="app-title">Employee Register</h1>
+      <p class="app-subtitle">Face Recognition Time Tracker</p>
+    </div>
+
+    <!-- Login Form -->
+    <ion-card class="login-card">
+      <ion-card-content>
+        <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+          <!-- Username/Email Field -->
+          <ion-item class="input-item">
+            <ion-label position="stacked">Username or Email</ion-label>
+            <ion-input
+              type="text"
+              [(ngModel)]="loginData.username_or_email"
+              name="username"
+              required
+              placeholder="Enter your username or email"
+              [disabled]="isLoading">
+            </ion-input>
+          </ion-item>
+
+          <!-- Password Field -->
+          <ion-item class="input-item">
+            <ion-label position="stacked">Password</ion-label>
+            <ion-input
+              [type]="showPassword ? 'text' : 'password'"
+              [(ngModel)]="loginData.password"
+              name="password"
+              required
+              placeholder="Enter your password"
+              [disabled]="isLoading">
+            </ion-input>
+            <ion-button
+              fill="clear"
+              slot="end"
+              (click)="togglePasswordVisibility()"
+              [disabled]="isLoading">
+              <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
+            </ion-button>
+          </ion-item>
+
+          <!-- Login Button -->
+          <ion-button
+            expand="block"
+            type="submit"
+            class="login-button"
+            [disabled]="isLoading || !loginForm.form.valid">
+            <ion-spinner name="crescent" *ngIf="isLoading"></ion-spinner>
+            <span *ngIf="!isLoading">Sign In</span>
+          </ion-button>
+        </form>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Footer -->
+    <div class="login-footer">
+      <p class="version-text">Version 1.0.0</p>
+      <p class="copyright-text">© 2025 Employee Register</p>
+    </div>
+  </div>
+</ion-content>

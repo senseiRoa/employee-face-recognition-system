@@ -35,3 +35,258 @@
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import '@ionic/angular/css/palettes/dark.system.css';
+
+/* Custom Corporate Theme */
+:root {
+  /* Primary Corporate Blue */
+  --ion-color-primary: #2563eb;
+  --ion-color-primary-rgb: 37, 99, 235;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #2152d3;
+  --ion-color-primary-tint: #3b73ed;
+
+  /* Secondary Corporate Gray */
+  --ion-color-secondary: #64748b;
+  --ion-color-secondary-rgb: 100, 116, 139;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #58667a;
+  --ion-color-secondary-tint: #748597;
+
+  /* Success Green */
+  --ion-color-success: #059669;
+  --ion-color-success-rgb: 5, 150, 105;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #047857;
+  --ion-color-success-tint: #10b981;
+
+  /* Warning Orange */
+  --ion-color-warning: #d97706;
+  --ion-color-warning-rgb: 217, 119, 6;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #b45309;
+  --ion-color-warning-tint: #f59e0b;
+
+  /* Danger Red */
+  --ion-color-danger: #dc2626;
+  --ion-color-danger-rgb: 220, 38, 38;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #b91c1c;
+  --ion-color-danger-tint: #ef4444;
+
+  /* Corporate font family */
+  --ion-font-family: 'Inter', 'Segoe UI', 'Roboto', sans-serif;
+}
+
+/* Global Typography */
+* {
+  font-family: var(--ion-font-family);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+/* Corporate Card Styling */
+ion-card {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin: 1rem 0;
+}
+
+ion-card-header {
+  padding: 1.25rem 1.25rem 0.5rem 1.25rem;
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+ion-card-subtitle {
+  font-size: 0.9rem;
+  color: var(--ion-color-medium);
+  margin-top: 0.25rem;
+}
+
+/* Button Styling */
+ion-button {
+  --border-radius: 8px;
+  font-weight: 500;
+  text-transform: none;
+}
+
+ion-button.button-large {
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  font-size: 1.1rem;
+}
+
+/* Toolbar Styling */
+ion-toolbar {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+ion-title {
+  font-weight: 600;
+  font-size: 1.2rem;
+}
+
+/* List Styling */
+ion-list {
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --inner-padding-end: 8px;
+}
+
+ion-item ion-label h2 {
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+ion-item ion-label p {
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+}
+
+/* Input Styling */
+ion-input, ion-textarea, ion-select {
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-light-shade);
+}
+
+ion-input:focus, ion-textarea:focus, ion-select:focus {
+  border-color: var(--ion-color-primary);
+}
+
+/* Toast Styling */
+.toast-success {
+  --background: var(--ion-color-success);
+  --color: var(--ion-color-success-contrast);
+}
+
+.toast-warning {
+  --background: var(--ion-color-warning);
+  --color: var(--ion-color-warning-contrast);
+}
+
+.toast-danger {
+  --background: var(--ion-color-danger);
+  --color: var(--ion-color-danger-contrast);
+}
+
+/* Loading Spinner */
+ion-loading {
+  --background: rgba(255, 255, 255, 0.95);
+  --spinner-color: var(--ion-color-primary);
+}
+
+/* Modal Styling */
+ion-modal {
+  --border-radius: 16px;
+}
+
+/* Alert Styling */
+ion-alert {
+  --background: var(--ion-background-color);
+}
+
+/* Action Sheet Styling */
+ion-action-sheet {
+  --background: var(--ion-background-color);
+}
+
+/* Menu Styling */
+ion-menu ion-content {
+  --background: var(--ion-color-light);
+}
+
+ion-menu ion-item {
+  --background: transparent;
+  --color: var(--ion-color-dark);
+  margin: 0.25rem 0.5rem;
+  border-radius: 8px;
+}
+
+ion-menu ion-item:hover {
+  --background: var(--ion-color-primary-tint);
+  --color: var(--ion-color-primary-contrast);
+}
+
+ion-menu ion-item.selected {
+  --background: var(--ion-color-primary);
+  --color: var(--ion-color-primary-contrast);
+}
+
+/* Utility Classes */
+.text-corporate {
+  color: var(--ion-color-primary);
+  font-weight: 600;
+}
+
+.bg-corporate {
+  background-color: var(--ion-color-primary);
+  color: var(--ion-color-primary-contrast);
+}
+
+.rounded-lg {
+  border-radius: 12px;
+}
+
+.shadow-sm {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-md {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.shadow-lg {
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+  ion-title {
+    font-size: 1.1rem;
+  }
+
+  ion-card-title {
+    font-size: 1.1rem;
+  }
+
+  ion-button.button-large {
+    font-size: 1rem;
+  }
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  ion-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  ion-input, ion-textarea, ion-select {
+    border-color: var(--ion-color-dark-tint);
+  }
+
+  ion-menu ion-content {
+    --background: var(--ion-color-dark);
+  }
+}

@@ -1,27 +1,262 @@
-#container {
+/* Home Page Styles */
+
+.welcome-section {
   text-align: center;
-
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
+  padding: 2rem 0;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  color: white;
+  margin: -1rem -1rem 2rem -1rem;
+  border-radius: 0 0 20px 20px;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+.company-logo {
+  margin-bottom: 1rem;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
+.welcome-title {
+  font-size: 1.8rem;
+  font-weight: 300;
+  margin: 0.5rem 0;
+}
 
-  color: #8c8c8c;
+.welcome-subtitle {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  opacity: 0.9;
+}
 
+.date-info {
+  font-size: 0.9rem;
+  opacity: 0.8;
   margin: 0;
 }
 
-#container a {
-  text-decoration: none;
+/* Stats Grid */
+.stats-grid {
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.stat-card {
+  margin: 0.25rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  height: 100px;
+}
+
+.stat-card ion-card-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  height: 100%;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-right: 0.75rem;
+}
+
+.stat-info h3 {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin: 0;
+  color: var(--ion-color-dark);
+}
+
+.stat-info p {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  margin: 0.25rem 0 0 0;
+}
+
+/* Section Titles */
+.section-title {
+  margin: 2rem 0 1rem 0;
+}
+
+.section-title h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+  margin: 0;
+  padding-left: 0.5rem;
+  border-left: 4px solid var(--ion-color-primary);
+}
+
+/* Action Cards */
+.actions-grid {
+  padding: 0;
+  margin-bottom: 1.5rem;
+}
+
+.action-card {
+  margin: 0.25rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  transition: all 0.3s ease;
+  height: 120px;
+}
+
+.action-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.action-card ion-card-content {
+  text-align: center;
+  padding: 1.25rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-card ion-icon {
+  margin-bottom: 0.5rem;
+}
+
+.action-card h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.5rem 0 0.25rem 0;
+  color: var(--ion-color-dark);
+}
+
+.action-card p {
+  font-size: 0.8rem;
+  color: var(--ion-color-medium);
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Status Card */
+.status-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.status-info {
+  text-align: center;
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.status-indicator.checked-in {
+  background-color: rgba(40, 167, 69, 0.1);
+  color: var(--ion-color-success);
+  border: 2px solid rgba(40, 167, 69, 0.3);
+}
+
+.status-indicator.checked-out {
+  background-color: rgba(220, 53, 69, 0.1);
+  color: var(--ion-color-danger);
+  border: 2px solid rgba(220, 53, 69, 0.3);
+}
+
+.status-indicator ion-icon {
+  margin-right: 0.5rem;
+  font-size: 1.2rem;
+}
+
+.last-action {
+  font-size: 0.85rem;
+  color: var(--ion-color-medium);
+  margin: 0;
+}
+
+/* Activity Card */
+.activity-card {
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.activity-card ion-list {
+  background: transparent;
+}
+
+.activity-card ion-item {
+  --border-width: 0 0 1px 0;
+  --border-color: rgba(0, 0, 0, 0.05);
+}
+
+.activity-card ion-item:last-child {
+  --border-width: 0;
+}
+
+.no-activity {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+}
+
+.no-activity ion-icon {
+  margin-bottom: 1rem;
+}
+
+.no-activity p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Loading Container */
+.loading-container {
+  text-align: center;
+  padding: 2rem;
+  color: var(--ion-color-medium);
+}
+
+.loading-container ion-spinner {
+  margin-bottom: 1rem;
+}
+
+.loading-container p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .welcome-title {
+    font-size: 1.5rem;
+  }
+
+  .welcome-subtitle {
+    font-size: 1rem;
+  }
+
+  .stat-card,
+  .action-card {
+    margin: 0.1rem;
+  }
+
+  .section-title h2 {
+    font-size: 1.2rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .stat-card,
+  .action-card,
+  .status-card,
+  .activity-card {
+    background-color: var(--ion-color-step-50);
+  }
+
+  .welcome-section {
+    background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
+  }
 }

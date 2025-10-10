@@ -1,0 +1,78 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>User Profile</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="dismiss()">
+        <ion-icon name="close"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="profile-container">
+    
+    <!-- Profile Header Section - Similar to welcome section -->
+    <div class="profile-header">
+      <div class="avatar-container">
+        <div class="avatar">
+          {{ getInitials() }}
+        </div>
+      </div>
+      <div class="user-name">
+        <h2>{{ getFullName() }}</h2>
+      </div>
+    </div>
+
+    <!-- Profile Information Card -->
+    <div class="section-title">
+      <h3>Profile Information</h3>
+    </div>
+
+    <ion-card class="profile-card">
+      <ion-card-content>
+        <div class="user-info">
+          <div class="info-item">
+            <ion-icon name="person-outline" class="info-icon"></ion-icon>
+            <div class="info-content">
+              <div class="info-label">Full Name</div>
+              <div class="info-value">{{ getFullName() }}</div>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <ion-icon name="mail-outline" class="info-icon"></ion-icon>
+            <div class="info-content">
+              <div class="info-label">Email Address</div>
+              <div class="info-value">{{ user?.email || 'N/A' }}</div>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <ion-icon name="briefcase-outline" class="info-icon"></ion-icon>
+            <div class="info-content">
+              <div class="info-label">Job Role</div>
+              <div class="info-value">{{ user?.role || 'N/A' }}</div>
+            </div>
+          </div>
+
+          <div class="info-item">
+            <ion-icon name="business-outline" class="info-icon"></ion-icon>
+            <div class="info-content">
+              <div class="info-label">Warehouse Location</div>
+              <div class="info-value">{{ user?.warehouse_name || 'N/A' }}</div>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <ion-button expand="block" fill="clear" (click)="dismiss()">
+        <ion-icon name="close" slot="start"></ion-icon>
+        Close Profile
+      </ion-button>
+    </div>
+  </div>
+</ion-content>

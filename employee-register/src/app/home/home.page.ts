@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { AlertController, ActionSheetController, LoadingController, ToastController, MenuController } from '@ionic/angular';
+import { AlertController, ActionSheetController, LoadingController, ToastController, MenuController, ModalController } from '@ionic/angular';
 import { AuthService } from '../services/auth.service';
 import { ApiService } from '../services/api.service';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,7 @@ import {
   settingsOutline,
   close
 } from 'ionicons/icons';
+import { UserProfileModalComponent } from '../components/user-profile-modal/user-profile-modal.component';
 
 @Component({
   selector: 'app-home',
@@ -52,7 +53,8 @@ export class HomePage implements OnInit {
     private actionSheetController: ActionSheetController,
     private loadingController: LoadingController,
     private toastController: ToastController,
-    private menuController: MenuController
+    private menuController: MenuController,
+    private modalController: ModalController
   ) {
     addIcons({
       personCircleOutline,
@@ -234,17 +236,17 @@ export class HomePage implements OnInit {
    * View user profile
    */
   async viewProfile() {
-    const alert = await this.alertController.create({
-      header: 'User Profile',
-      message: `
-        <strong>Name:</strong> ${this.currentUser?.first_name} ${this.currentUser?.last_name}<br>
-        <strong>Email:</strong> ${this.currentUser?.email}<br>
-        <strong>Role:</strong> ${this.currentUser?.role}<br>
-        <strong>Warehouse:</strong> ${this.currentUser?.warehouse_name}
-      `,
-      buttons: ['OK']
+    const modal = await this.modalController.create({
+      component: UserProfileModalComponent,
+      componentProps: {
+        user: this.currentUser
+      },
+      presentingElement: undefined,
+      showBackdrop: true,
+      backdropDismiss: true
     });
-    await alert.present();
+    
+    await modal.present();
   }
 
   /**

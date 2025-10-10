@@ -1,0 +1,258 @@
+/* User Profile Modal Styles - Matching Home Page */
+
+.profile-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Header Section - Similar to welcome section */
+.profile-header {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  color: white;
+  margin: -1rem -1rem 1.5rem -1rem;
+  border-radius: 0 0 20px 20px;
+}
+
+.avatar-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.user-name {
+  h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: white;
+    opacity: 0.9;
+  }
+}
+
+/* Profile Card - Matching home card styles with dark theme */
+.profile-card {
+  margin: 0 0 1.5rem 0;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  background-color: var(--ion-color-step-50);
+}
+
+.profile-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Section Title - Matching home section titles with dark theme */
+.section-title {
+  margin: 1.5rem 0 1rem 0;
+  
+  h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ion-color-light);
+    margin: 0;
+    padding-left: 0.5rem;
+    border-left: 4px solid var(--ion-color-primary);
+  }
+}
+
+/* User Info - Similar to stat cards */
+.user-info {
+  .info-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    transition: background-color 0.2s ease;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background-color: rgba(var(--ion-color-primary-rgb), 0.05);
+    }
+  }
+  
+  .info-icon {
+    font-size: 1.5rem;
+    color: var(--ion-color-primary);
+    margin-right: 1rem;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+  
+  .info-content {
+    flex: 1;
+    
+    .info-label {
+      font-size: 0.75rem;
+      color: var(--ion-color-medium);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      font-weight: 500;
+    }
+    
+    .info-value {
+      font-size: 1rem;
+      color: var(--ion-color-light);
+      font-weight: 600;
+      line-height: 1.4;
+    }
+  }
+}
+
+/* Action Buttons - Matching home action cards */
+.action-buttons {
+  margin-top: 1.5rem;
+  padding: 0;
+  
+  ion-button {
+    margin: 0.5rem 0;
+    height: 48px;
+    font-weight: 600;
+    border-radius: 12px;
+    --box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    
+    &:hover {
+      transform: translateY(-1px);
+      --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    }
+  }
+}
+
+/* Header Toolbar */
+ion-header {
+  ion-toolbar {
+    --background: var(--ion-color-primary);
+    --color: white;
+    --border-width: 0;
+    
+    ion-title {
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+    
+    ion-button {
+      --color: white;
+      --background: rgba(255, 255, 255, 0.1);
+      --border-radius: 8px;
+      
+      &:hover {
+        --background: rgba(255, 255, 255, 0.2);
+      }
+    }
+  }
+}
+
+/* Content Background - Dark theme like home */
+ion-content {
+  --background: var(--ion-color-dark);
+}
+
+/* Responsive adjustments - Matching home responsive */
+@media (max-width: 576px) {
+  .profile-header {
+    padding: 1.5rem 1rem;
+    
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+  
+  .avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+  
+  .section-title h3 {
+    font-size: 1.1rem;
+  }
+  
+  .info-item {
+    padding: 0.75rem;
+  }
+  
+  .info-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.3rem;
+  }
+}
+
+/* Dark mode support - Matching home dark mode */
+@media (prefers-color-scheme: dark) {
+  .profile-card {
+    background-color: var(--ion-color-step-50);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+  
+  .profile-header {
+    background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-tint) 100%);
+  }
+  
+  .user-name h2 {
+    color: white;
+  }
+  
+  .info-value {
+    color: var(--ion-color-light);
+  }
+  
+  .section-title h3 {
+    color: var(--ion-color-light);
+  }
+  
+  ion-content {
+    --background: var(--ion-color-dark);
+  }
+  
+  .info-item:hover {
+    background-color: rgba(var(--ion-color-primary-rgb), 0.1);
+  }
+}
+
+/* Force dark theme styles */
+.profile-card {
+  background-color: var(--ion-color-step-50);
+}
+
+.section-title h3 {
+  color: var(--ion-color-light);
+}
+
+.info-value {
+  color: var(--ion-color-light);
+}
